@@ -1363,6 +1363,10 @@ export type Database = {
         Args: { _account_id: string; _base_url: string; _enabled: boolean }
         Returns: undefined
       }
+      anonymize_inactive_customers: {
+        Args: { _months: number }
+        Returns: number
+      }
       can_access_unit: {
         Args: { _unit_id: string; _user_id: string }
         Returns: boolean
@@ -1502,6 +1506,7 @@ export type Database = {
           slug: string
         }[]
       }
+      run_data_retention: { Args: never; Returns: Json }
       sac_sla_hours: {
         Args: { _category: Database["public"]["Enums"]["sac_category"] }
         Returns: number
