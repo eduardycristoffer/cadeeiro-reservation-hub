@@ -78,7 +78,7 @@ async function authenticate(request: Request, scope: "read" | "write"): Promise<
 export async function handleSdr(
   request: Request,
   opts: { endpoint: string; scope: "read" | "write"; idempotent?: boolean },
-  fn: (ctx: { key: ApiKeyCtx; body: unknown; url: URL }) => Promise<{ status?: number; data: unknown; mensagem_sugerida?: string }>,
+  fn: (ctx: { key: ApiKeyCtx; body: unknown; url: URL }) => Promise<{ status?: number | undefined; data: unknown; mensagem_sugerida?: string | undefined }>,
 ): Promise<Response> {
   const url = new URL(request.url);
   let key: ApiKeyCtx | null = null;

@@ -14,6 +14,7 @@ import { Route as AdminRouteImport } from './routes/admin'
 import { Route as EntrarRouteImport } from './routes/entrar'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as AdminEquipeRouteImport } from './routes/admin.equipe'
+import { Route as AdminIntegracoesRouteImport } from './routes/admin.integracoes'
 import { Route as AdminReservasRouteImport } from './routes/admin.reservas'
 import { Route as ReservarIndexRouteImport } from './routes/reservar.index'
 import { Route as ReservarSucessoRouteImport } from './routes/reservar.sucesso'
@@ -53,6 +54,11 @@ const AdminIndexRoute = AdminIndexRouteImport.update({
 const AdminEquipeRoute = AdminEquipeRouteImport.update({
   id: '/equipe',
   path: '/equipe',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminIntegracoesRoute = AdminIntegracoesRouteImport.update({
+  id: '/integracoes',
+  path: '/integracoes',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminReservasRoute = AdminReservasRouteImport.update({
@@ -142,6 +148,7 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AdminRouteWithChildren
   '/entrar': typeof EntrarRoute
   '/admin/equipe': typeof AdminEquipeRoute
+  '/admin/integracoes': typeof AdminIntegracoesRoute
   '/admin/reservas': typeof AdminReservasRoute
   '/reservar/sucesso': typeof ReservarSucessoRoute
   '/admin/': typeof AdminIndexRoute
@@ -163,6 +170,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/entrar': typeof EntrarRoute
   '/admin/equipe': typeof AdminEquipeRoute
+  '/admin/integracoes': typeof AdminIntegracoesRoute
   '/admin/reservas': typeof AdminReservasRoute
   '/reservar/sucesso': typeof ReservarSucessoRoute
   '/admin': typeof AdminIndexRoute
@@ -186,6 +194,7 @@ export interface FileRoutesById {
   '/admin': typeof AdminRouteWithChildren
   '/entrar': typeof EntrarRoute
   '/admin/equipe': typeof AdminEquipeRoute
+  '/admin/integracoes': typeof AdminIntegracoesRoute
   '/admin/reservas': typeof AdminReservasRoute
   '/reservar/sucesso': typeof ReservarSucessoRoute
   '/admin/': typeof AdminIndexRoute
@@ -210,6 +219,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/entrar'
     | '/admin/equipe'
+    | '/admin/integracoes'
     | '/admin/reservas'
     | '/reservar/sucesso'
     | '/admin/'
@@ -231,6 +241,7 @@ export interface FileRouteTypes {
     | '/'
     | '/entrar'
     | '/admin/equipe'
+    | '/admin/integracoes'
     | '/admin/reservas'
     | '/reservar/sucesso'
     | '/admin'
@@ -253,6 +264,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/entrar'
     | '/admin/equipe'
+    | '/admin/integracoes'
     | '/admin/reservas'
     | '/reservar/sucesso'
     | '/admin/'
@@ -323,6 +335,13 @@ declare module '@tanstack/react-router' {
       path: '/equipe'
       fullPath: '/admin/equipe'
       preLoaderRoute: typeof AdminEquipeRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/integracoes': {
+      id: '/admin/integracoes'
+      path: '/integracoes'
+      fullPath: '/admin/integracoes'
+      preLoaderRoute: typeof AdminIntegracoesRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/reservas': {
@@ -435,6 +454,7 @@ declare module '@tanstack/react-router' {
 
 interface AdminRouteChildren {
   AdminEquipeRoute: typeof AdminEquipeRoute
+  AdminIntegracoesRoute: typeof AdminIntegracoesRoute
   AdminReservasRoute: typeof AdminReservasRoute
   AdminIndexRoute: typeof AdminIndexRoute
   AdminUnidadesUnitIdRoute: typeof AdminUnidadesUnitIdRoute
@@ -443,6 +463,7 @@ interface AdminRouteChildren {
 
 const AdminRouteChildren: AdminRouteChildren = {
   AdminEquipeRoute: AdminEquipeRoute,
+  AdminIntegracoesRoute: AdminIntegracoesRoute,
   AdminReservasRoute: AdminReservasRoute,
   AdminIndexRoute: AdminIndexRoute,
   AdminUnidadesUnitIdRoute: AdminUnidadesUnitIdRoute,
