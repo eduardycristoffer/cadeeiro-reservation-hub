@@ -49,7 +49,7 @@ function ReservarPage() {
   return (
     <main className="min-h-screen bg-background">
       <header className="mx-auto flex max-w-5xl items-center justify-between px-5 py-5">
-        <BrandLogo className="h-11" />
+        <BrandLogo className="h-16" />
         <a href="/entrar" className="text-sm text-muted-foreground hover:text-foreground">
           Área da equipe
         </a>

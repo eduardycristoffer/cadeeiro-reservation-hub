@@ -54,7 +54,7 @@ function Entrar() {
   return (
     <main className="flex min-h-screen items-center justify-center bg-surface px-5">
       <div className="fade-up w-full max-w-sm rounded-3xl bg-card p-8 shadow-soft">
-        <BrandLogo className="h-14" />
+        <BrandLogo className="h-20" />
         <h1 className="mt-2 text-3xl font-semibold">{mode === "login" ? "Entrar" : "Criar conta"}</h1>
         {!isSupabaseConfigured ? (
           <p className="mt-4 text-sm text-muted-foreground">O banco de dados ainda não foi conectado a este projeto.</p>
