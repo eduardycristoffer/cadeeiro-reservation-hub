@@ -1176,6 +1176,22 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      add_reservation_note: {
+        Args: { _note: string; _reservation_id: string }
+        Returns: undefined
+      }
+      admin_list_users: {
+        Args: never
+        Returns: {
+          created_at: string
+          email: string
+          full_name: string
+          id: string
+          is_active: boolean
+          roles: Database["public"]["Enums"]["app_role"][]
+          unit_ids: string[]
+        }[]
+      }
       can_access_unit: {
         Args: { _unit_id: string; _user_id: string }
         Returns: boolean
@@ -1207,6 +1223,35 @@ export type Database = {
           unit_name: string
         }[]
       }
+      create_staff_reservation: {
+        Args: {
+          _date: string
+          _full_name: string
+          _notes?: string
+          _origin?: Database["public"]["Enums"]["reservation_origin"]
+          _party_size: number
+          _phone: string
+          _status?: Database["public"]["Enums"]["reservation_status"]
+          _time: string
+          _unit_id: string
+        }
+        Returns: {
+          id: string
+          protocol: string
+          status: Database["public"]["Enums"]["reservation_status"]
+        }[]
+      }
+      get_reservation_history: {
+        Args: { _reservation_id: string }
+        Returns: {
+          changed_by_name: string
+          created_at: string
+          from_status: Database["public"]["Enums"]["reservation_status"]
+          id: string
+          note: string
+          to_status: Database["public"]["Enums"]["reservation_status"]
+        }[]
+      }
       get_unit_available_dates: {
         Args: {
           _from: string
@@ -1235,6 +1280,10 @@ export type Database = {
       }
       hit_rate_limit: { Args: { _key: string; _max: number }; Returns: boolean }
       is_staff: { Args: { _user_id: string }; Returns: boolean }
+      mark_reservation_arrived: {
+        Args: { _reservation_id: string }
+        Returns: string
+      }
       normalize_br_phone: { Args: { _raw: string }; Returns: string }
       public_list_units: {
         Args: never
@@ -1248,6 +1297,22 @@ export type Database = {
           name: string
           photo_url: string
           slug: string
+        }[]
+      }
+      set_reservation_status: {
+        Args: {
+          _note?: string
+          _reservation_id: string
+          _status: Database["public"]["Enums"]["reservation_status"]
+        }
+        Returns: Database["public"]["Enums"]["reservation_status"]
+      }
+      staff_unit_slots: {
+        Args: { _date: string; _party_size?: number; _unit_id: string }
+        Returns: {
+          available: boolean
+          remaining: number
+          slot_time: string
         }[]
       }
     }
