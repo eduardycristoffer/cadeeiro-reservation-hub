@@ -10,33 +10,43 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ReservarSucessoRouteImport } from './routes/reservar.sucesso'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ReservarSucessoRoute = ReservarSucessoRouteImport.update({
+  id: '/reservar/sucesso',
+  path: '/reservar/sucesso',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/reservar/sucesso': typeof ReservarSucessoRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/reservar/sucesso': typeof ReservarSucessoRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/reservar/sucesso': typeof ReservarSucessoRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths: '/' | '/reservar/sucesso'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/reservar/sucesso'
+  id: '__root__' | '/' | '/reservar/sucesso'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ReservarSucessoRoute: typeof ReservarSucessoRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +58,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/reservar/sucesso': {
+      id: '/reservar/sucesso'
+      path: '/reservar/sucesso'
+      fullPath: '/reservar/sucesso'
+      preLoaderRoute: typeof ReservarSucessoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ReservarSucessoRoute: ReservarSucessoRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
