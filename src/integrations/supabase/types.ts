@@ -14,6 +14,103 @@ export type Database = {
   }
   public: {
     Tables: {
+      api_idempotency: {
+        Row: {
+          api_key_id: string
+          created_at: string
+          expires_at: string
+          id: string
+          idem_key: string
+          request_hash: string
+          response: Json | null
+          status_code: number | null
+          updated_at: string
+        }
+        Insert: {
+          api_key_id: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          idem_key: string
+          request_hash: string
+          response?: Json | null
+          status_code?: number | null
+          updated_at?: string
+        }
+        Update: {
+          api_key_id?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          idem_key?: string
+          request_hash?: string
+          response?: Json | null
+          status_code?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "api_idempotency_api_key_id_fkey"
+            columns: ["api_key_id"]
+            isOneToOne: false
+            referencedRelation: "api_keys"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      api_keys: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          is_active: boolean
+          key_hash: string
+          last_used_at: string | null
+          name: string
+          organization_id: string
+          prefix: string
+          revoked_at: string | null
+          scopes: string[]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          key_hash: string
+          last_used_at?: string | null
+          name: string
+          organization_id: string
+          prefix: string
+          revoked_at?: string | null
+          scopes?: string[]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          key_hash?: string
+          last_used_at?: string | null
+          name?: string
+          organization_id?: string
+          prefix?: string
+          revoked_at?: string | null
+          scopes?: string[]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "api_keys_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       audit_logs: {
         Row: {
           action: string
@@ -111,14 +208,20 @@ export type Database = {
           contact_id: string | null
           created_at: string
           external_id: string
+          handoff_at: string | null
           id: string
+          inbox_external_id: string | null
           intent: string | null
+          last_message_at: string | null
+          message_count: number
           organization_id: string
           origin: string | null
           reservation_id: string | null
           result: string | null
           sac_ticket_id: string | null
           started_at: string | null
+          status: string | null
+          summary: string | null
           tags: string[]
           unit_id: string | null
           updated_at: string
@@ -132,14 +235,20 @@ export type Database = {
           contact_id?: string | null
           created_at?: string
           external_id: string
+          handoff_at?: string | null
           id?: string
+          inbox_external_id?: string | null
           intent?: string | null
+          last_message_at?: string | null
+          message_count?: number
           organization_id: string
           origin?: string | null
           reservation_id?: string | null
           result?: string | null
           sac_ticket_id?: string | null
           started_at?: string | null
+          status?: string | null
+          summary?: string | null
           tags?: string[]
           unit_id?: string | null
           updated_at?: string
@@ -153,14 +262,20 @@ export type Database = {
           contact_id?: string | null
           created_at?: string
           external_id?: string
+          handoff_at?: string | null
           id?: string
+          inbox_external_id?: string | null
           intent?: string | null
+          last_message_at?: string | null
+          message_count?: number
           organization_id?: string
           origin?: string | null
           reservation_id?: string | null
           result?: string | null
           sac_ticket_id?: string | null
           started_at?: string | null
+          status?: string | null
+          summary?: string | null
           tags?: string[]
           unit_id?: string | null
           updated_at?: string
@@ -255,6 +370,48 @@ export type Database = {
             columns: ["organization_id"]
             isOneToOne: false
             referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      crm_inbox_units: {
+        Row: {
+          created_at: string
+          id: string
+          inbox_external_id: string
+          organization_id: string
+          unit_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          inbox_external_id: string
+          organization_id: string
+          unit_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          inbox_external_id?: string
+          organization_id?: string
+          unit_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_inbox_units_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_inbox_units_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
             referencedColumns: ["id"]
           },
         ]
@@ -1176,10 +1333,18 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      _default_org: { Args: never; Returns: string }
+      _rand_hex: { Args: { _len: number }; Returns: string }
       add_reservation_note: {
         Args: { _note: string; _reservation_id: string }
         Returns: undefined
       }
+      admin_create_api_key: {
+        Args: { _name: string; _scopes?: string[] }
+        Returns: Json
+      }
+      admin_get_crm_settings: { Args: never; Returns: Json }
+      admin_list_api_keys: { Args: never; Returns: Json }
       admin_list_users: {
         Args: never
         Returns: {
@@ -1191,6 +1356,12 @@ export type Database = {
           roles: Database["public"]["Enums"]["app_role"][]
           unit_ids: string[]
         }[]
+      }
+      admin_revoke_api_key: { Args: { _id: string }; Returns: undefined }
+      admin_rotate_crm_webhook_token: { Args: never; Returns: string }
+      admin_save_crm_settings: {
+        Args: { _account_id: string; _base_url: string; _enabled: boolean }
+        Returns: undefined
       }
       can_access_unit: {
         Args: { _unit_id: string; _user_id: string }
@@ -1240,6 +1411,38 @@ export type Database = {
           protocol: string
           status: Database["public"]["Enums"]["reservation_status"]
         }[]
+      }
+      crm_claim_outbound: {
+        Args: { _limit?: number }
+        Returns: {
+          attempts: number
+          created_at: string
+          direction: string
+          event_id: string
+          event_type: string
+          id: string
+          last_error: string | null
+          next_attempt_at: string
+          organization_id: string | null
+          payload: Json
+          processed_at: string | null
+          status: Database["public"]["Enums"]["queue_status"]
+          updated_at: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "crm_events"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      crm_finish_outbound: {
+        Args: { _error?: string; _id: string; _ok: boolean }
+        Returns: undefined
+      }
+      crm_ingest_event: {
+        Args: { _event_id: string; _event_type: string; _payload: Json }
+        Returns: string
       }
       get_reservation_history: {
         Args: { _reservation_id: string }
@@ -1298,6 +1501,89 @@ export type Database = {
           photo_url: string
           slug: string
         }[]
+      }
+      sac_sla_hours: {
+        Args: { _category: Database["public"]["Enums"]["sac_category"] }
+        Returns: number
+      }
+      sdr_auth: { Args: { _key_hash: string }; Returns: Json }
+      sdr_cancel_reservation: {
+        Args: { _phone: string; _protocol: string; _reason: string }
+        Returns: Json
+      }
+      sdr_classify_conversation: {
+        Args: {
+          _channel?: string
+          _classification: Database["public"]["Enums"]["crm_classification"]
+          _completed_at?: string
+          _contact_external_id?: string
+          _contact_name?: string
+          _external_id: string
+          _intent?: string
+          _phone?: string
+          _reservation_protocol?: string
+          _result?: string
+          _sac_protocol?: string
+          _started_at?: string
+          _summary?: string
+          _tags?: string[]
+          _unit_id?: string
+        }
+        Returns: Json
+      }
+      sdr_create_reservation: {
+        Args: {
+          _contact_external_id?: string
+          _conversation_external_id?: string
+          _date: string
+          _full_name: string
+          _notes?: string
+          _party_size: number
+          _phone: string
+          _time: string
+          _unit_id: string
+          _whatsapp_opt_in?: boolean
+        }
+        Returns: Json
+      }
+      sdr_create_sac: {
+        Args: {
+          _category: Database["public"]["Enums"]["sac_category"]
+          _conversation_external_id?: string
+          _description: string
+          _full_name: string
+          _human_requested?: boolean
+          _phone: string
+          _priority?: Database["public"]["Enums"]["sac_priority"]
+          _subject: string
+          _unit_id: string
+        }
+        Returns: Json
+      }
+      sdr_find_reservations: {
+        Args: { _phone: string; _protocol?: string }
+        Returns: Json
+      }
+      sdr_handoff: {
+        Args: {
+          _conversation_external_id: string
+          _full_name?: string
+          _phone: string
+          _reason?: string
+          _unit_id?: string
+        }
+        Returns: Json
+      }
+      sdr_list_units: { Args: never; Returns: Json }
+      sdr_update_reservation: {
+        Args: {
+          _date?: string
+          _party_size?: number
+          _phone: string
+          _protocol: string
+          _time?: string
+        }
+        Returns: Json
       }
       set_reservation_status: {
         Args: {
