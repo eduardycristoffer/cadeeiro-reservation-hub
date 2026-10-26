@@ -1,0 +1,39 @@
+import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import type { User } from "@supabase/supabase-js";
+import { supabase } from "@/lib/supabase";
+
+export type Role = "super_admin" | "gestor" | "funcionario";
+type AuthState = { loading: boolean; user: User | null; roles: Role[] };
+
+const Ctx = createContext<AuthState>({ loading: true, user: null, roles: [] });
+
+export function AuthProvider({ children }: { children: ReactNode }) {
+  const [state, setState] = useState<AuthState>({ loading: true, user: null, roles: [] });
+
+  useEffect(() => {
+    if (!supabase) {
+      setState({ loading: false, user: null, roles: [] });
+      return;
+    }
+    const sb = supabase;
+    async function load() {
+      const { data } = await sb.auth.getUser();
+      const user = data.user ?? null;
+      let roles: Role[] = [];
+      if (user) {
+        const { data: r } = await sb.from("user_roles").select("role").eq("user_id", user.id);
+        roles = ((r ?? []) as { role: Role }[]).map((x) => x.role);
+      }
+      setState({ loading: false, user, roles });
+    }
+    load();
+    const { data: sub } = sb.auth.onAuthStateChange((event) => {
+      if (event === "SIGNED_IN" || event === "SIGNED_OUT" || event === "USER_UPDATED") load();
+    });
+    return () => sub.subscription.unsubscribe();
+  }, []);
+
+  return <Ctx.Provider value={state}>{children}</Ctx.Provider>;
+}
+
+export const useAuth = () => useContext(Ctx);

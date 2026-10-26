@@ -8,3 +8,11 @@
 > Commits you push to the connected branch sync back to Lovable and show up in
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
+
+# Project rules
+
+- Backend is the user's own external Supabase (not Lovable Cloud); SQL lives in `db/migrations/` until it is connected, because the owner requested their own project.
+- Public visitors never touch tables directly: the reservation page only calls SECURITY DEFINER RPCs (`public_list_units`, `get_unit_slots`, `get_unit_available_dates`, `create_public_reservation`), so availability is revalidated server-side under an advisory lock.
+- Roles live in `user_roles`; unit isolation via `can_access_unit` / `can_manage_unit` in every RLS policy — never check permissions only in the UI.
+- `src/lib/supabase.ts` returns `null` when env is missing; every screen must render a "not connected" state instead of crashing.
+- Credentials never go in tables; `integration_settings.secret_name` stores only the secret's name.
