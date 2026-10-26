@@ -1,5 +1,13 @@
 {
   "version": "7",
   "dialect": "postgresql",
-  "entries": []
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1793024677968,
+      "tag": "0000_cadeeiro_fases_1_2_3",
+      "breakpoints": true
+    }
+  ]
 }
