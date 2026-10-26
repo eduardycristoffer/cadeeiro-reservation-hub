@@ -1,17 +1,18 @@
 import { createFileRoute, Link, Outlet, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
-import { Building2, LayoutGrid, LogOut, Loader2 } from "lucide-react";
+import { Building2, CalendarDays, LayoutGrid, LogOut, Loader2, Users } from "lucide-react";
 import { AuthProvider, useAuth } from "@/lib/auth";
 import { isSupabaseConfigured, supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
+import { Toaster } from "@/components/ui/sonner";
 
 export const Route = createFileRoute("/admin")({
   ssr: false,
   head: () => ({
     meta: [
-      { title: "Painel — Cadeeiro Gestão" },
-      { name: "description", content: "Painel de gestão de reservas da Rede Cadeeiro." },
-      { property: "og:title", content: "Painel — Cadeeiro Gestão" },
+      { title: "Painel — Candeeiro Gestão" },
+      { name: "description", content: "Painel de gestão de reservas da Rede Candeeiro." },
+      { property: "og:title", content: "Painel — Candeeiro Gestão" },
       { property: "og:description", content: "Painel de gestão de reservas." },
       { name: "robots", content: "noindex" },
     ],
@@ -19,13 +20,16 @@ export const Route = createFileRoute("/admin")({
   component: () => (
     <AuthProvider>
       <AdminShell />
+      <Toaster position="top-center" />
     </AuthProvider>
   ),
 });
 
 const NAV = [
   { to: "/admin", label: "Início", icon: LayoutGrid, exact: true },
+  { to: "/admin/reservas", label: "Reservas", icon: CalendarDays, exact: false },
   { to: "/admin/unidades", label: "Unidades", icon: Building2, exact: false },
+  { to: "/admin/equipe", label: "Equipe", icon: Users, exact: false, superOnly: true },
 ] as const;
 
 function AdminShell() {
@@ -52,12 +56,14 @@ function AdminShell() {
     );
   }
 
+  const nav = NAV.filter((n) => !("superOnly" in n) || roles.includes("super_admin"));
+
   return (
     <div className="flex min-h-screen bg-background">
       <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col border-r bg-sidebar p-4 md:flex">
-        <p className="px-3 py-2 text-lg font-semibold">Cadeeiro</p>
+        <p className="px-3 py-2 text-lg font-semibold">Candeeiro</p>
         <nav className="mt-4 flex-1 space-y-1">
-          {NAV.map((n) => (
+          {nav.map((n) => (
             <Link
               key={n.to}
               to={n.to}
@@ -77,13 +83,13 @@ function AdminShell() {
       </aside>
       <div className="flex-1">
         <nav className="flex gap-2 overflow-x-auto border-b px-4 py-3 md:hidden">
-          {NAV.map((n) => (
+          {nav.map((n) => (
             <Link key={n.to} to={n.to} activeOptions={{ exact: n.exact }} className="rounded-full px-4 py-1.5 text-sm text-muted-foreground data-[status=active]:bg-primary data-[status=active]:text-primary-foreground">
               {n.label}
             </Link>
           ))}
         </nav>
-        <main className="mx-auto max-w-5xl px-5 py-8 md:px-10 md:py-12">
+        <main className="mx-auto max-w-6xl px-5 py-8 md:px-10 md:py-12">
           <Outlet />
         </main>
       </div>

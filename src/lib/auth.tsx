@@ -21,8 +21,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const user = data.user ?? null;
       let roles: Role[] = [];
       if (user) {
-        const { data: r } = await sb.from("user_roles").select("role").eq("user_id", user.id);
-        roles = ((r ?? []) as { role: Role }[]).map((x) => x.role);
+        const [{ data: r }, { data: prof }] = await Promise.all([
+          sb.from("user_roles").select("role").eq("user_id", user.id),
+          sb.from("user_profiles").select("is_active").eq("id", user.id).maybeSingle(),
+        ]);
+        const active = (prof as { is_active: boolean } | null)?.is_active !== false;
+        roles = active ? ((r ?? []) as { role: Role }[]).map((x) => x.role) : [];
       }
       setState({ loading: false, user, roles });
     }

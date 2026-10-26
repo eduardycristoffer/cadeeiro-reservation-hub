@@ -78,8 +78,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Cadeeiro Gestão" },
-      { name: "description", content: "Reservas e atendimento da Rede Cadeeiro." },
+      { title: "Candeeiro Gestão" },
+      { name: "description", content: "Reservas e atendimento da Rede Candeeiro." },
       { name: "author", content: "Tryade" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },

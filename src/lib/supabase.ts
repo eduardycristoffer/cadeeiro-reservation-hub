@@ -32,6 +32,11 @@ const ERRORS: Record<string, string> = {
   RATE_LIMITED: "Muitas tentativas em pouco tempo. Aguarde alguns minutos.",
   NOTES_TOO_LONG: "A observação pode ter no máximo 500 caracteres.",
   SPAM_DETECTED: "Não foi possível enviar. Tente novamente.",
+  FORBIDDEN: "Você não tem permissão para esta ação.",
+  INVALID_TRANSITION: "Essa mudança de status não é permitida a partir do status atual.",
+  REASON_REQUIRED: "Informe o motivo do cancelamento.",
+  LARGE_GROUP_NEEDS_MANAGER: "Grupos grandes só podem ser confirmados por gestor ou super admin.",
+  NOTE_REQUIRED: "Escreva a observação antes de salvar.",
   SUPABASE_NOT_CONFIGURED: "O sistema ainda está sendo configurado. Tente novamente em breve.",
 };
 
