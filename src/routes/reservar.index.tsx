@@ -80,7 +80,7 @@ function ReservarPage() {
             src={hero}
             alt="Mesa posta em uma unidade da Rede Cadeeiro"
             width={1600}
-            height={1000}
+            height={1008}
             className="aspect-[16/10] w-full rounded-3xl object-cover"
           />
         </div>

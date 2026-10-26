@@ -10,11 +10,37 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AdminRouteImport } from './routes/admin'
+import { Route as EntrarRouteImport } from './routes/entrar'
+import { Route as AdminIndexRouteImport } from './routes/admin.index'
+import { Route as ReservarIndexRouteImport } from './routes/reservar.index'
 import { Route as ReservarSucessoRouteImport } from './routes/reservar.sucesso'
+import { Route as AdminUnidadesIndexRouteImport } from './routes/admin.unidades.index'
+import { Route as AdminUnidadesUnitIdRouteImport } from './routes/admin.unidades.$unitId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EntrarRoute = EntrarRouteImport.update({
+  id: '/entrar',
+  path: '/entrar',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminIndexRoute = AdminIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminRoute,
+} as any)
+const ReservarIndexRoute = ReservarIndexRouteImport.update({
+  id: '/reservar/',
+  path: '/reservar/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ReservarSucessoRoute = ReservarSucessoRouteImport.update({
@@ -22,31 +48,85 @@ const ReservarSucessoRoute = ReservarSucessoRouteImport.update({
   path: '/reservar/sucesso',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminUnidadesIndexRoute = AdminUnidadesIndexRouteImport.update({
+  id: '/unidades/',
+  path: '/unidades/',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminUnidadesUnitIdRoute = AdminUnidadesUnitIdRouteImport.update({
+  id: '/unidades/$unitId',
+  path: '/unidades/$unitId',
+  getParentRoute: () => AdminRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRouteWithChildren
+  '/entrar': typeof EntrarRoute
   '/reservar/sucesso': typeof ReservarSucessoRoute
+  '/admin/': typeof AdminIndexRoute
+  '/reservar/': typeof ReservarIndexRoute
+  '/admin/unidades/$unitId': typeof AdminUnidadesUnitIdRoute
+  '/admin/unidades/': typeof AdminUnidadesIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/entrar': typeof EntrarRoute
   '/reservar/sucesso': typeof ReservarSucessoRoute
+  '/admin': typeof AdminIndexRoute
+  '/reservar': typeof ReservarIndexRoute
+  '/admin/unidades/$unitId': typeof AdminUnidadesUnitIdRoute
+  '/admin/unidades': typeof AdminUnidadesIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/admin': typeof AdminRouteWithChildren
+  '/entrar': typeof EntrarRoute
   '/reservar/sucesso': typeof ReservarSucessoRoute
+  '/admin/': typeof AdminIndexRoute
+  '/reservar/': typeof ReservarIndexRoute
+  '/admin/unidades/$unitId': typeof AdminUnidadesUnitIdRoute
+  '/admin/unidades/': typeof AdminUnidadesIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/reservar/sucesso'
+  fullPaths:
+    | '/'
+    | '/admin'
+    | '/entrar'
+    | '/reservar/sucesso'
+    | '/admin/'
+    | '/reservar/'
+    | '/admin/unidades/$unitId'
+    | '/admin/unidades/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/reservar/sucesso'
-  id: '__root__' | '/' | '/reservar/sucesso'
+  to:
+    | '/'
+    | '/entrar'
+    | '/reservar/sucesso'
+    | '/admin'
+    | '/reservar'
+    | '/admin/unidades/$unitId'
+    | '/admin/unidades'
+  id:
+    | '__root__'
+    | '/'
+    | '/admin'
+    | '/entrar'
+    | '/reservar/sucesso'
+    | '/admin/'
+    | '/reservar/'
+    | '/admin/unidades/$unitId'
+    | '/admin/unidades/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AdminRoute: typeof AdminRouteWithChildren
+  EntrarRoute: typeof EntrarRoute
   ReservarSucessoRoute: typeof ReservarSucessoRoute
+  ReservarIndexRoute: typeof ReservarIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -58,6 +138,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/entrar': {
+      id: '/entrar'
+      path: '/entrar'
+      fullPath: '/entrar'
+      preLoaderRoute: typeof EntrarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/': {
+      id: '/admin/'
+      path: '/'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AdminIndexRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/reservar/': {
+      id: '/reservar/'
+      path: '/reservar'
+      fullPath: '/reservar/'
+      preLoaderRoute: typeof ReservarIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/reservar/sucesso': {
       id: '/reservar/sucesso'
       path: '/reservar/sucesso'
@@ -65,12 +173,43 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ReservarSucessoRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/unidades/': {
+      id: '/admin/unidades/'
+      path: '/unidades'
+      fullPath: '/admin/unidades/'
+      preLoaderRoute: typeof AdminUnidadesIndexRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/unidades/$unitId': {
+      id: '/admin/unidades/$unitId'
+      path: '/unidades/$unitId'
+      fullPath: '/admin/unidades/$unitId'
+      preLoaderRoute: typeof AdminUnidadesUnitIdRouteImport
+      parentRoute: typeof AdminRoute
+    }
   }
 }
 
+interface AdminRouteChildren {
+  AdminIndexRoute: typeof AdminIndexRoute
+  AdminUnidadesUnitIdRoute: typeof AdminUnidadesUnitIdRoute
+  AdminUnidadesIndexRoute: typeof AdminUnidadesIndexRoute
+}
+
+const AdminRouteChildren: AdminRouteChildren = {
+  AdminIndexRoute: AdminIndexRoute,
+  AdminUnidadesUnitIdRoute: AdminUnidadesUnitIdRoute,
+  AdminUnidadesIndexRoute: AdminUnidadesIndexRoute,
+}
+
+const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AdminRoute: AdminRouteWithChildren,
+  EntrarRoute: EntrarRoute,
   ReservarSucessoRoute: ReservarSucessoRoute,
+  ReservarIndexRoute: ReservarIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
