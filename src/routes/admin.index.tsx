@@ -63,7 +63,7 @@ function AdminHome() {
         </div>
       )}
       <div className="mt-8 flex flex-wrap gap-3">
-        <Button asChild size="lg"><Link to="/admin/reservas">Ver reservas</Link></Button>
+        <Button asChild size="lg"><Link to="/admin/reservas" search={{ view: "lista", cal: "mes", periodo: "hoje", pagina: 1 }}>Ver reservas</Link></Button>
         <Button asChild size="lg" variant="outline"><a href="/reservar" target="_blank" rel="noreferrer">Abrir página de reservas</a></Button>
       </div>
     </div>

@@ -16,14 +16,14 @@ type Search = {
   view: "lista" | "calendario";
   cal: "mes" | "semana";
   periodo: Period;
-  de?: string;
-  ate?: string;
-  unidade?: string;
-  status?: string;
-  origem?: string;
-  q?: string;
+  de?: string | undefined;
+  ate?: string | undefined;
+  unidade?: string | undefined;
+  status?: string | undefined;
+  origem?: string | undefined;
+  q?: string | undefined;
   pagina: number;
-  ref?: string;
+  ref?: string | undefined;
 };
 
 const PERIODS: Period[] = ["hoje", "amanha", "semana", "mes", "intervalo", "todas"];
@@ -31,17 +31,17 @@ const str = (v: unknown) => (typeof v === "string" && v ? v : undefined);
 
 export const Route = createFileRoute("/admin/reservas")({
   validateSearch: (s: Record<string, unknown>): Search => ({
-    view: s.view === "calendario" ? "calendario" : "lista",
-    cal: s.cal === "semana" ? "semana" : "mes",
-    periodo: PERIODS.includes(s.periodo as Period) ? (s.periodo as Period) : "hoje",
-    de: str(s.de),
-    ate: str(s.ate),
-    unidade: str(s.unidade),
-    status: str(s.status),
-    origem: str(s.origem),
-    q: str(s.q),
-    pagina: Math.max(1, Number(s.pagina) || 1),
-    ref: str(s.ref),
+    view: s["view"] === "calendario" ? "calendario" : "lista",
+    cal: s["cal"] === "semana" ? "semana" : "mes",
+    periodo: PERIODS.includes(s["periodo"] as Period) ? (s["periodo"] as Period) : "hoje",
+    de: str(s["de"]),
+    ate: str(s["ate"]),
+    unidade: str(s["unidade"]),
+    status: str(s["status"]),
+    origem: str(s["origem"]),
+    q: str(s["q"]),
+    pagina: Math.max(1, Number(s["pagina"]) || 1),
+    ref: str(s["ref"]),
   }),
   head: () => ({ meta: [{ title: "Reservas — Candeeiro Gestão" }, { name: "robots", content: "noindex" }] }),
   component: Reservas,

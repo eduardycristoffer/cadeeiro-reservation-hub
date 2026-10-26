@@ -31,7 +31,7 @@ export function canConfirmLargeGroup(isLargeGroup: boolean, canManage: boolean):
 
 export type Period = "hoje" | "amanha" | "semana" | "mes" | "intervalo" | "todas";
 
-export function periodRange(period: Period, today: Date, custom?: { from?: string; to?: string }): { from?: string; to?: string } {
+export function periodRange(period: Period, today: Date, custom?: { from?: string | undefined; to?: string | undefined }): { from?: string | undefined; to?: string | undefined } {
   const d = new Date(today.getFullYear(), today.getMonth(), today.getDate());
   const add = (n: number) => { const x = new Date(d); x.setDate(x.getDate() + n); return toIsoDate(x); };
   switch (period) {
