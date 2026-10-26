@@ -2,7 +2,7 @@
 -- Cadeeiro Gestão — Fases 1, 2 e 3
 -- Banco de dados, segurança (RLS), autenticação, unidades, capacidade
 -- e criação pública de reservas com controle transacional.
--- Aplicar no SQL Editor do Supabase próprio (uma única vez).
+-- Aplicado no Lovable Cloud pela ferramenta de migração (uma única vez).
 -- Fuso: America/Sao_Paulo
 -- =====================================================================
 
@@ -704,7 +704,7 @@ begin
   end if;
 
   loop
-    v_protocol := 'CAD-' || to_char(_date, 'YYMMDD') || '-' || upper(substr(encode(gen_random_bytes(4), 'hex'), 1, 5));
+    v_protocol := 'CAD-' || to_char(_date, 'YYMMDD') || '-' || upper(substr(replace(gen_random_uuid()::text, '-', ''), 1, 5));
     exit when not exists (select 1 from public.reservations r where r.protocol = v_protocol);
   end loop;
 

@@ -1,0 +1,20 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1793024677968,
+      "tag": "0000_cadeeiro_fases_1_2_3",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1793024753750,
+      "tag": "0001_fix_protocol_uses_gen_random_uuid",
+      "breakpoints": true
+    }
+  ]
+}
