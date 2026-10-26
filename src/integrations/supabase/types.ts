@@ -886,6 +886,73 @@ export type Database = {
           },
         ]
       }
+      reservation_leads: {
+        Row: {
+          campaign: string | null
+          created_at: string
+          full_name: string
+          id: string
+          organization_id: string
+          phone_e164: string
+          reservation_id: string | null
+          service: string | null
+          status: string
+          unit_id: string | null
+          updated_at: string
+          whatsapp_opt_in: boolean
+        }
+        Insert: {
+          campaign?: string | null
+          created_at?: string
+          full_name: string
+          id?: string
+          organization_id: string
+          phone_e164: string
+          reservation_id?: string | null
+          service?: string | null
+          status?: string
+          unit_id?: string | null
+          updated_at?: string
+          whatsapp_opt_in?: boolean
+        }
+        Update: {
+          campaign?: string | null
+          created_at?: string
+          full_name?: string
+          id?: string
+          organization_id?: string
+          phone_e164?: string
+          reservation_id?: string | null
+          service?: string | null
+          status?: string
+          unit_id?: string | null
+          updated_at?: string
+          whatsapp_opt_in?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reservation_leads_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reservation_leads_reservation_id_fkey"
+            columns: ["reservation_id"]
+            isOneToOne: false
+            referencedRelation: "reservations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reservation_leads_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       reservation_status_history: {
         Row: {
           changed_by: string | null
@@ -931,7 +998,9 @@ export type Database = {
         Row: {
           arrived_at: string | null
           assigned_to: string | null
+          campaign: string | null
           cancelled_at: string | null
+          celebrant_name: string | null
           confirmed_at: string | null
           created_at: string
           created_by: string | null
@@ -940,12 +1009,14 @@ export type Database = {
           id: string
           is_large_group: boolean
           notes: string | null
+          occasion: string | null
           organization_id: string
           origin: Database["public"]["Enums"]["reservation_origin"]
           party_size: number
           protocol: string
           reservation_date: string
           reservation_time: string
+          service: string | null
           status: Database["public"]["Enums"]["reservation_status"]
           table_id: string | null
           unit_id: string
@@ -954,7 +1025,9 @@ export type Database = {
         Insert: {
           arrived_at?: string | null
           assigned_to?: string | null
+          campaign?: string | null
           cancelled_at?: string | null
+          celebrant_name?: string | null
           confirmed_at?: string | null
           created_at?: string
           created_by?: string | null
@@ -963,12 +1036,14 @@ export type Database = {
           id?: string
           is_large_group?: boolean
           notes?: string | null
+          occasion?: string | null
           organization_id: string
           origin?: Database["public"]["Enums"]["reservation_origin"]
           party_size: number
           protocol: string
           reservation_date: string
           reservation_time: string
+          service?: string | null
           status?: Database["public"]["Enums"]["reservation_status"]
           table_id?: string | null
           unit_id: string
@@ -977,7 +1052,9 @@ export type Database = {
         Update: {
           arrived_at?: string | null
           assigned_to?: string | null
+          campaign?: string | null
           cancelled_at?: string | null
+          celebrant_name?: string | null
           confirmed_at?: string | null
           created_at?: string
           created_by?: string | null
@@ -986,12 +1063,14 @@ export type Database = {
           id?: string
           is_large_group?: boolean
           notes?: string | null
+          occasion?: string | null
           organization_id?: string
           origin?: Database["public"]["Enums"]["reservation_origin"]
           party_size?: number
           protocol?: string
           reservation_date?: string
           reservation_time?: string
+          service?: string | null
           status?: Database["public"]["Enums"]["reservation_status"]
           table_id?: string | null
           unit_id?: string
@@ -1375,14 +1454,30 @@ export type Database = {
         Args: { _unit_id: string; _user_id: string }
         Returns: boolean
       }
+      capture_reservation_lead: {
+        Args: {
+          _campaign?: string
+          _full_name: string
+          _phone: string
+          _privacy_accepted?: boolean
+          _service?: string
+          _website?: string
+          _whatsapp_opt_in?: boolean
+        }
+        Returns: undefined
+      }
       create_public_reservation: {
         Args: {
+          _campaign?: string
+          _celebrant_name?: string
           _date: string
           _full_name: string
           _notes?: string
+          _occasion?: string
           _party_size: number
           _phone: string
           _privacy_accepted?: boolean
+          _service?: string
           _time: string
           _unit_id: string
           _website?: string
