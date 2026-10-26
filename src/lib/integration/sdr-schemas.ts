@@ -40,9 +40,13 @@ export const patchReservationBody = z.discriminatedUnion("action", [
   z.object({
     action: z.literal("alterar"), phone,
     date: date.optional(), time: time.optional(), party_size: z.number().int().min(1).max(200).optional(),
-  }).refine((b) => b.date || b.time || b.party_size, { message: "informe date, time ou party_size", path: ["date"] }),
+  }),
   z.object({ action: z.literal("cancelar"), phone, reason: z.string().trim().min(2).max(500) }),
-]);
+]).superRefine((b, ctx) => {
+  if (b.action === "alterar" && !b.date && !b.time && !b.party_size) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, message: "informe date, time ou party_size", path: ["date"] });
+  }
+});
 
 export const sacBody = z.object({
   category: z.enum(SAC_CATEGORIES),

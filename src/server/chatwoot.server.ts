@@ -10,7 +10,7 @@ export async function cw<T = unknown>(cfg: CrmConfig, method: string, path: stri
   const res = await fetch(`${cfg.baseUrl}${endpoint}`, {
     method,
     headers: { api_access_token: cfg.token, "content-type": "application/json", accept: "application/json" },
-    body: body === undefined ? undefined : JSON.stringify(body),
+    ...(body === undefined ? {} : { body: JSON.stringify(body) }),
     signal: AbortSignal.timeout(8000),
   });
   const text = await res.text();
