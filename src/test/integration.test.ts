@@ -39,6 +39,16 @@ describe("event_id do webhook", () => {
     const b = buildInboundEventId("conversation_updated", { id: 7, updated_at: 1761490060 });
     expect(a).not.toBe(b);
   });
+  it("muda quando só o status da conversa muda dentro do mesmo segundo", () => {
+    const a = buildInboundEventId("conversation_status_changed", { id: 7, updated_at: 1761490000, status: "open" });
+    const b = buildInboundEventId("conversation_status_changed", { id: 7, updated_at: 1761490000, status: "resolved" });
+    expect(a).not.toBe(b);
+    expect(a).toBe("conversation_status_changed:conv:7:2025-10-26T14:46:40.000Z:open");
+  });
+  it("reenvio do mesmo evento de conversa mantém o mesmo id", () => {
+    const p = { id: 7, updated_at: 1761490000, status: "open" };
+    expect(buildInboundEventId("conversation_updated", p)).toBe(buildInboundEventId("conversation_updated", { ...p }));
+  });
 });
 
 describe("assinatura HMAC do Chatwoot", () => {

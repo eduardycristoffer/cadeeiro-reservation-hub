@@ -30,8 +30,11 @@ export function isOptOutText(text: unknown): boolean {
 }
 
 /**
- * event_id determinístico: evento + tipo do objeto + id + carimbo de tempo.
+ * event_id determinístico: evento + tipo do objeto + id + carimbo de tempo
+ * (+ status, nos eventos de conversa).
  * O mesmo webhook reenviado gera o mesmo id (idempotência em crm_events).
+ * O Chatwoot só tem precisão de segundos: duas mudanças de status no mesmo
+ * segundo teriam o mesmo id e a segunda seria descartada como duplicada.
  */
 export function buildInboundEventId(event: string, payload: Obj, headerTimestamp?: string | null): string {
   const isMessage = event === "message_created";
@@ -42,7 +45,8 @@ export function buildInboundEventId(event: string, payload: Obj, headerTimestamp
     toIso(isMessage ? payload["created_at"] : payload["updated_at"] ?? payload["timestamp"] ?? payload["created_at"]) ??
     toIso(headerTimestamp) ??
     "na";
-  return `${event}:${kind}:${id}:${ts}`;
+  const status = kind === "conv" ? s(payload["status"]) : null;
+  return status ? `${event}:${kind}:${id}:${ts}:${status}` : `${event}:${kind}:${id}:${ts}`;
 }
 
 export type NormalizedInbound = {
