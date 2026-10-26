@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as EntrarRouteImport } from './routes/entrar'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
+import { Route as AdminReservasRouteImport } from './routes/admin.reservas'
 import { Route as ReservarIndexRouteImport } from './routes/reservar.index'
 import { Route as ReservarSucessoRouteImport } from './routes/reservar.sucesso'
 import { Route as AdminUnidadesIndexRouteImport } from './routes/admin.unidades.index'
@@ -36,6 +37,11 @@ const EntrarRoute = EntrarRouteImport.update({
 const AdminIndexRoute = AdminIndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminReservasRoute = AdminReservasRouteImport.update({
+  id: '/reservas',
+  path: '/reservas',
   getParentRoute: () => AdminRoute,
 } as any)
 const ReservarIndexRoute = ReservarIndexRouteImport.update({
@@ -63,6 +69,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
   '/entrar': typeof EntrarRoute
+  '/admin/reservas': typeof AdminReservasRoute
   '/reservar/sucesso': typeof ReservarSucessoRoute
   '/admin/': typeof AdminIndexRoute
   '/reservar/': typeof ReservarIndexRoute
@@ -72,6 +79,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/entrar': typeof EntrarRoute
+  '/admin/reservas': typeof AdminReservasRoute
   '/reservar/sucesso': typeof ReservarSucessoRoute
   '/admin': typeof AdminIndexRoute
   '/reservar': typeof ReservarIndexRoute
@@ -83,6 +91,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
   '/entrar': typeof EntrarRoute
+  '/admin/reservas': typeof AdminReservasRoute
   '/reservar/sucesso': typeof ReservarSucessoRoute
   '/admin/': typeof AdminIndexRoute
   '/reservar/': typeof ReservarIndexRoute
@@ -95,6 +104,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/entrar'
+    | '/admin/reservas'
     | '/reservar/sucesso'
     | '/admin/'
     | '/reservar/'
@@ -104,6 +114,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/entrar'
+    | '/admin/reservas'
     | '/reservar/sucesso'
     | '/admin'
     | '/reservar'
@@ -114,6 +125,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/entrar'
+    | '/admin/reservas'
     | '/reservar/sucesso'
     | '/admin/'
     | '/reservar/'
@@ -159,6 +171,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminIndexRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/reservas': {
+      id: '/admin/reservas'
+      path: '/reservas'
+      fullPath: '/admin/reservas'
+      preLoaderRoute: typeof AdminReservasRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/reservar/': {
       id: '/reservar/'
       path: '/reservar'
@@ -191,12 +210,14 @@ declare module '@tanstack/react-router' {
 }
 
 interface AdminRouteChildren {
+  AdminReservasRoute: typeof AdminReservasRoute
   AdminIndexRoute: typeof AdminIndexRoute
   AdminUnidadesUnitIdRoute: typeof AdminUnidadesUnitIdRoute
   AdminUnidadesIndexRoute: typeof AdminUnidadesIndexRoute
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
+  AdminReservasRoute: AdminReservasRoute,
   AdminIndexRoute: AdminIndexRoute,
   AdminUnidadesUnitIdRoute: AdminUnidadesUnitIdRoute,
   AdminUnidadesIndexRoute: AdminUnidadesIndexRoute,
