@@ -36,6 +36,13 @@
       "when": 1793057190976,
       "tag": "0004_hardening_security",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1793058835492,
+      "tag": "0005_rodizio_ocasiao_campanha_leads",
+      "breakpoints": true
     }
   ]
 }
