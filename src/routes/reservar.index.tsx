@@ -115,7 +115,9 @@ function Wizard() {
   const [phone, setPhone] = useState("");
   const [notes, setNotes] = useState("");
   const [privacy, setPrivacy] = useState(false);
-  const [optIn, setOptIn] = useState(true);
+  const [optIn, setOptIn] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
+  const [slotNotice, setSlotNotice] = useState<string | null>(null);
   const [website, setWebsite] = useState("");
   const [touched, setTouched] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -138,7 +140,7 @@ function Wizard() {
     supabase
       .rpc("get_unit_available_dates", { _unit_id: unit.id, _from: toIsoDate(from), _to: toIsoDate(to), _party_size: 1 })
       .then(({ data }) => setAvailableDates(new Set(((data ?? []) as { available_date: string }[]).map((r) => r.available_date))));
-  }, [unit]);
+  }, [unit, reloadKey]);
 
   useEffect(() => {
     if (!supabase || !unit || !date) return;
@@ -146,9 +148,10 @@ function Wizard() {
     supabase
       .rpc("get_unit_slots", { _unit_id: unit.id, _date: date, _party_size: 1 })
       .then(({ data }) => setSlots(((data ?? []) as Slot[]).filter((s) => s.remaining > 0)));
-  }, [unit, date]);
+  }, [unit, date, reloadKey]);
 
   const remainingAtTime = useMemo(() => slots?.find((s) => s.slot_time === time)?.remaining ?? 0, [slots, time]);
+  const threshold = Math.max(1, unit?.large_group_threshold ?? 10);
   const nameOk = name.trim().length >= 3 && /\s/.test(name.trim());
   const phoneOk = isValidBrPhone(phone);
 
@@ -174,11 +177,14 @@ function Wizard() {
     setSubmitting(false);
     if (error) {
       const msg = friendlyError(error);
-      setSubmitError(msg);
       if (msg.includes("horário")) {
+        setSubmitError(null);
         setTime(null);
+        setSlotNotice("Esse horário acabou de ser preenchido por outra reserva. Atualizamos a lista: escolha outro horário.");
+        setReloadKey((k) => k + 1);
         setStep(2);
-        setDate((d) => (d ? `${d}` : d));
+      } else {
+        setSubmitError(msg);
       }
       return;
     }
@@ -274,6 +280,7 @@ function Wizard() {
           <>
             <Title>Qual horário deseja?</Title>
             <p className="-mt-3 mb-5 text-sm capitalize text-muted-foreground">{formatDateLong(date)}</p>
+            {slotNotice && <p role="status" className="mb-4 rounded-xl bg-surface p-3 text-sm">{slotNotice}</p>}
             {!slots ? <Loading /> : slots.length === 0 ? (
               <p className="text-muted-foreground">Os horários deste dia acabaram de esgotar. Escolha outra data.</p>
             ) : (
@@ -281,7 +288,7 @@ function Wizard() {
                 {slots.map((s) => (
                   <button
                     key={s.slot_time}
-                    onClick={() => { setTime(s.slot_time); if (people > s.remaining) setPeople(Math.min(2, s.remaining)); next(); }}
+                    onClick={() => { setSlotNotice(null); setTime(s.slot_time); if (people > s.remaining) setPeople(Math.min(2, s.remaining)); next(); }}
                     className={cn("tile py-3 text-center font-medium", time === s.slot_time && "tile-selected")}
                   >
                     {hhmm(s.slot_time)}
@@ -296,7 +303,7 @@ function Wizard() {
           <>
             <Title>Para quantas pessoas?</Title>
             <div className="grid grid-cols-5 gap-2">
-              {Array.from({ length: 10 }, (_, i) => i + 1).map((n) => (
+              {Array.from({ length: threshold }, (_, i) => i + 1).map((n) => (
                 <button
                   key={n}
                   disabled={n > remainingAtTime}
@@ -308,17 +315,17 @@ function Wizard() {
               ))}
             </div>
             <button
-              onClick={() => { setBigGroup(true); setPeople(11); }}
+              onClick={() => { setBigGroup(true); setPeople(threshold + 1); }}
               className={cn("tile mt-3 flex w-full items-center justify-center gap-2 py-3 text-sm font-medium", bigGroup && "tile-selected")}
             >
-              <Users className="h-4 w-4" /> Grupo com mais de 10 pessoas
+              <Users className="h-4 w-4" /> Grupo com mais de {threshold} pessoas
             </button>
             {bigGroup && (
               <div className="mt-4 space-y-3">
                 <Input
                   type="number"
                   inputMode="numeric"
-                  min={11}
+                  min={threshold + 1}
                   max={200}
                   value={people}
                   onChange={(e) => setPeople(Math.max(1, Math.min(200, Number(e.target.value) || 0)))}
@@ -329,7 +336,7 @@ function Wizard() {
                   <p className="text-sm text-destructive">Este horário comporta no máximo {remainingAtTime} pessoas. Escolha outro horário.</p>
                 )}
                 <p className="text-sm text-muted-foreground">Grupos grandes sempre passam por confirmação da unidade.</p>
-                <Button className="w-full" size="lg" disabled={people < 11 || people > remainingAtTime} onClick={next}>Continuar</Button>
+                <Button className="w-full" size="lg" disabled={people <= threshold || people > remainingAtTime} onClick={next}>Continuar</Button>
               </div>
             )}
           </>
