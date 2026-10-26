@@ -16,3 +16,5 @@
 - Roles live in `user_roles`; unit isolation via `can_access_unit` / `can_manage_unit` in every RLS policy — never check permissions only in the UI.
 - `src/lib/supabase.ts` returns `null` when env is missing; every screen must render a "not connected" state instead of crashing.
 - Credentials never go in tables; `integration_settings.secret_name` stores only the secret's name.
+- Staff never writes `reservations` directly (INSERT/UPDATE revoked from authenticated): status changes, arrival, notes and manual bookings go through SECURITY DEFINER RPCs (`set_reservation_status`, `mark_reservation_arrived`, `add_reservation_note`, `create_staff_reservation`) so transitions, capacity locks and history stay enforced in the database.
+- `has_role`/`is_staff` require an active `user_profiles` row, so deactivating a user cuts access in RLS, not just the UI.
