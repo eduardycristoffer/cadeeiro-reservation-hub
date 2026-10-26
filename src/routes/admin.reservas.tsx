@@ -283,7 +283,7 @@ function Reservas() {
 }
 
 function CalendarView({ unitId, mode, refDate, tick, onMode, onRef, onPick }: {
-  unitId?: string; mode: "mes" | "semana"; refDate?: string; tick: number;
+  unitId?: string | undefined; mode: "mes" | "semana"; refDate?: string | undefined; tick: number;
   onMode: (m: "mes" | "semana") => void; onRef: (d: string) => void; onPick: (d: string) => void;
 }) {
   const ref = refDate ? fromIsoDate(refDate) : new Date();
