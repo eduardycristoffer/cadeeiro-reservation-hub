@@ -14,10 +14,10 @@ import hero from "@/assets/hero.jpg";
 export const Route = createFileRoute("/reservar/")({
   head: () => ({
     meta: [
-      { title: "Reservar mesa — Rede Cadeeiro" },
+      { title: "Reservar mesa — Rede Candeeiro" },
       { name: "description", content: "Escolha a unidade, o dia e o horário. Sua reserva em menos de um minuto." },
-      { property: "og:title", content: "Reservar mesa — Rede Cadeeiro" },
-      { property: "og:description", content: "Sua reserva na Rede Cadeeiro em menos de um minuto." },
+      { property: "og:title", content: "Reservar mesa — Rede Candeeiro" },
+      { property: "og:description", content: "Sua reserva na Rede Candeeiro em menos de um minuto." },
     ],
   }),
   component: ReservarPage,
@@ -48,7 +48,7 @@ function ReservarPage() {
   return (
     <main className="min-h-screen bg-background">
       <header className="mx-auto flex max-w-5xl items-center justify-between px-5 py-5">
-        <span className="text-lg font-semibold tracking-tight">Cadeeiro</span>
+        <span className="text-lg font-semibold tracking-tight">Candeeiro</span>
         <a href="/entrar" className="text-sm text-muted-foreground hover:text-foreground">
           Área da equipe
         </a>
@@ -78,7 +78,7 @@ function ReservarPage() {
         <div className="mx-auto max-w-5xl px-5 pb-16">
           <img
             src={hero}
-            alt="Mesa posta em uma unidade da Rede Cadeeiro"
+            alt="Mesa posta em uma unidade da Rede Candeeiro"
             width={1600}
             height={1008}
             className="aspect-[16/10] w-full rounded-3xl object-cover"
@@ -93,7 +93,7 @@ function ReservarPage() {
       )}
 
       <footer className="mx-auto max-w-5xl px-5 py-10 text-center text-xs text-muted-foreground">
-        Rede Cadeeiro · Desenvolvido por Tryade
+        Rede Candeeiro · Desenvolvido por Tryade
       </footer>
     </main>
   );

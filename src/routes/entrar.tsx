@@ -8,9 +8,9 @@ import { isSupabaseConfigured, supabase } from "@/lib/supabase";
 export const Route = createFileRoute("/entrar")({
   head: () => ({
     meta: [
-      { title: "Entrar — Cadeeiro Gestão" },
-      { name: "description", content: "Acesso da equipe ao painel Cadeeiro Gestão." },
-      { property: "og:title", content: "Entrar — Cadeeiro Gestão" },
+      { title: "Entrar — Candeeiro Gestão" },
+      { name: "description", content: "Acesso da equipe ao painel Candeeiro Gestão." },
+      { property: "og:title", content: "Entrar — Candeeiro Gestão" },
       { property: "og:description", content: "Acesso da equipe ao painel." },
       { name: "robots", content: "noindex" },
     ],
@@ -53,7 +53,7 @@ function Entrar() {
   return (
     <main className="flex min-h-screen items-center justify-center bg-surface px-5">
       <div className="fade-up w-full max-w-sm rounded-3xl bg-card p-8 shadow-soft">
-        <p className="text-sm font-semibold">Cadeeiro Gestão</p>
+        <p className="text-sm font-semibold">Candeeiro Gestão</p>
         <h1 className="mt-2 text-3xl font-semibold">{mode === "login" ? "Entrar" : "Criar conta"}</h1>
         {!isSupabaseConfigured ? (
           <p className="mt-4 text-sm text-muted-foreground">O banco de dados ainda não foi conectado a este projeto.</p>

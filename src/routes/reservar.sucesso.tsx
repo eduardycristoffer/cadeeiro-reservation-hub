@@ -17,9 +17,9 @@ export const Route = createFileRoute("/reservar/sucesso")({
   validateSearch: search,
   head: () => ({
     meta: [
-      { title: "Solicitação recebida — Rede Cadeeiro" },
-      { name: "description", content: "Acompanhe o protocolo da sua reserva na Rede Cadeeiro." },
-      { property: "og:title", content: "Solicitação recebida — Rede Cadeeiro" },
+      { title: "Solicitação recebida — Rede Candeeiro" },
+      { name: "description", content: "Acompanhe o protocolo da sua reserva na Rede Candeeiro." },
+      { property: "og:title", content: "Solicitação recebida — Rede Candeeiro" },
       { property: "og:description", content: "Sua reserva foi registrada." },
       { name: "robots", content: "noindex" },
     ],
