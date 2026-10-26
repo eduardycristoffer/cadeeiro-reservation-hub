@@ -27,6 +27,7 @@ export function NewReservationDialog({ open, units, onClose, onCreated }: {
   const [status, setStatus] = useState<"confirmada" | "pendente">("confirmada");
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const [reload, setReload] = useState(0);
 
   useEffect(() => { if (open && !unitId && units[0]) setUnitId(units[0].id); }, [open, units, unitId]);
 
@@ -38,7 +39,7 @@ export function NewReservationDialog({ open, units, onClose, onCreated }: {
         if (error) { setErr(friendlyError(error)); setSlots([]); return; }
         setSlots(((data ?? []) as Slot[]).filter((s) => s.available));
       });
-  }, [open, unitId, date, people]);
+  }, [open, unitId, date, people, reload]);
 
   const valid = unitId && date && time && people > 0 && name.trim().length >= 2 && isValidBrPhone(phone);
 
@@ -53,7 +54,7 @@ export function NewReservationDialog({ open, units, onClose, onCreated }: {
     setSaving(false);
     if (error) {
       setErr(friendlyError(error));
-      if (String(error.message).includes("SLOT_UNAVAILABLE")) setDate((d) => d); // força recarga abaixo
+      if (String(error.message).includes("SLOT_UNAVAILABLE")) setReload((n) => n + 1);
       return;
     }
     const row = (Array.isArray(data) ? data[0] : data) as { id: string; protocol: string; status: string };
