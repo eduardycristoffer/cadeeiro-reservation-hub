@@ -12,7 +12,7 @@ export function reservationMessage(r: {
 }): string {
   const base = `${r.unit_name}, ${dateBr(r.date)} às ${r.time.slice(0, 5)}, ${r.party_size} ${r.party_size === 1 ? "pessoa" : "pessoas"}. Protocolo ${r.protocol}.`;
   if (r.status === "confirmada") return `Sua reserva está confirmada: ${base}`;
-  return `Recebemos sua solicitação de reserva: ${base} Ela ainda não está confirmada: a unidade vai analisar o pedido e a confirmação será enviada por aqui.`;
+  return `Recebemos sua solicitação de reserva: ${base} Ela ainda não está confirmada: a unidade vai analisar o pedido e o retorno virá por aqui.`;
 }
 
 export function reservationUpdateMessage(r: { status: string; previous_status: string; protocol: string; unit_name: string; date: string; time: string; party_size: number }): string {
