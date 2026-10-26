@@ -4,6 +4,7 @@ import { Building2, CalendarDays, LayoutGrid, LogOut, Loader2, Users } from "luc
 import { AuthProvider, useAuth } from "@/lib/auth";
 import { isSupabaseConfigured, supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
+import { Toaster } from "@/components/ui/sonner";
 
 export const Route = createFileRoute("/admin")({
   ssr: false,
@@ -19,6 +20,7 @@ export const Route = createFileRoute("/admin")({
   component: () => (
     <AuthProvider>
       <AdminShell />
+      <Toaster position="top-center" />
     </AuthProvider>
   ),
 });
