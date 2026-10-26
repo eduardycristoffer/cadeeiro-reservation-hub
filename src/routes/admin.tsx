@@ -1,3 +1,4 @@
+import { BrandLogo } from "@/components/BrandLogo";
 import { createFileRoute, Link, Outlet, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { Building2, CalendarDays, LayoutGrid, LogOut, Loader2, Plug, Users } from "lucide-react";
@@ -62,7 +63,7 @@ function AdminShell() {
   return (
     <div className="flex min-h-screen bg-background">
       <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col border-r bg-sidebar p-4 md:flex">
-        <p className="px-3 py-2 text-lg font-semibold">Candeeiro</p>
+        <div className="px-3 py-2"><BrandLogo className="h-12" /></div>
         <nav className="mt-4 flex-1 space-y-1">
           {nav.map((n) => (
             <Link

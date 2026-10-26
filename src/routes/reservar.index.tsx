@@ -1,3 +1,4 @@
+import { BrandLogo } from "@/components/BrandLogo";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ArrowLeft, Loader2, MapPin, ShieldCheck, Users, Clock3 } from "lucide-react";
@@ -48,7 +49,7 @@ function ReservarPage() {
   return (
     <main className="min-h-screen bg-background">
       <header className="mx-auto flex max-w-5xl items-center justify-between px-5 py-5">
-        <span className="text-lg font-semibold tracking-tight">Candeeiro</span>
+        <BrandLogo className="h-16" />
         <a href="/entrar" className="text-sm text-muted-foreground hover:text-foreground">
           Área da equipe
         </a>
