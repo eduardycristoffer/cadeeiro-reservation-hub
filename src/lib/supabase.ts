@@ -1,7 +1,7 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
-const url = import.meta.env.VITE_SUPABASE_URL as string | undefined;
-const key = (import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? import.meta.env.VITE_SUPABASE_ANON_KEY) as
+const url = import.meta.env["VITE_SUPABASE_URL"] as string | undefined;
+const key = (import.meta.env["VITE_SUPABASE_PUBLISHABLE_KEY"] ?? import.meta.env["VITE_SUPABASE_ANON_KEY"]) as
   | string
   | undefined;
 
@@ -37,6 +37,6 @@ const ERRORS: Record<string, string> = {
 
 export function friendlyError(err: unknown): string {
   const msg = err instanceof Error ? err.message : typeof err === "object" && err && "message" in err ? String((err as { message: unknown }).message) : String(err);
-  for (const k of Object.keys(ERRORS)) if (msg.includes(k)) return ERRORS[k];
+  for (const k of Object.keys(ERRORS)) if (msg.includes(k)) return ERRORS[k]!;
   return "Algo deu errado. Tente novamente.";
 }
