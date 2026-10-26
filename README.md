@@ -8,6 +8,18 @@ Desenvolvido pela Tryade. Idioma: pt-BR. Fuso: `America/Sao_Paulo`.
 - API do SDR: `/api/public/sdr/*` (contrato em `/api/public/sdr/openapi.json`)
 - Webhook e worker do CRM: `/api/public/crm/*`
 
+## Fluxo de reserva (`/reservar`)
+
+Capa (escolha do rodízio) → contatos (nome, WhatsApp, aceite LGPD) → unidade (só se houver mais de uma) → pessoas
+→ quando (hoje e próximos dias + calendário) → ocasião e pedido → "Solicitar reserva".
+
+- O contato é gravado já no passo 2 (`capture_reservation_lead`), mesmo que a pessoa desista; vira `convertida` ao reservar.
+- Rodízio, ocasião, aniversariante e campanha ficam em `reservations` (`service`, `occasion`, `celebrant_name`, `campaign`)
+  e aparecem na lista e na gaveta do painel.
+- **Links de campanha:** cada campanha tem seu link. O link geral `/reservar` mostra a escolha do rodízio; links como
+  `/reservar?rodizio=carnes&campanha=black-friday` já entram com o rodízio definido e gravam a campanha
+  (`rodizio` = `carnes` | `pizza`; `campanha` = texto livre, normalizado para `a-z 0-9 _ -`).
+
 ## Estado por fase
 
 | Fase | Conteúdo | Status |
@@ -56,7 +68,7 @@ Sem variáveis, `src/lib/supabase.ts` devolve `null` e as telas mostram "não co
 2. Aplique pela ferramenta de migração do Lovable. O Lovable grava o espelho em `drizzle/migrations/`.
 3. Arquivo em `db/` e schema no banco devem sempre coincidir.
 
-Última: `004_hardening.sql` (auditoria de segurança de 26/10/2026).
+Última: `005_rodizio_ocasiao_campanha_leads.sql`. A `004_hardening.sql` é da auditoria de segurança de 26/10/2026; o que a ferramenta de migração não aceita (UPDATE de dados, pg_cron) está em `db/maintenance/`.
 
 ## Regras de segurança (resumo; detalhes em `AGENTS.md`)
 
@@ -70,7 +82,8 @@ Sem variáveis, `src/lib/supabase.ts` devolve `null` e as telas mostram "não co
 ## LGPD / retenção
 
 `run_data_retention()` (agendada às 00:30 de São Paulo via pg_cron) apaga logs de integração e eventos já processados
-(90 dias), outbox finalizado (180 dias), auditoria (365 dias) e idempotência expirada. Nada pendente é apagado.
+(90 dias), outbox finalizado (180 dias), auditoria (365 dias), idempotência expirada e contatos capturados
+(`reservation_leads`: 90 dias se não viraram reserva, 180 dias os demais). Nada pendente é apagado.
 `anonymize_inactive_customers(meses)` existe mas **não é agendada**; rode manualmente após definir o prazo.
 
 ## Pendências conhecidas

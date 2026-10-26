@@ -3,6 +3,7 @@ import { z } from "zod";
 import { Check, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { formatDateLong, hhmm } from "@/lib/format";
+import { OCCASION_LABEL, SERVICE_LABEL, type OccasionId, type ServiceId } from "@/lib/reservations";
 
 const search = z.object({
   p: z.string().catch(""),
@@ -11,6 +12,9 @@ const search = z.object({
   t: z.string().catch(""),
   n: z.coerce.number().catch(0),
   s: z.string().catch("pendente"),
+  r: z.string().catch(""),
+  o: z.string().catch(""),
+  w: z.string().catch(""),
 });
 
 export const Route = createFileRoute("/reservar/sucesso")({
@@ -28,12 +32,14 @@ export const Route = createFileRoute("/reservar/sucesso")({
 });
 
 function Success() {
-  const { p, u, d, t, n, s } = Route.useSearch();
+  const { p, u, d, t, n, s, r, o, w } = Route.useSearch();
   const confirmed = s === "confirmada";
+  const rodizio = SERVICE_LABEL[r as ServiceId];
+  const ocasiao = OCCASION_LABEL[o as OccasionId];
   return (
     <main className="min-h-screen bg-surface px-5 py-16">
       <div className="fade-up mx-auto max-w-md rounded-3xl bg-card p-8 text-center shadow-soft">
-        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-primary text-primary-foreground">
+        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-brand text-brand-foreground">
           {confirmed ? <Check className="h-7 w-7" /> : <Clock className="h-7 w-7" />}
         </div>
         <h1 className="mt-6 text-3xl font-semibold">
@@ -48,10 +54,12 @@ function Success() {
           <p className="text-xs uppercase tracking-wider text-muted-foreground">Protocolo</p>
           <p className="mt-1 font-mono text-2xl font-semibold">{p}</p>
           <dl className="mt-5 space-y-3 text-sm">
+            {rodizio && <Row k="Rodízio" v={rodizio} />}
             <Row k="Unidade" v={u} />
             {d && <Row k="Data" v={formatDateLong(d)} />}
             {t && <Row k="Horário" v={hhmm(t)} />}
             <Row k="Pessoas" v={String(n)} />
+            {ocasiao && o !== "nenhuma" && <Row k="Ocasião" v={w ? `${ocasiao} · ${w}` : ocasiao} />}
             <Row k="Status" v={confirmed ? "Confirmada" : "Aguardando confirmação"} />
           </dl>
         </div>
