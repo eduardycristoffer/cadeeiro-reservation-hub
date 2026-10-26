@@ -202,3 +202,11 @@
     transform: none;
   }
 }
+
+.logo-on-dark { display: none; }
+.dark .logo-on-light { display: none; }
+.dark .logo-on-dark { display: inline-block; }
+@media (prefers-color-scheme: dark) {
+  :root:not(.light) .logo-on-light { display: none; }
+  :root:not(.light) .logo-on-dark { display: inline-block; }
+}
