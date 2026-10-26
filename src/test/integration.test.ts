@@ -1,4 +1,3 @@
-// @vitest-environment node
 import { describe, expect, it } from "vitest";
 import { extractChatwootPhone, maskPhone, normalizeBrPhone } from "@/lib/integration/phone";
 import { buildInboundEventId, isOptOutText, normalizeChatwootPayload } from "@/lib/integration/chatwoot-events";
