@@ -8,11 +8,12 @@ import { StatusBadge } from "@/components/admin/bits";
 import { useAuth } from "@/lib/auth";
 import { friendlyError, requireSupabase } from "@/lib/supabase";
 import { STATUS_LABEL, formatDateLong, hhmm } from "@/lib/format";
-import { ORIGIN_LABEL, TRANSITIONS, canConfirmLargeGroup, formatPhoneE164, waLink, type ReservationStatus } from "@/lib/reservations";
+import { OCCASION_LABEL, ORIGIN_LABEL, SERVICE_LABEL, TRANSITIONS, canConfirmLargeGroup, formatPhoneE164, waLink, type OccasionId, type ReservationStatus, type ServiceId } from "@/lib/reservations";
 
 type Detail = {
   id: string; protocol: string; reservation_date: string; reservation_time: string; party_size: number;
   origin: keyof typeof ORIGIN_LABEL; status: ReservationStatus; is_large_group: boolean; notes: string | null;
+  service: ServiceId | null; occasion: OccasionId | null; celebrant_name: string | null; campaign: string | null;
   arrived_at: string | null; created_at: string;
   customers: { full_name: string; phone_e164: string; whatsapp_opt_in: boolean } | null;
   units: { name: string } | null;
@@ -37,7 +38,7 @@ export function ReservationDrawer({ id, tick, onClose, onChanged }: { id: string
     if (!id) { setR(null); return; }
     const sb = requireSupabase();
     sb.from("reservations")
-      .select("id,protocol,reservation_date,reservation_time,party_size,origin,status,is_large_group,notes,arrived_at,created_at,customers(full_name,phone_e164,whatsapp_opt_in),units(name)")
+      .select("id,protocol,reservation_date,reservation_time,party_size,origin,status,is_large_group,notes,service,occasion,celebrant_name,campaign,arrived_at,created_at,customers(full_name,phone_e164,whatsapp_opt_in),units(name)")
       .eq("id", id).maybeSingle()
       .then(({ data }) => setR(data as unknown as Detail));
     sb.rpc("get_reservation_history", { _reservation_id: id }).then(({ data }) => setHist((data ?? []) as Hist[]));
@@ -82,10 +83,15 @@ export function ReservationDrawer({ id, tick, onClose, onChanged }: { id: string
 
             <dl className="mt-6 divide-y rounded-2xl bg-surface px-4 text-sm">
               <Item k="Unidade" v={r.units?.name ?? "—"} />
+              {r.service && <Item k="Rodízio" v={SERVICE_LABEL[r.service]} />}
               <Item k="Data" v={<span className="capitalize">{formatDateLong(r.reservation_date)}</span>} />
               <Item k="Horário" v={hhmm(r.reservation_time)} />
               <Item k="Pessoas" v={String(r.party_size)} />
+              {r.occasion && r.occasion !== "nenhuma" && (
+                <Item k="Ocasião" v={r.celebrant_name ? `${OCCASION_LABEL[r.occasion]} · ${r.celebrant_name}` : OCCASION_LABEL[r.occasion]} />
+              )}
               <Item k="Origem" v={ORIGIN_LABEL[r.origin]} />
+              {r.campaign && <Item k="Campanha" v={r.campaign} />}
               <Item k="WhatsApp" v={r.customers ? formatPhoneE164(r.customers.phone_e164) : "—"} />
               <Item k="Criada em" v={new Date(r.created_at).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })} />
             </dl>
@@ -97,7 +103,7 @@ export function ReservationDrawer({ id, tick, onClose, onChanged }: { id: string
 
             {r.notes && (
               <section className="mt-6">
-                <h3 className="text-sm font-medium">Observação do cliente</h3>
+                <h3 className="text-sm font-medium">O que preparar / observação do cliente</h3>
                 <p className="mt-1 whitespace-pre-wrap rounded-2xl bg-surface p-3 text-sm">{r.notes}</p>
               </section>
             )}

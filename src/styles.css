@@ -28,6 +28,9 @@
   --color-muted-foreground: var(--muted-foreground);
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
+  --color-brand: var(--brand);
+  --color-brand-foreground: var(--brand-foreground);
+  --color-brand-ink: var(--brand-ink);
   --color-success: var(--success);
   --color-warning: var(--warning);
   --color-destructive: var(--destructive);
@@ -55,6 +58,9 @@
 
 :root {
   --radius: 1.25rem;
+  --brand: #d9201f; /* vermelho da marca: preenchimentos (texto branco 5:1) */
+  --brand-foreground: #ffffff;
+  --brand-ink: #c4161c; /* vermelho para texto pequeno sobre fundo claro */
   --background: oklch(1 0 0); /* #FFFFFF */
   --surface: oklch(0.97 0.002 286); /* #F5F5F7 */
   --foreground: oklch(0.21 0.003 286); /* #1D1D1F */
@@ -95,6 +101,7 @@
 }
 
 .dark {
+  --brand-ink: #ff453a;
   --background: oklch(0 0 0);
   --surface: oklch(0.17 0.002 286);
   --foreground: oklch(0.97 0.002 286);
@@ -125,6 +132,7 @@
 
 @media (prefers-color-scheme: dark) {
   :root:not(.light) {
+    --brand-ink: #ff453a;
     --background: oklch(0 0 0);
     --surface: oklch(0.17 0.002 286);
     --foreground: oklch(0.97 0.002 286);
@@ -186,6 +194,20 @@
 @utility tile-selected {
   border-color: var(--color-foreground);
   box-shadow: 0 0 0 1px var(--color-foreground);
+}
+
+@utility tile-on {
+  border-radius: var(--radius-xl);
+  border: 1px solid transparent;
+  background: var(--color-foreground);
+  color: var(--color-background);
+}
+
+@utility no-scrollbar {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
 }
 
 @utility fade-up {

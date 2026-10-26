@@ -9,7 +9,7 @@ import { ReservationDrawer } from "@/components/admin/ReservationDrawer";
 import { NewReservationDialog } from "@/components/admin/NewReservationDialog";
 import { friendlyError, requireSupabase } from "@/lib/supabase";
 import { STATUS_LABEL, fromIsoDate, hhmm, toIsoDate } from "@/lib/format";
-import { ORIGIN_LABEL, formatPhoneE164, periodRange, type Period } from "@/lib/reservations";
+import { OCCASION_LABEL, ORIGIN_LABEL, SERVICE_LABEL, formatPhoneE164, periodRange, type OccasionId, type Period, type ServiceId } from "@/lib/reservations";
 import { cn } from "@/lib/utils";
 
 type Search = {
@@ -57,6 +57,10 @@ export type Row = {
   status: string;
   is_large_group: boolean;
   notes: string | null;
+  service: ServiceId | null;
+  occasion: OccasionId | null;
+  celebrant_name: string | null;
+  campaign: string | null;
   arrived_at: string | null;
   created_at: string;
   unit_id: string;
@@ -125,7 +129,7 @@ function Reservas() {
     const embed = term && !byProtocol ? "customers!inner(full_name,phone_e164)" : "customers(full_name,phone_e164)";
     let query = sb
       .from("reservations")
-      .select(`id,protocol,reservation_date,reservation_time,party_size,origin,status,is_large_group,notes,arrived_at,created_at,unit_id,${embed},units(name)`, { count: "exact" });
+      .select(`id,protocol,reservation_date,reservation_time,party_size,origin,status,is_large_group,notes,service,occasion,celebrant_name,campaign,arrived_at,created_at,unit_id,${embed},units(name)`, { count: "exact" });
     if (range.from) query = query.gte("reservation_date", range.from);
     if (range.to) query = query.lte("reservation_date", range.to);
     if (search.unidade) query = query.eq("unit_id", search.unidade);
@@ -235,7 +239,7 @@ function Reservas() {
               <table className="w-full text-sm">
                 <thead className="text-left text-xs uppercase tracking-wide text-muted-foreground">
                   <tr className="border-b">
-                    {["Protocolo", "Cliente", "WhatsApp", "Unidade", "Data", "Horário", "Pessoas", "Origem", "Status", "Criada em"].map((h) => (
+                    {["Protocolo", "Cliente", "WhatsApp", "Unidade", "Rodízio", "Data", "Horário", "Pessoas", "Ocasião", "Origem", "Status", "Criada em"].map((h) => (
                       <th key={h} className="whitespace-nowrap px-4 py-3 font-medium">{h}</th>
                     ))}
                   </tr>
@@ -247,12 +251,23 @@ function Reservas() {
                       <td className="px-4 py-3 font-medium">{r.customers?.full_name ?? "—"}</td>
                       <td className="whitespace-nowrap px-4 py-3 text-muted-foreground">{r.customers ? formatPhoneE164(r.customers.phone_e164) : "—"}</td>
                       <td className="whitespace-nowrap px-4 py-3">{r.units?.name}</td>
+                      <td className="whitespace-nowrap px-4 py-3">{r.service ? SERVICE_LABEL[r.service] : <span className="text-muted-foreground">—</span>}</td>
                       <td className="whitespace-nowrap px-4 py-3">{fromIsoDate(r.reservation_date).toLocaleDateString("pt-BR")}</td>
                       <td className="px-4 py-3 tabular-nums">{hhmm(r.reservation_time)}</td>
                       <td className="px-4 py-3">
                         <span className={cn("inline-flex items-center gap-1 tabular-nums", r.is_large_group && "rounded-full border border-foreground px-2 py-0.5 font-semibold")}>
                           {r.is_large_group && <Users className="h-3 w-3" />}{r.party_size}
                         </span>
+                      </td>
+                      <td className="whitespace-nowrap px-4 py-3">
+                        {r.occasion && r.occasion !== "nenhuma" ? (
+                          <span className="inline-flex items-center gap-1.5 rounded-full bg-surface px-2.5 py-1 text-xs font-semibold">
+                            <span className="h-1.5 w-1.5 rounded-full bg-brand" aria-hidden="true" />
+                            {OCCASION_LABEL[r.occasion]}{r.celebrant_name ? ` · ${r.celebrant_name}` : ""}
+                          </span>
+                        ) : (
+                          <span className="text-muted-foreground">—</span>
+                        )}
                       </td>
                       <td className="whitespace-nowrap px-4 py-3 text-muted-foreground">{ORIGIN_LABEL[r.origin]}</td>
                       <td className="px-4 py-3"><StatusBadge status={r.status} /></td>

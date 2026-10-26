@@ -11,6 +11,34 @@ export const ORIGIN_LABEL: Record<ReservationOrigin, string> = {
   outro: "Outro",
 };
 
+export const SERVICES = [
+  { id: "rodizio_carnes", slug: "carnes", label: "Rodízio de Carnes" },
+  { id: "rodizio_pizza", slug: "pizza", label: "Rodízio de Pizza" },
+] as const;
+export type ServiceId = (typeof SERVICES)[number]["id"];
+export const SERVICE_LABEL: Record<ServiceId, string> = {
+  rodizio_carnes: "Rodízio de Carnes",
+  rodizio_pizza: "Rodízio de Pizza",
+};
+
+export const OCCASIONS = [
+  { id: "aniversario", label: "Aniversário", asksWho: true },
+  { id: "romantico", label: "Romântico", asksWho: false },
+  { id: "comemoracao", label: "Comemoração", asksWho: true },
+  { id: "negocios", label: "Negócios", asksWho: false },
+  { id: "familia", label: "Família e amigos", asksWho: false },
+  { id: "nenhuma", label: "Sem ocasião", asksWho: false },
+] as const;
+export type OccasionId = (typeof OCCASIONS)[number]["id"];
+export const OCCASION_LABEL: Record<OccasionId, string> = {
+  aniversario: "Aniversário",
+  romantico: "Romântico",
+  comemoracao: "Comemoração",
+  negocios: "Negócios",
+  familia: "Família e amigos",
+  nenhuma: "Sem ocasião",
+};
+
 /** Transições permitidas (espelham a função set_reservation_status no banco). */
 export const TRANSITIONS: Record<ReservationStatus, ReservationStatus[]> = {
   pendente: ["confirmada", "cancelada"],

@@ -3,8 +3,10 @@
 -- 2) Histórico de status só é gravado por RPC/trigger (nunca por INSERT direto).
 -- 3) Funções auxiliares de permissão deixam de ser executáveis por anon.
 -- 4) Privilégios de tabela mínimos (anon sem acesso; authenticated sem TRUNCATE/REFERENCES/TRIGGER).
--- 5) Organização renomeada para "Rede Candeeiro".
--- 6) Rotina de retenção de dados (LGPD) + agendamento diário via pg_cron, quando disponível.
+-- 5) Rotina de retenção de dados (LGPD).
+-- A renomeação da organização e o agendamento do pg_cron NÃO estão aqui: a ferramenta de migração
+-- do Lovable recusa UPDATE de dados e acesso a cron.job. Foram feitos direto no banco; o SQL está em
+-- db/maintenance/2026-10-26_marca_e_cron.sql.
 -- Não edita migrations anteriores; é seguro reaplicar (idempotente).
 
 -- 1) Autoedição de perfil ----------------------------------------------------------
@@ -59,12 +61,7 @@ revoke truncate, references, trigger on all tables in schema public from authent
 -- Tabelas só do servidor (service role): sem acesso nem para usuários logados.
 revoke all on public.api_keys, public.api_idempotency, public.public_rate_limits from anon, authenticated;
 
--- 5) Marca ------------------------------------------------------------------------------
-update public.organizations
-   set name = 'Rede Candeeiro', slug = 'rede-candeeiro'
- where slug = 'rede-cadeeiro' and name = 'Rede Cadeeiro';
-
--- 6) Retenção (LGPD) ----------------------------------------------------------------------
+-- 5) Retenção (LGPD) ----------------------------------------------------------------------
 -- Janelas (ajuste conforme a política de privacidade antes de aplicar em produção):
 --   integration_event_logs ....... 90 dias
 --   crm_events (já processados) .. 90 dias  (payload tem telefone e nome)
@@ -140,16 +137,3 @@ revoke all on function public.run_data_retention() from public, anon, authentica
 revoke all on function public.anonymize_inactive_customers(integer) from public, anon, authenticated;
 grant execute on function public.run_data_retention() to service_role;
 grant execute on function public.anonymize_inactive_customers(integer) to service_role;
-
--- Agenda a retenção às 03:30 UTC (00:30 em São Paulo) quando o pg_cron está instalado.
-do $$
-begin
-  if exists (select 1 from pg_extension where extname = 'pg_cron') then
-    perform cron.unschedule(jobid) from cron.job where jobname = 'cadeeiro_data_retention';
-    perform cron.schedule('cadeeiro_data_retention', '30 3 * * *', 'select public.run_data_retention()');
-  else
-    raise notice 'pg_cron não instalado: agende public.run_data_retention() por outro meio.';
-  end if;
-exception when others then
-  raise notice 'Não foi possível agendar a retenção (%): agende public.run_data_retention() manualmente.', sqlerrm;
-end $$;
