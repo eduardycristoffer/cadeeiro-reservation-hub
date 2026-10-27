@@ -11,6 +11,8 @@
 
 # Project rules
 
+- Keep mobile admin navigation in a visible grid and constrain the shared content column with min-width zero; wide data belongs in local scrollers or mobile item lists to prevent page-level overflow.
+
 - Backend is Lovable Cloud (enabled by the owner on 2026-10-26, reversing the earlier "own Supabase" plan); `db/migrations/` keeps the canonical SQL and every change is applied through the migration tool, so the file and the live schema must stay in sync.
 - Public visitors never touch tables directly: the reservation page only calls SECURITY DEFINER RPCs (`public_list_units`, `get_unit_slots`, `get_unit_available_dates`, `create_public_reservation`), so availability is revalidated server-side under an advisory lock.
 - Roles live in `user_roles`; unit isolation via `can_access_unit` / `can_manage_unit` in every RLS policy — never check permissions only in the UI.
