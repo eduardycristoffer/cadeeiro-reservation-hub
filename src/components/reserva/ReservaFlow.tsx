@@ -47,7 +47,7 @@ export function ReservaFlow({ initialService, campaign }: { initialService?: Ser
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [privacy, setPrivacy] = useState(false);
-  const [optIn, setOptIn] = useState(true);
+  const [optIn, setOptIn] = useState(false);
   const [website, setWebsite] = useState("");
   const [touched, setTouched] = useState(false);
 
@@ -84,7 +84,7 @@ export function ReservaFlow({ initialService, campaign }: { initialService?: Ser
 
   useEffect(() => {
     if (!units) return;
-    if (offered.length === 1) setUnit(offered[0]!);
+    if (offered.length === 1 && offered[0]) setUnit(offered[0]);
     else setUnit((cur) => (cur && offered.some((u) => u.id === cur.id) ? cur : null));
   }, [units, offered]);
 
@@ -100,8 +100,10 @@ export function ReservaFlow({ initialService, campaign }: { initialService?: Ser
     to.setDate(to.getDate() + Math.min(unit.max_advance_days, 90));
     supabase
       .rpc("get_unit_available_dates", { _unit_id: unit.id, _from: toIsoDate(from), _to: toIsoDate(to), _party_size: Math.max(people, 1) })
-      .then(({ data }) => {
-        if (!cancelled) setAvailableDates(new Set(((data ?? []) as { available_date: string }[]).map((r) => r.available_date)));
+      .then(({ data, error }) => {
+        if (cancelled) return;
+        setLoadError(error ? friendlyError(error) : null);
+        setAvailableDates(new Set(((data ?? []) as { available_date: string }[]).map((r) => r.available_date)));
       });
     return () => { cancelled = true; };
   }, [stage, unit, people, reloadKey]);
@@ -112,7 +114,11 @@ export function ReservaFlow({ initialService, campaign }: { initialService?: Ser
     setSlots(null);
     supabase
       .rpc("get_unit_slots", { _unit_id: unit.id, _date: date, _party_size: Math.max(people, 1) })
-      .then(({ data }) => { if (!cancelled) setSlots((data ?? []) as Slot[]); });
+      .then(({ data, error }) => {
+        if (cancelled) return;
+        setSlotNotice(error ? friendlyError(error) : null);
+        setSlots((data ?? []) as Slot[]);
+      });
     return () => { cancelled = true; };
   }, [stage, unit, date, people, reloadKey]);
 
@@ -195,37 +201,38 @@ export function ReservaFlow({ initialService, campaign }: { initialService?: Ser
   if (stage === "capa") {
     return (
       <Shell>
-        <div className="flex items-center justify-end pt-5">
+        <div className="flex items-center justify-end pt-3">
           <a href="/entrar" className="text-sm text-muted-foreground hover:text-foreground">Área da equipe</a>
         </div>
-        <div className="flex flex-1 flex-col justify-center py-6">
+        <div className="flex flex-1 flex-col justify-center py-4">
           <div className="fade-up">
-            <BrandLogo className="h-28" />
-            <h1 className="mt-8 text-5xl font-extrabold leading-[1.02] tracking-tight md:text-6xl">Reservar mesa</h1>
-            <p className="mt-3 text-lg text-muted-foreground">
+            <BrandLogo className="h-20 sm:h-24" />
+            <h1 className="mt-4 text-3xl font-bold leading-tight sm:text-4xl">Reservar mesa</h1>
+            <p className="mt-2 text-sm text-muted-foreground">
               {initialService ? "Sua mesa em poucos toques." : "Qual rodízio você quer?"}
             </p>
           </div>
 
-          <div className="fade-up mt-8 flex flex-col gap-3">
+          <div className="fade-up mt-5 flex flex-col gap-3">
             {(initialService ? SERVICES.filter((s) => s.id === initialService) : SERVICES).map((s) => {
               const Icon = SERVICE_ICON[s.id];
               const on = service === s.id;
               return (
-                <button
+                <Button
+                  variant="outline"
                   key={s.id}
                   type="button"
                   disabled={Boolean(initialService)}
                   aria-pressed={on}
                   onClick={() => setPickedService(s.id)}
                   className={cn(
-                    "flex h-28 w-full items-center gap-5 rounded-3xl px-6 text-left transition-colors disabled:cursor-default",
+                    "h-20 w-full justify-start gap-4 rounded-2xl px-4 text-left transition-colors disabled:cursor-default disabled:opacity-100",
                     on || initialService ? "tile-on" : "tile",
                   )}
                 >
-                  <Icon className={cn("h-9 w-9 shrink-0", on || initialService ? "text-brand-ink" : "text-muted-foreground")} aria-hidden="true" />
-                  <span className="text-2xl font-bold tracking-tight">{s.label}</span>
-                </button>
+                  <Icon className={cn("size-6 shrink-0", on || initialService ? "text-brand-ink" : "text-muted-foreground")} aria-hidden="true" />
+                  <span className="text-lg font-semibold">{s.label}</span>
+                </Button>
               );
             })}
           </div>
@@ -238,12 +245,12 @@ export function ReservaFlow({ initialService, campaign }: { initialService?: Ser
             </p>
           ) : (
             <>
-              {!service && <p className="mb-3 text-center text-sm text-muted-foreground">Escolha o rodízio para continuar</p>}
-              <Button variant="brand" className="h-16 w-full flex-col gap-0 text-base font-bold" disabled={!service} onClick={() => setStage("contatos")}>
-                <span>Reservar agora</span>
-                <span className="text-xs font-medium">em 1 minuto</span>
+              {loadError && <p role="alert" className="mb-3 text-sm text-destructive">{loadError}</p>}
+              {service && units && offered.length === 0 && <p role="status" className="mb-3 text-sm text-muted-foreground">Sem unidades disponíveis para este rodízio.</p>}
+              <Button className="h-12 w-full text-base font-semibold" disabled={!service || !units || offered.length === 0} onClick={() => setStage("contatos")}>
+                Reservar agora
               </Button>
-              <p className="mt-4 flex flex-wrap justify-center gap-x-5 gap-y-1 text-xs text-muted-foreground">
+              <p className="mt-3 flex flex-wrap justify-center gap-x-4 gap-y-1 text-[11px] text-muted-foreground">
                 <span className="inline-flex items-center gap-1.5"><Clock3 className="h-3.5 w-3.5" /> Disponibilidade em tempo real</span>
                 <span className="inline-flex items-center gap-1.5"><ShieldCheck className="h-3.5 w-3.5" /> Dados protegidos (LGPD)</span>
               </p>
@@ -280,13 +287,13 @@ export function ReservaFlow({ initialService, campaign }: { initialService?: Ser
         <p className="mt-2.5 text-sm font-medium text-muted-foreground">Passo {idx + 1} de {flow.length}</p>
       </div>
 
-      <div className="flex-1 pb-6 pt-5">
+      <div className="reserva-content min-w-0 flex-1 pb-4 pt-4">
         {/* contatos primeiro: o lead fica guardado mesmo que a pessoa desista */}
         {stage === "contatos" && (
           <div>
-            <StepTitle title="Seus contatos" sub="Para a equipe falar com você sobre a reserva." />
-            {service && <Chip className="mt-5">{SERVICE_LABEL[service]}</Chip>}
-            <div className="mt-6 space-y-4">
+            <StepTitle title="Seus contatos" sub="Para acompanhar sua reserva." />
+            {service && <Chip className="mt-3">{SERVICE_LABEL[service]}</Chip>}
+            <div className="mt-4 space-y-3">
               <Field label="Nome e sobrenome" error={touched && !nameOk ? "Informe nome e sobrenome." : null}>
                 <Input value={name} maxLength={120} autoComplete="name" onChange={(e) => setName(e.target.value)} className="h-14 rounded-2xl border-0 bg-surface text-base" placeholder="Como você se chama?" />
               </Field>
@@ -299,13 +306,13 @@ export function ReservaFlow({ initialService, campaign }: { initialService?: Ser
                 <label className="flex items-start gap-3">
                   <Checkbox checked={privacy} onCheckedChange={(v) => setPrivacy(v === true)} className="mt-0.5 h-5 w-5" />
                   <span>
-                    Li e aceito o aviso de privacidade: usamos nome e WhatsApp para gerenciar esta reserva e o atendimento, conforme a LGPD.
+                    Aceito o uso de nome e WhatsApp para esta reserva e atendimento (LGPD).
                   </span>
                 </label>
                 {touched && !privacy && <p className="text-destructive">É preciso aceitar o aviso de privacidade.</p>}
                 <label className="flex items-start gap-3">
                   <Checkbox checked={optIn} onCheckedChange={(v) => setOptIn(v === true)} className="mt-0.5 h-5 w-5" />
-                  <span>Quero receber a confirmação e atualizações pelo WhatsApp.</span>
+                  <span>Receber atualizações pelo WhatsApp (opcional).</span>
                 </label>
               </div>
             </div>
@@ -333,7 +340,7 @@ export function ReservaFlow({ initialService, campaign }: { initialService?: Ser
                   <div className="min-w-0">
                     <p className="text-lg font-semibold">{u.name}</p>
                     {(u.address || u.city) && (
-                      <p className="mt-0.5 flex items-center gap-1 truncate text-sm opacity-70">
+                      <p className="mt-0.5 flex items-start gap-1 text-sm opacity-70">
                         <MapPin className="h-3.5 w-3.5 shrink-0" /> {[u.address, u.city].filter(Boolean).join(" · ")}
                       </p>
                     )}
@@ -346,8 +353,8 @@ export function ReservaFlow({ initialService, campaign }: { initialService?: Ser
 
         {stage === "pessoas" && (
           <div>
-            <StepTitle title="Quantas pessoas?" sub="Use os botões ou toque no número para digitar." />
-            <div className="mt-10 flex items-center justify-between">
+            <StepTitle title="Quantas pessoas?" />
+            <div className="mt-6 grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2">
               <button
                 aria-label="Menos uma pessoa"
                 disabled={people <= 1}
@@ -368,7 +375,7 @@ export function ReservaFlow({ initialService, campaign }: { initialService?: Ser
                     const digits = e.target.value.replace(/\D/g, "");
                     setPeopleRaw(digits === "" ? "" : String(parsePeople(digits)));
                   }}
-                  className="w-44 bg-transparent text-center text-8xl font-extrabold tabular-nums tracking-tighter outline-none placeholder:text-muted-foreground focus-visible:underline focus-visible:decoration-brand focus-visible:decoration-4 focus-visible:underline-offset-8"
+                  className="w-full min-w-0 bg-transparent text-center text-6xl font-bold tabular-nums outline-none placeholder:text-muted-foreground focus-visible:underline focus-visible:decoration-brand focus-visible:decoration-4 focus-visible:underline-offset-8"
                 />
                 <p className="mt-1 text-lg font-medium text-muted-foreground">{people === 1 ? "pessoa" : "pessoas"}</p>
               </div>
@@ -381,7 +388,7 @@ export function ReservaFlow({ initialService, campaign }: { initialService?: Ser
                 <Plus className="h-6 w-6" />
               </button>
             </div>
-            <div className="mt-9 flex flex-wrap justify-center gap-2">
+            <div className="mt-6 flex flex-wrap justify-center gap-2">
               {QUICK_PEOPLE.map((n) => (
                 <button
                   key={n}
@@ -410,13 +417,14 @@ export function ReservaFlow({ initialService, campaign }: { initialService?: Ser
               </button>
             </div>
 
-            {!availableDates ? <Loading /> : availableDates.size === 0 ? (
+            {loadError && <div role="alert" className="mt-3 text-sm text-destructive">{loadError} <Button variant="outline" size="sm" onClick={() => setReloadKey((k) => k + 1)}>Tentar novamente</Button></div>}
+            {!availableDates ? <Loading /> : availableDates.size === 0 && !loadError ? (
               <p className="mt-4 rounded-2xl bg-surface p-4 text-sm text-muted-foreground">
                 Não há datas disponíveis para {pessoas(people)} neste momento. Tente outra quantidade de pessoas.
               </p>
             ) : (
               <>
-                <div className="no-scrollbar -mx-6 mt-3 flex gap-2 overflow-x-auto px-6">
+                <div className="mt-3 grid grid-cols-7 gap-1">
                   {days.map((d, i) => {
                     const iso = toIsoDate(d);
                     const on = date === iso;
@@ -429,14 +437,14 @@ export function ReservaFlow({ initialService, campaign }: { initialService?: Ser
                         aria-label={formatDateLong(iso)}
                         onClick={() => { setDate(iso); setTime(null); setCalOpen(false); setSlotNotice(null); }}
                         className={cn(
-                          "flex h-20 w-16 shrink-0 flex-col items-center justify-center gap-1 rounded-2xl transition-colors disabled:opacity-30",
+                          "flex h-16 min-w-0 flex-col items-center justify-center gap-1 rounded-xl transition-colors disabled:opacity-30",
                           on ? "tile-on" : "bg-surface",
                         )}
                       >
                         <span className="text-xs font-semibold uppercase tracking-wide opacity-80">
                           {i === 0 ? "hoje" : d.toLocaleDateString("pt-BR", { weekday: "short" }).replace(".", "")}
                         </span>
-                        <span className="text-2xl font-bold tabular-nums tracking-tight">{d.getDate()}</span>
+                        <span className="text-lg font-bold tabular-nums">{d.getDate()}</span>
                         <span className={cn("h-1.5 w-1.5 rounded-full", on ? "bg-brand" : "bg-transparent")} />
                       </button>
                     );
@@ -448,7 +456,7 @@ export function ReservaFlow({ initialService, campaign }: { initialService?: Ser
                     <Calendar
                       mode="single"
                       locale={ptBR}
-                      className="bg-transparent [--cell-size:2.6rem]"
+                      className="bg-transparent [--cell-size:2.2rem] sm:[--cell-size:2.6rem]"
                       selected={date ? fromIsoDate(date) : undefined}
                       onSelect={(d) => { if (d) { setDate(toIsoDate(d)); setTime(null); setCalOpen(false); setSlotNotice(null); } }}
                       disabled={(d) => !availableDates.has(toIsoDate(d))}
@@ -495,8 +503,8 @@ export function ReservaFlow({ initialService, campaign }: { initialService?: Ser
 
         {stage === "ocasiao" && (
           <div>
-            <StepTitle title="É uma ocasião especial?" sub="Assim a equipe se prepara para receber você." />
-            <div className="mt-6 grid grid-cols-2 gap-2.5">
+            <StepTitle title="Qual a ocasião?" />
+            <div className="mt-4 grid grid-cols-2 gap-2.5">
               {OCCASIONS.map((o) => {
                 const Icon = OCCASION_ICON[o.id];
                 const on = occasion === o.id;
@@ -505,10 +513,10 @@ export function ReservaFlow({ initialService, campaign }: { initialService?: Ser
                     key={o.id}
                     aria-pressed={on}
                     onClick={() => setOccasion(o.id)}
-                    className={cn("flex h-24 flex-col items-start justify-center gap-2 rounded-3xl px-4 text-left transition-colors", on ? "tile-on" : "bg-surface")}
+                    className={cn("flex h-16 items-center gap-2 rounded-2xl px-3 text-left transition-colors", on ? "tile-on" : "bg-surface")}
                   >
                     <Icon className={cn("h-6 w-6", on ? "text-brand-ink" : "text-muted-foreground")} aria-hidden="true" />
-                    <span className="text-base font-semibold tracking-tight">{o.label}</span>
+                    <span className="text-sm font-semibold">{o.label}</span>
                   </button>
                 );
               })}
@@ -524,11 +532,11 @@ export function ReservaFlow({ initialService, campaign }: { initialService?: Ser
 
             {occasion && (
               <div className="fade-up mt-5">
-                <Field label="Quer que a gente prepare algo? (opcional)">
+                <Field label="Observação (opcional)">
                   <Textarea
                     value={notes}
                     maxLength={NOTE_MAX}
-                    rows={3}
+                    rows={2}
                     onChange={(e) => setNotes(e.target.value)}
                     className="rounded-2xl border-0 bg-surface text-base"
                     placeholder="Ex.: surpresa com bolo, alergia, cadeirinha de bebê…"
@@ -571,9 +579,9 @@ export function ReservaFlow({ initialService, campaign }: { initialService?: Ser
 }
 
 function Shell({ children }: { children: ReactNode }) {
-  return <main className="mx-auto flex min-h-[100dvh] w-full max-w-md flex-col px-6">{children}</main>;
+  return <main className="mx-auto flex min-h-[100dvh] w-full min-w-0 max-w-md flex-col px-5">{children}</main>;
 }
 
 function Footer({ children }: { children: ReactNode }) {
-  return <footer className="sticky bottom-0 -mx-6 bg-background px-6 pb-6 pt-3">{children}</footer>;
+  return <footer className="reserva-footer sticky bottom-0 z-10 -mx-5 shrink-0 border-t bg-background px-5 pt-3">{children}</footer>;
 }
