@@ -1,12 +1,103 @@
 import { ApiError } from "@/lib/integration/errors";
 import {
-  availabilityQuery, classifyBody, createReservationBody, findReservationsQuery, handoffBody, patchReservationBody, sacBody,
+  availabilityQuery, classifyBody, contextQuery, createReservationBody, deliveryBody, findDeliveryQuery, findReservationsQuery,
+  followupMarkBody, followupsDueQuery, handoffBody, patchReservationBody, pricesQuery, sacBody,
 } from "@/lib/integration/sdr-schemas";
-import { cancelMessage, handoffMessage, reservationMessage, reservationUpdateMessage, sacMessage } from "@/lib/integration/messages";
+import { cancelMessage, deliveryMessage, handoffMessage, reservationMessage, reservationUpdateMessage, sacMessage } from "@/lib/integration/messages";
+import { PRICE_DISCLAIMER, WEEKDAY_NAMES, formatServices, priceText, type RawPrices } from "@/lib/prices";
 import { db, handleSdr, parseWith, rpc } from "./sdr.server";
 
-type Unit = { id: string; slug: string; name: string };
+type Unit = { id: string; slug: string; name: string; city?: string | null; services?: string[]; has_delivery?: boolean };
 type ResOut = { protocol: string; status: string; previous_status: string; unit_name: string; date: string; time: string; party_size: number; is_large_group: boolean };
+
+const todaySp = () => new Date().toLocaleDateString("en-CA", { timeZone: "America/Sao_Paulo" });
+
+/** Unidade por id, slug ou caixa de entrada do CRM ("conta:caixa" ou só o id da caixa). Null se não achar. */
+async function findUnit(q: { unit_id?: string | undefined; unit_slug?: string | undefined; inbox?: string | undefined }): Promise<Unit | null> {
+  const units = await rpc<Unit[]>("sdr_list_units", {});
+  if (q.unit_id || q.unit_slug) return units.find((u) => u.id === q.unit_id || u.slug === q.unit_slug) ?? null;
+  if (q.inbox) {
+    const id = await rpc<string | null>("sdr_unit_by_inbox", { _inbox: q.inbox });
+    return id ? units.find((u) => u.id === id) ?? null : null;
+  }
+  return null;
+}
+
+async function pricesFor(unitId: string, date: string) {
+  const raw = await rpc<RawPrices | null>("resolve_unit_prices", { _unit_id: unitId, _date: date });
+  if (!raw) throw new ApiError("UNIT_NOT_FOUND");
+  return {
+    unidade: raw.unit.name,
+    data: raw.date,
+    dia_da_semana: raw.is_holiday && raw.holiday_name ? `feriado (${raw.holiday_name})` : WEEKDAY_NAMES[raw.weekday],
+    servicos: formatServices(raw),
+    aviso: PRICE_DISCLAIMER,
+    texto: priceText(raw),
+  };
+}
+
+/** Valores vigentes da unidade na data (padrão: hoje). Nunca invente valores: use esta resposta. */
+export const prices = (request: Request) =>
+  handleSdr(request, { endpoint: "/prices", scope: "read" }, async ({ url }) => {
+    const q = parseWith(pricesQuery, Object.fromEntries(url.searchParams));
+    const unit = await findUnit(q);
+    if (!unit) throw new ApiError("UNIT_NOT_FOUND");
+    return { data: await pricesFor(unit.id, q.date ?? todaySp()) };
+  });
+
+/**
+ * Contexto para abrir uma conversa: data de hoje, unidade da caixa de entrada (ou null se a caixa não estiver
+ * mapeada: aí o atendente pergunta a unidade), lista de unidades e, havendo unidade, os valores de hoje.
+ */
+export const context = (request: Request) =>
+  handleSdr(request, { endpoint: "/context", scope: "read" }, async ({ url }) => {
+    const q = parseWith(contextQuery, Object.fromEntries(url.searchParams));
+    const date = q.date ?? todaySp();
+    const units = await rpc<Unit[]>("sdr_list_units", {});
+    const unit = await findUnit(q);
+    const unidades = units.map((u) => ({ id: u.id, slug: u.slug, nome: u.name, cidade: u.city ?? null, servicos: u.services ?? [], delivery: u.has_delivery ?? false }));
+    const precos = unit ? await pricesFor(unit.id, date) : null;
+    return {
+      data: {
+        hoje: { data: date, dia_da_semana: precos?.dia_da_semana ?? WEEKDAY_NAMES[new Date(`${date}T12:00:00`).getDay()] },
+        unidade: unit,
+        unidades,
+        precos,
+      },
+    };
+  });
+
+export const createDelivery = (request: Request) =>
+  handleSdr(request, { endpoint: "/delivery", scope: "write", idempotent: true }, async ({ body }) => {
+    const b = parseWith(deliveryBody, body);
+    const r = await rpc<{ protocol: string; status: string; unit_name: string }>("sdr_create_delivery_order", {
+      _unit_id: b.unit_id, _full_name: b.full_name, _phone: b.phone, _items_text: b.items, _address: b.address,
+      _neighborhood: b.neighborhood ?? null, _address_reference: b.address_reference ?? null, _payment_method: b.payment_method ?? null,
+      _change_for: b.change_for ?? null, _notes: b.notes ?? null, _conversation_external_id: b.conversation_external_id ?? null,
+    });
+    return { status: 201, data: r, mensagem_sugerida: deliveryMessage(r.protocol) };
+  });
+
+export const findDelivery = (request: Request) =>
+  handleSdr(request, { endpoint: "/delivery", scope: "read" }, async ({ url }) => {
+    const q = parseWith(findDeliveryQuery, Object.fromEntries(url.searchParams));
+    const list = await rpc<unknown[]>("sdr_get_delivery_orders", { _phone: q.phone, _protocol: q.protocol ?? null });
+    return { data: list, mensagem_sugerida: list.length ? undefined : "Não encontrei pedidos de delivery recentes para este telefone." };
+  });
+
+/** Lembretes de reserva a enviar agora (véspera e no dia). Quem envia é o fluxo agendado do n8n. */
+export const followupsDue = (request: Request) =>
+  handleSdr(request, { endpoint: "/followups/due", scope: "read" }, async ({ url }) => {
+    const q = parseWith(followupsDueQuery, Object.fromEntries(url.searchParams));
+    return { data: await rpc<unknown[]>("sdr_followups_due", { _limit: q.limit }) };
+  });
+
+export const markFollowup = (request: Request) =>
+  handleSdr(request, { endpoint: "/followups", scope: "write" }, async ({ body }) => {
+    const b = parseWith(followupMarkBody, body);
+    await rpc("sdr_mark_followup", { _protocol: b.protocol, _kind: b.kind, _ok: b.ok, _error: b.error ?? null });
+    return { data: { protocol: b.protocol, kind: b.kind, ok: b.ok } };
+  });
 
 export const listUnits = (request: Request) =>
   handleSdr(request, { endpoint: "/units", scope: "read" }, async () => ({ data: await rpc("sdr_list_units", {}) }));
@@ -42,6 +133,7 @@ export const createReservation = (request: Request) =>
       _unit_id: b.unit_id, _date: b.date, _time: b.time, _party_size: b.party_size, _full_name: b.full_name, _phone: b.phone,
       _notes: b.notes ?? null, _whatsapp_opt_in: b.whatsapp_opt_in,
       _conversation_external_id: b.conversation_external_id ?? null, _contact_external_id: b.contact_external_id ?? null,
+      _service: b.service ?? null, _occasion: b.occasion ?? null, _celebrant_name: b.celebrant_name ?? null,
     });
     return { status: 201, data: r, mensagem_sugerida: reservationMessage(r) };
   });

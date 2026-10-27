@@ -4,6 +4,8 @@ import { ArrowLeft, Loader2, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
+import { PRICE_SERVICES } from "@/lib/prices";
 import { requireSupabase } from "@/lib/supabase";
 import { WEEKDAYS, hhmm } from "@/lib/format";
 
@@ -15,6 +17,7 @@ type Unit = {
   id: string; name: string; address: string | null; city: string | null; phone: string | null; description: string | null;
   photo_url: string | null; is_active: boolean; accepts_online_reservations: boolean; auto_confirm: boolean;
   min_advance_minutes: number; max_advance_days: number; large_group_threshold: number;
+  services: string[]; has_delivery: boolean; agent_notes: string | null;
 };
 type Rule = { id: string; weekday: number; start_time: string; end_time: string; slot_interval_minutes: number; max_guests_per_slot: number; max_party_size: number; is_active: boolean };
 type Block = { id: string; block_date: string; start_time: string | null; end_time: string | null; kind: string; reason: string | null };
@@ -74,6 +77,31 @@ function UnitDetail() {
           <Toggle label="Confirmar automaticamente quando houver vaga (grupos grandes sempre ficam pendentes)" checked={unit.auto_confirm} onChange={(v) => set("auto_confirm", v)} />
         </div>
         <div className="mt-6 flex items-center gap-4">
+          <Button onClick={saveUnit}>Salvar</Button>
+          {msg && <span className="text-sm text-muted-foreground">{msg}</span>}
+        </div>
+      </Section>
+
+      <Section title="Atendente de WhatsApp">
+        <p className="mb-4 text-sm text-muted-foreground">O que esta unidade oferece e o que o atendente deve saber. Os valores ficam em <strong>Valores</strong>.</p>
+        <div className="grid gap-2 sm:grid-cols-2">
+          {PRICE_SERVICES.map((s) => {
+            const on = unit.services.includes(s.id);
+            return (
+              <label key={s.id} className="flex items-center gap-3 rounded-2xl bg-surface px-4 py-3 text-sm">
+                <input type="checkbox" className="h-4 w-4" checked={on}
+                  onChange={() => set("services", on ? unit.services.filter((x) => x !== s.id) : [...unit.services, s.id])} />
+                {s.title}
+              </label>
+            );
+          })}
+        </div>
+        <div className="mt-4"><Toggle label="Faz delivery (o atendente passa a registrar pedidos de delivery)" checked={unit.has_delivery} onChange={(v) => set("has_delivery", v)} /></div>
+        <L label="Informações para o atendente (endereço, horários, brinquedoteca, regras da casa…)">
+          <Textarea value={unit.agent_notes ?? ""} maxLength={4000} rows={6} onChange={(e) => set("agent_notes", e.target.value || null)} className="mt-1 rounded-xl" />
+        </L>
+        <p className="mt-1 text-xs text-muted-foreground">O atendente só afirma o que estiver aqui ou nos valores; o que faltar, ele encaminha para a equipe.</p>
+        <div className="mt-5 flex items-center gap-4">
           <Button onClick={saveUnit}>Salvar</Button>
           {msg && <span className="text-sm text-muted-foreground">{msg}</span>}
         </div>

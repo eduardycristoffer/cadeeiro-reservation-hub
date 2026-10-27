@@ -1,7 +1,7 @@
 import { BrandLogo } from "@/components/BrandLogo";
 import { createFileRoute, Link, Outlet, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
-import { Building2, CalendarDays, LayoutGrid, LogOut, Loader2, Plug, Users } from "lucide-react";
+import { Building2, CalendarDays, LayoutGrid, LogOut, Loader2, Plug, Tag, Truck, Users } from "lucide-react";
 import { AuthProvider, useAuth } from "@/lib/auth";
 import { isSupabaseConfigured, supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
@@ -29,6 +29,8 @@ export const Route = createFileRoute("/admin")({
 const NAV = [
   { to: "/admin", label: "Início", icon: LayoutGrid, exact: true },
   { to: "/admin/reservas", label: "Reservas", icon: CalendarDays, exact: false },
+  { to: "/admin/delivery", label: "Delivery", icon: Truck, exact: false },
+  { to: "/admin/valores", label: "Valores", icon: Tag, exact: false, managerOnly: true },
   { to: "/admin/unidades", label: "Unidades", icon: Building2, exact: false },
   { to: "/admin/equipe", label: "Equipe", icon: Users, exact: false, superOnly: true },
   { to: "/admin/integracoes", label: "Integrações", icon: Plug, exact: false, superOnly: true },
@@ -58,7 +60,8 @@ function AdminShell() {
     );
   }
 
-  const nav = NAV.filter((n) => !("superOnly" in n) || roles.includes("super_admin"));
+  const isManager = roles.includes("super_admin") || roles.includes("gestor");
+  const nav = NAV.filter((n) => (!("superOnly" in n) || roles.includes("super_admin")) && (!("managerOnly" in n) || isManager));
 
   return (
     <div className="flex min-h-screen bg-background">

@@ -13,22 +13,29 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as EntrarRouteImport } from './routes/entrar'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
+import { Route as AdminDeliveryRouteImport } from './routes/admin.delivery'
 import { Route as AdminEquipeRouteImport } from './routes/admin.equipe'
 import { Route as AdminIntegracoesRouteImport } from './routes/admin.integracoes'
 import { Route as AdminReservasRouteImport } from './routes/admin.reservas'
+import { Route as AdminValoresRouteImport } from './routes/admin.valores'
 import { Route as ReservarIndexRouteImport } from './routes/reservar.index'
 import { Route as ReservarSucessoRouteImport } from './routes/reservar.sucesso'
 import { Route as AdminUnidadesIndexRouteImport } from './routes/admin.unidades.index'
 import { Route as AdminUnidadesUnitIdRouteImport } from './routes/admin.unidades.$unitId'
 import { Route as ApiPublicCrmWorkerRouteImport } from './routes/api.public.crm.worker'
 import { Route as ApiPublicSdrAvailabilityRouteImport } from './routes/api.public.sdr.availability'
+import { Route as ApiPublicSdrContextRouteImport } from './routes/api.public.sdr.context'
+import { Route as ApiPublicSdrDeliveryRouteImport } from './routes/api.public.sdr.delivery'
+import { Route as ApiPublicSdrFollowupsRouteImport } from './routes/api.public.sdr.followups'
 import { Route as ApiPublicSdrHandoffRouteImport } from './routes/api.public.sdr.handoff'
 import { Route as ApiPublicSdrOpenapiDotjsonRouteImport } from './routes/api.public.sdr.openapi[.]json'
+import { Route as ApiPublicSdrPricesRouteImport } from './routes/api.public.sdr.prices'
 import { Route as ApiPublicSdrReservationsRouteImport } from './routes/api.public.sdr.reservations'
 import { Route as ApiPublicSdrSacRouteImport } from './routes/api.public.sdr.sac'
 import { Route as ApiPublicSdrUnitsRouteImport } from './routes/api.public.sdr.units'
 import { Route as ApiPublicCrmWebhookTokenRouteImport } from './routes/api.public.crm.webhook.$token'
 import { Route as ApiPublicSdrConversationsClassifyRouteImport } from './routes/api.public.sdr.conversations.classify'
+import { Route as ApiPublicSdrFollowupsDueRouteImport } from './routes/api.public.sdr.followups.due'
 import { Route as ApiPublicSdrReservationsProtocolRouteImport } from './routes/api.public.sdr.reservations.$protocol'
 
 const IndexRoute = IndexRouteImport.update({
@@ -51,6 +58,11 @@ const AdminIndexRoute = AdminIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminDeliveryRoute = AdminDeliveryRouteImport.update({
+  id: '/delivery',
+  path: '/delivery',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminEquipeRoute = AdminEquipeRouteImport.update({
   id: '/equipe',
   path: '/equipe',
@@ -64,6 +76,11 @@ const AdminIntegracoesRoute = AdminIntegracoesRouteImport.update({
 const AdminReservasRoute = AdminReservasRouteImport.update({
   id: '/reservas',
   path: '/reservas',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminValoresRoute = AdminValoresRouteImport.update({
+  id: '/valores',
+  path: '/valores',
   getParentRoute: () => AdminRoute,
 } as any)
 const ReservarIndexRoute = ReservarIndexRouteImport.update({
@@ -97,6 +114,21 @@ const ApiPublicSdrAvailabilityRoute =
     path: '/api/public/sdr/availability',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicSdrContextRoute = ApiPublicSdrContextRouteImport.update({
+  id: '/api/public/sdr/context',
+  path: '/api/public/sdr/context',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicSdrDeliveryRoute = ApiPublicSdrDeliveryRouteImport.update({
+  id: '/api/public/sdr/delivery',
+  path: '/api/public/sdr/delivery',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicSdrFollowupsRoute = ApiPublicSdrFollowupsRouteImport.update({
+  id: '/api/public/sdr/followups',
+  path: '/api/public/sdr/followups',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicSdrHandoffRoute = ApiPublicSdrHandoffRouteImport.update({
   id: '/api/public/sdr/handoff',
   path: '/api/public/sdr/handoff',
@@ -108,6 +140,11 @@ const ApiPublicSdrOpenapiDotjsonRoute =
     path: '/api/public/sdr/openapi.json',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicSdrPricesRoute = ApiPublicSdrPricesRouteImport.update({
+  id: '/api/public/sdr/prices',
+  path: '/api/public/sdr/prices',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicSdrReservationsRoute =
   ApiPublicSdrReservationsRouteImport.update({
     id: '/api/public/sdr/reservations',
@@ -136,6 +173,12 @@ const ApiPublicSdrConversationsClassifyRoute =
     path: '/api/public/sdr/conversations/classify',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicSdrFollowupsDueRoute =
+  ApiPublicSdrFollowupsDueRouteImport.update({
+    id: '/due',
+    path: '/due',
+    getParentRoute: () => ApiPublicSdrFollowupsRoute,
+  } as any)
 const ApiPublicSdrReservationsProtocolRoute =
   ApiPublicSdrReservationsProtocolRouteImport.update({
     id: '/$protocol',
@@ -147,9 +190,11 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
   '/entrar': typeof EntrarRoute
+  '/admin/delivery': typeof AdminDeliveryRoute
   '/admin/equipe': typeof AdminEquipeRoute
   '/admin/integracoes': typeof AdminIntegracoesRoute
   '/admin/reservas': typeof AdminReservasRoute
+  '/admin/valores': typeof AdminValoresRoute
   '/reservar/sucesso': typeof ReservarSucessoRoute
   '/admin/': typeof AdminIndexRoute
   '/reservar/': typeof ReservarIndexRoute
@@ -157,21 +202,28 @@ export interface FileRoutesByFullPath {
   '/admin/unidades/': typeof AdminUnidadesIndexRoute
   '/api/public/crm/worker': typeof ApiPublicCrmWorkerRoute
   '/api/public/sdr/availability': typeof ApiPublicSdrAvailabilityRoute
+  '/api/public/sdr/context': typeof ApiPublicSdrContextRoute
+  '/api/public/sdr/delivery': typeof ApiPublicSdrDeliveryRoute
+  '/api/public/sdr/followups': typeof ApiPublicSdrFollowupsRouteWithChildren
   '/api/public/sdr/handoff': typeof ApiPublicSdrHandoffRoute
   '/api/public/sdr/openapi.json': typeof ApiPublicSdrOpenapiDotjsonRoute
+  '/api/public/sdr/prices': typeof ApiPublicSdrPricesRoute
   '/api/public/sdr/reservations': typeof ApiPublicSdrReservationsRouteWithChildren
   '/api/public/sdr/sac': typeof ApiPublicSdrSacRoute
   '/api/public/sdr/units': typeof ApiPublicSdrUnitsRoute
   '/api/public/crm/webhook/$token': typeof ApiPublicCrmWebhookTokenRoute
   '/api/public/sdr/conversations/classify': typeof ApiPublicSdrConversationsClassifyRoute
+  '/api/public/sdr/followups/due': typeof ApiPublicSdrFollowupsDueRoute
   '/api/public/sdr/reservations/$protocol': typeof ApiPublicSdrReservationsProtocolRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/entrar': typeof EntrarRoute
+  '/admin/delivery': typeof AdminDeliveryRoute
   '/admin/equipe': typeof AdminEquipeRoute
   '/admin/integracoes': typeof AdminIntegracoesRoute
   '/admin/reservas': typeof AdminReservasRoute
+  '/admin/valores': typeof AdminValoresRoute
   '/reservar/sucesso': typeof ReservarSucessoRoute
   '/admin': typeof AdminIndexRoute
   '/reservar': typeof ReservarIndexRoute
@@ -179,13 +231,18 @@ export interface FileRoutesByTo {
   '/admin/unidades': typeof AdminUnidadesIndexRoute
   '/api/public/crm/worker': typeof ApiPublicCrmWorkerRoute
   '/api/public/sdr/availability': typeof ApiPublicSdrAvailabilityRoute
+  '/api/public/sdr/context': typeof ApiPublicSdrContextRoute
+  '/api/public/sdr/delivery': typeof ApiPublicSdrDeliveryRoute
+  '/api/public/sdr/followups': typeof ApiPublicSdrFollowupsRouteWithChildren
   '/api/public/sdr/handoff': typeof ApiPublicSdrHandoffRoute
   '/api/public/sdr/openapi.json': typeof ApiPublicSdrOpenapiDotjsonRoute
+  '/api/public/sdr/prices': typeof ApiPublicSdrPricesRoute
   '/api/public/sdr/reservations': typeof ApiPublicSdrReservationsRouteWithChildren
   '/api/public/sdr/sac': typeof ApiPublicSdrSacRoute
   '/api/public/sdr/units': typeof ApiPublicSdrUnitsRoute
   '/api/public/crm/webhook/$token': typeof ApiPublicCrmWebhookTokenRoute
   '/api/public/sdr/conversations/classify': typeof ApiPublicSdrConversationsClassifyRoute
+  '/api/public/sdr/followups/due': typeof ApiPublicSdrFollowupsDueRoute
   '/api/public/sdr/reservations/$protocol': typeof ApiPublicSdrReservationsProtocolRoute
 }
 export interface FileRoutesById {
@@ -193,9 +250,11 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
   '/entrar': typeof EntrarRoute
+  '/admin/delivery': typeof AdminDeliveryRoute
   '/admin/equipe': typeof AdminEquipeRoute
   '/admin/integracoes': typeof AdminIntegracoesRoute
   '/admin/reservas': typeof AdminReservasRoute
+  '/admin/valores': typeof AdminValoresRoute
   '/reservar/sucesso': typeof ReservarSucessoRoute
   '/admin/': typeof AdminIndexRoute
   '/reservar/': typeof ReservarIndexRoute
@@ -203,13 +262,18 @@ export interface FileRoutesById {
   '/admin/unidades/': typeof AdminUnidadesIndexRoute
   '/api/public/crm/worker': typeof ApiPublicCrmWorkerRoute
   '/api/public/sdr/availability': typeof ApiPublicSdrAvailabilityRoute
+  '/api/public/sdr/context': typeof ApiPublicSdrContextRoute
+  '/api/public/sdr/delivery': typeof ApiPublicSdrDeliveryRoute
+  '/api/public/sdr/followups': typeof ApiPublicSdrFollowupsRouteWithChildren
   '/api/public/sdr/handoff': typeof ApiPublicSdrHandoffRoute
   '/api/public/sdr/openapi.json': typeof ApiPublicSdrOpenapiDotjsonRoute
+  '/api/public/sdr/prices': typeof ApiPublicSdrPricesRoute
   '/api/public/sdr/reservations': typeof ApiPublicSdrReservationsRouteWithChildren
   '/api/public/sdr/sac': typeof ApiPublicSdrSacRoute
   '/api/public/sdr/units': typeof ApiPublicSdrUnitsRoute
   '/api/public/crm/webhook/$token': typeof ApiPublicCrmWebhookTokenRoute
   '/api/public/sdr/conversations/classify': typeof ApiPublicSdrConversationsClassifyRoute
+  '/api/public/sdr/followups/due': typeof ApiPublicSdrFollowupsDueRoute
   '/api/public/sdr/reservations/$protocol': typeof ApiPublicSdrReservationsProtocolRoute
 }
 export interface FileRouteTypes {
@@ -218,9 +282,11 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/entrar'
+    | '/admin/delivery'
     | '/admin/equipe'
     | '/admin/integracoes'
     | '/admin/reservas'
+    | '/admin/valores'
     | '/reservar/sucesso'
     | '/admin/'
     | '/reservar/'
@@ -228,21 +294,28 @@ export interface FileRouteTypes {
     | '/admin/unidades/'
     | '/api/public/crm/worker'
     | '/api/public/sdr/availability'
+    | '/api/public/sdr/context'
+    | '/api/public/sdr/delivery'
+    | '/api/public/sdr/followups'
     | '/api/public/sdr/handoff'
     | '/api/public/sdr/openapi.json'
+    | '/api/public/sdr/prices'
     | '/api/public/sdr/reservations'
     | '/api/public/sdr/sac'
     | '/api/public/sdr/units'
     | '/api/public/crm/webhook/$token'
     | '/api/public/sdr/conversations/classify'
+    | '/api/public/sdr/followups/due'
     | '/api/public/sdr/reservations/$protocol'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/entrar'
+    | '/admin/delivery'
     | '/admin/equipe'
     | '/admin/integracoes'
     | '/admin/reservas'
+    | '/admin/valores'
     | '/reservar/sucesso'
     | '/admin'
     | '/reservar'
@@ -250,22 +323,29 @@ export interface FileRouteTypes {
     | '/admin/unidades'
     | '/api/public/crm/worker'
     | '/api/public/sdr/availability'
+    | '/api/public/sdr/context'
+    | '/api/public/sdr/delivery'
+    | '/api/public/sdr/followups'
     | '/api/public/sdr/handoff'
     | '/api/public/sdr/openapi.json'
+    | '/api/public/sdr/prices'
     | '/api/public/sdr/reservations'
     | '/api/public/sdr/sac'
     | '/api/public/sdr/units'
     | '/api/public/crm/webhook/$token'
     | '/api/public/sdr/conversations/classify'
+    | '/api/public/sdr/followups/due'
     | '/api/public/sdr/reservations/$protocol'
   id:
     | '__root__'
     | '/'
     | '/admin'
     | '/entrar'
+    | '/admin/delivery'
     | '/admin/equipe'
     | '/admin/integracoes'
     | '/admin/reservas'
+    | '/admin/valores'
     | '/reservar/sucesso'
     | '/admin/'
     | '/reservar/'
@@ -273,13 +353,18 @@ export interface FileRouteTypes {
     | '/admin/unidades/'
     | '/api/public/crm/worker'
     | '/api/public/sdr/availability'
+    | '/api/public/sdr/context'
+    | '/api/public/sdr/delivery'
+    | '/api/public/sdr/followups'
     | '/api/public/sdr/handoff'
     | '/api/public/sdr/openapi.json'
+    | '/api/public/sdr/prices'
     | '/api/public/sdr/reservations'
     | '/api/public/sdr/sac'
     | '/api/public/sdr/units'
     | '/api/public/crm/webhook/$token'
     | '/api/public/sdr/conversations/classify'
+    | '/api/public/sdr/followups/due'
     | '/api/public/sdr/reservations/$protocol'
   fileRoutesById: FileRoutesById
 }
@@ -291,8 +376,12 @@ export interface RootRouteChildren {
   ReservarIndexRoute: typeof ReservarIndexRoute
   ApiPublicCrmWorkerRoute: typeof ApiPublicCrmWorkerRoute
   ApiPublicSdrAvailabilityRoute: typeof ApiPublicSdrAvailabilityRoute
+  ApiPublicSdrContextRoute: typeof ApiPublicSdrContextRoute
+  ApiPublicSdrDeliveryRoute: typeof ApiPublicSdrDeliveryRoute
+  ApiPublicSdrFollowupsRoute: typeof ApiPublicSdrFollowupsRouteWithChildren
   ApiPublicSdrHandoffRoute: typeof ApiPublicSdrHandoffRoute
   ApiPublicSdrOpenapiDotjsonRoute: typeof ApiPublicSdrOpenapiDotjsonRoute
+  ApiPublicSdrPricesRoute: typeof ApiPublicSdrPricesRoute
   ApiPublicSdrReservationsRoute: typeof ApiPublicSdrReservationsRouteWithChildren
   ApiPublicSdrSacRoute: typeof ApiPublicSdrSacRoute
   ApiPublicSdrUnitsRoute: typeof ApiPublicSdrUnitsRoute
@@ -330,6 +419,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminIndexRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/delivery': {
+      id: '/admin/delivery'
+      path: '/delivery'
+      fullPath: '/admin/delivery'
+      preLoaderRoute: typeof AdminDeliveryRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/equipe': {
       id: '/admin/equipe'
       path: '/equipe'
@@ -349,6 +445,13 @@ declare module '@tanstack/react-router' {
       path: '/reservas'
       fullPath: '/admin/reservas'
       preLoaderRoute: typeof AdminReservasRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/valores': {
+      id: '/admin/valores'
+      path: '/valores'
+      fullPath: '/admin/valores'
+      preLoaderRoute: typeof AdminValoresRouteImport
       parentRoute: typeof AdminRoute
     }
     '/reservar/': {
@@ -393,6 +496,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicSdrAvailabilityRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/sdr/context': {
+      id: '/api/public/sdr/context'
+      path: '/api/public/sdr/context'
+      fullPath: '/api/public/sdr/context'
+      preLoaderRoute: typeof ApiPublicSdrContextRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/sdr/delivery': {
+      id: '/api/public/sdr/delivery'
+      path: '/api/public/sdr/delivery'
+      fullPath: '/api/public/sdr/delivery'
+      preLoaderRoute: typeof ApiPublicSdrDeliveryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/sdr/followups': {
+      id: '/api/public/sdr/followups'
+      path: '/api/public/sdr/followups'
+      fullPath: '/api/public/sdr/followups'
+      preLoaderRoute: typeof ApiPublicSdrFollowupsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/sdr/handoff': {
       id: '/api/public/sdr/handoff'
       path: '/api/public/sdr/handoff'
@@ -405,6 +529,13 @@ declare module '@tanstack/react-router' {
       path: '/api/public/sdr/openapi.json'
       fullPath: '/api/public/sdr/openapi.json'
       preLoaderRoute: typeof ApiPublicSdrOpenapiDotjsonRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/sdr/prices': {
+      id: '/api/public/sdr/prices'
+      path: '/api/public/sdr/prices'
+      fullPath: '/api/public/sdr/prices'
+      preLoaderRoute: typeof ApiPublicSdrPricesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/sdr/reservations': {
@@ -442,6 +573,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicSdrConversationsClassifyRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/sdr/followups/due': {
+      id: '/api/public/sdr/followups/due'
+      path: '/due'
+      fullPath: '/api/public/sdr/followups/due'
+      preLoaderRoute: typeof ApiPublicSdrFollowupsDueRouteImport
+      parentRoute: typeof ApiPublicSdrFollowupsRoute
+    }
     '/api/public/sdr/reservations/$protocol': {
       id: '/api/public/sdr/reservations/$protocol'
       path: '/$protocol'
@@ -453,24 +591,41 @@ declare module '@tanstack/react-router' {
 }
 
 interface AdminRouteChildren {
+  AdminDeliveryRoute: typeof AdminDeliveryRoute
   AdminEquipeRoute: typeof AdminEquipeRoute
   AdminIntegracoesRoute: typeof AdminIntegracoesRoute
   AdminReservasRoute: typeof AdminReservasRoute
+  AdminValoresRoute: typeof AdminValoresRoute
   AdminIndexRoute: typeof AdminIndexRoute
   AdminUnidadesUnitIdRoute: typeof AdminUnidadesUnitIdRoute
   AdminUnidadesIndexRoute: typeof AdminUnidadesIndexRoute
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
+  AdminDeliveryRoute: AdminDeliveryRoute,
   AdminEquipeRoute: AdminEquipeRoute,
   AdminIntegracoesRoute: AdminIntegracoesRoute,
   AdminReservasRoute: AdminReservasRoute,
+  AdminValoresRoute: AdminValoresRoute,
   AdminIndexRoute: AdminIndexRoute,
   AdminUnidadesUnitIdRoute: AdminUnidadesUnitIdRoute,
   AdminUnidadesIndexRoute: AdminUnidadesIndexRoute,
 }
 
 const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
+
+interface ApiPublicSdrFollowupsRouteChildren {
+  ApiPublicSdrFollowupsDueRoute: typeof ApiPublicSdrFollowupsDueRoute
+}
+
+const ApiPublicSdrFollowupsRouteChildren: ApiPublicSdrFollowupsRouteChildren = {
+  ApiPublicSdrFollowupsDueRoute: ApiPublicSdrFollowupsDueRoute,
+}
+
+const ApiPublicSdrFollowupsRouteWithChildren =
+  ApiPublicSdrFollowupsRoute._addFileChildren(
+    ApiPublicSdrFollowupsRouteChildren,
+  )
 
 interface ApiPublicSdrReservationsRouteChildren {
   ApiPublicSdrReservationsProtocolRoute: typeof ApiPublicSdrReservationsProtocolRoute
@@ -495,8 +650,12 @@ const rootRouteChildren: RootRouteChildren = {
   ReservarIndexRoute: ReservarIndexRoute,
   ApiPublicCrmWorkerRoute: ApiPublicCrmWorkerRoute,
   ApiPublicSdrAvailabilityRoute: ApiPublicSdrAvailabilityRoute,
+  ApiPublicSdrContextRoute: ApiPublicSdrContextRoute,
+  ApiPublicSdrDeliveryRoute: ApiPublicSdrDeliveryRoute,
+  ApiPublicSdrFollowupsRoute: ApiPublicSdrFollowupsRouteWithChildren,
   ApiPublicSdrHandoffRoute: ApiPublicSdrHandoffRoute,
   ApiPublicSdrOpenapiDotjsonRoute: ApiPublicSdrOpenapiDotjsonRoute,
+  ApiPublicSdrPricesRoute: ApiPublicSdrPricesRoute,
   ApiPublicSdrReservationsRoute: ApiPublicSdrReservationsRouteWithChildren,
   ApiPublicSdrSacRoute: ApiPublicSdrSacRoute,
   ApiPublicSdrUnitsRoute: ApiPublicSdrUnitsRoute,
