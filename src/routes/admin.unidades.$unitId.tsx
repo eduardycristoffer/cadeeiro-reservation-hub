@@ -6,7 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { PRICE_SERVICES } from "@/lib/prices";
-import { requireSupabase } from "@/lib/supabase";
+import { requireSupabase, friendlyError } from "@/lib/supabase";
+import { toast } from "sonner";
 import { WEEKDAYS, hhmm } from "@/lib/format";
 
 export const Route = createFileRoute("/admin/unidades/$unitId")({
@@ -29,6 +30,7 @@ function UnitDetail() {
   const [rules, setRules] = useState<Rule[]>([]);
   const [blocks, setBlocks] = useState<Block[]>([]);
   const [msg, setMsg] = useState<string | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   async function load() {
     const sb = requireSupabase();
@@ -37,6 +39,8 @@ function UnitDetail() {
       sb.from("reservation_capacity_rules").select("*").eq("unit_id", unitId).order("weekday").order("start_time"),
       sb.from("reservation_blocks").select("*").eq("unit_id", unitId).gte("block_date", new Date().toISOString().slice(0, 10)).order("block_date"),
     ]);
+    if (u.error || r.error || b.error) { setLoadError(friendlyError(u.error || r.error || b.error)); return; }
+    setLoadError(null);
     setUnit(u.data as Unit);
     setRules((r.data ?? []) as Rule[]);
     setBlocks((b.data ?? []) as Block[]);
@@ -51,6 +55,7 @@ function UnitDetail() {
     setTimeout(() => setMsg(null), 2500);
   }
 
+  if (loadError) return <div role="alert" className="space-y-3 text-sm"><p>{loadError}</p><Button variant="outline" onClick={load}>Tentar novamente</Button></div>;
   if (!unit) return <div className="flex justify-center py-20"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>;
   const set = <K extends keyof Unit>(k: K, v: Unit[K]) => setUnit({ ...unit, [k]: v });
 
@@ -121,7 +126,7 @@ function UnitDetail() {
                 <span className="font-medium">{new Date(b.block_date + "T12:00").toLocaleDateString("pt-BR")}</span>{" "}
                 <span className="text-muted-foreground">{b.start_time ? `${hhmm(b.start_time)}–${hhmm(b.end_time!)}` : "Dia inteiro"} · {b.kind === "feriado" ? "Feriado" : b.kind === "data_especial" ? "Data especial" : "Manual"}{b.reason ? ` · ${b.reason}` : ""}</span>
               </span>
-              <button aria-label="Remover bloqueio" onClick={async () => { await requireSupabase().from("reservation_blocks").delete().eq("id", b.id); load(); }} className="text-muted-foreground hover:text-destructive"><Trash2 className="h-4 w-4" /></button>
+              <Button variant="ghost" size="icon" aria-label="Remover bloqueio" onClick={async () => { const { error } = await requireSupabase().from("reservation_blocks").delete().eq("id", b.id); if (error) toast.error(friendlyError(error)); else load(); }} className="shrink-0 text-muted-foreground hover:text-destructive"><Trash2 className="h-4 w-4" /></Button>
             </div>
           ))}
         </div>
@@ -148,7 +153,7 @@ function RuleList({ rules, onChange }: { rules: Rule[]; onChange: () => void }) 
               <td className="px-4 py-3">{r.max_guests_per_slot} pessoas</td>
               <td className="px-4 py-3">{r.max_party_size}</td>
               <td className="px-4 py-3 text-right">
-                <button aria-label="Remover faixa" onClick={async () => { await requireSupabase().from("reservation_capacity_rules").delete().eq("id", r.id); onChange(); }} className="text-muted-foreground hover:text-destructive"><Trash2 className="h-4 w-4" /></button>
+                <Button variant="ghost" size="icon" aria-label="Remover faixa" onClick={async () => { const { error } = await requireSupabase().from("reservation_capacity_rules").delete().eq("id", r.id); if (error) toast.error(friendlyError(error)); else onChange(); }} className="text-muted-foreground hover:text-destructive"><Trash2 className="h-4 w-4" /></Button>
               </td>
             </tr>
           ))}

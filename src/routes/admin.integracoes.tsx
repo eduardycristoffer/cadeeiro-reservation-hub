@@ -306,10 +306,10 @@ function SdrTab() {
       </Panel>
 
       <Panel title="Endpoints">
-        <p className="text-sm">OpenAPI para importar no n8n: <a className="underline" href="/api/public/sdr/openapi.json" target="_blank" rel="noreferrer">{base}/openapi.json</a></p>
+        <p className="break-words text-sm">OpenAPI para importar no n8n: <a className="break-all underline" href="/api/public/sdr/openapi.json" target="_blank" rel="noreferrer">{base}/openapi.json</a></p>
         <div className="mt-3 divide-y text-sm">
           {ENDPOINTS.map(([m, p, d]) => (
-            <div key={`${m}${p}`} className="flex gap-3 py-2"><span className="w-14 font-mono text-xs">{m}</span><span className="font-mono text-xs">{p}</span><span className="text-muted-foreground">{d}</span></div>
+            <div key={`${m}${p}`} className="grid grid-cols-[3rem_minmax(0,1fr)] gap-x-2 gap-y-1 py-3 sm:grid-cols-[3rem_minmax(0,1fr)_minmax(0,1fr)]"><span className="font-mono text-xs">{m}</span><span className="break-all font-mono text-xs">{p}</span><span className="col-start-2 text-muted-foreground sm:col-start-auto">{d}</span></div>
           ))}
         </div>
         <pre className="mt-4 overflow-x-auto rounded-2xl bg-surface p-4 text-xs">{`curl "${base}/availability?unit_slug=SLUG&date=2026-11-20&party_size=4" \\
