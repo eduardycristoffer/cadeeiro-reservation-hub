@@ -199,8 +199,11 @@
 @utility tile-on {
   border-radius: var(--radius-xl);
   border: 1px solid transparent;
-  background: var(--color-foreground);
-  color: var(--color-background);
+  background: var(--color-foreground) !important;
+  color: var(--color-background) !important;
+  & .text-muted-foreground {
+    color: color-mix(in oklab, var(--color-background) 70%, transparent) !important;
+  }
 }
 
 @utility no-scrollbar {
