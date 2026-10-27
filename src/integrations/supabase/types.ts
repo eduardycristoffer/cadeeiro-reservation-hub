@@ -1907,6 +1907,7 @@ export type Database = {
           max_advance_days: number
           name: string
           photo_url: string
+          services: string[]
           slug: string
         }[]
       }
