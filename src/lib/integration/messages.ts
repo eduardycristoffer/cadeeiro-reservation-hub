@@ -31,6 +31,10 @@ export function sacMessage(protocol: string): string {
   return `Registramos sua solicitação com o protocolo ${protocol}. A equipe responsável vai analisar o caso e dará retorno por este canal.`;
 }
 
+export function deliveryMessage(protocol: string): string {
+  return `Anotei seu pedido de delivery, protocolo ${protocol}. A equipe vai conferir o pedido e confirmar os detalhes por aqui.`;
+}
+
 export function handoffMessage(): string {
   return "Certo, vou encaminhar sua conversa para uma pessoa da nossa equipe, que vai continuar o atendimento por aqui.";
 }

@@ -12,6 +12,10 @@ export const CLASSIFICATIONS = [
 export const SAC_CATEGORIES = ["reclamacao", "elogio", "sugestao", "duvida", "problema_reserva", "atendimento", "outros"] as const;
 export const SAC_PRIORITIES = ["baixa", "media", "alta", "urgente"] as const;
 
+export const SERVICE_IDS = ["rodizio_carnes", "rodizio_pizza", "almoco_quilo", "almoco_executivo"] as const;
+export const OCCASION_IDS = ["aniversario", "romantico", "comemoracao", "negocios", "familia", "nenhuma"] as const;
+export const PAYMENT_METHODS = ["dinheiro", "pix", "cartao_credito", "cartao_debito", "outro"] as const;
+
 export const availabilityQuery = z.object({
   unit_id: z.string().uuid().optional(),
   unit_slug: z.string().min(1).max(120).optional(),
@@ -32,6 +36,43 @@ export const createReservationBody = z.object({
   whatsapp_opt_in: z.boolean().optional().default(true),
   conversation_external_id: ext.optional().nullable(),
   contact_external_id: ext.optional().nullable(),
+  service: z.enum(SERVICE_IDS).optional().nullable(),
+  occasion: z.enum(OCCASION_IDS).optional().nullable(),
+  celebrant_name: z.string().trim().max(60).optional().nullable(),
+});
+
+export const unitSelector = z.object({
+  unit_id: z.string().uuid().optional(),
+  unit_slug: z.string().min(1).max(120).optional(),
+  inbox: z.string().trim().min(1).max(60).optional(),
+  date: date.optional(),
+});
+export const pricesQuery = unitSelector.refine((q) => q.unit_id || q.unit_slug || q.inbox, {
+  message: "informe unit_id, unit_slug ou inbox", path: ["unit_id"],
+});
+export const contextQuery = unitSelector;
+
+export const deliveryBody = z.object({
+  unit_id: z.string().uuid(),
+  full_name: z.string().trim().min(2).max(120),
+  phone,
+  items: z.string().trim().min(3).max(1500),
+  address: z.string().trim().min(5).max(300),
+  neighborhood: z.string().trim().max(100).optional().nullable(),
+  address_reference: z.string().trim().max(200).optional().nullable(),
+  payment_method: z.enum(PAYMENT_METHODS).optional().nullable(),
+  change_for: z.number().positive().max(99999).optional().nullable(),
+  notes: z.string().trim().max(500).optional().nullable(),
+  conversation_external_id: ext.optional().nullable(),
+});
+export const findDeliveryQuery = z.object({ phone, protocol: z.string().max(40).optional() });
+
+export const followupsDueQuery = z.object({ limit: z.coerce.number().int().min(1).max(50).default(20) });
+export const followupMarkBody = z.object({
+  protocol: z.string().trim().min(6).max(40),
+  kind: z.enum(["lembrete_vespera", "lembrete_dia"]),
+  ok: z.boolean(),
+  error: z.string().max(500).optional().nullable(),
 });
 
 export const findReservationsQuery = z.object({ phone, protocol: z.string().max(40).optional() });
