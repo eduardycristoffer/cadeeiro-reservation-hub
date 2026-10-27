@@ -39,11 +39,11 @@ function Integracoes() {
       <h1 className="text-4xl font-semibold">Integrações</h1>
       <p className="mt-1 text-muted-foreground">Tryade CRM (canal de WhatsApp) e o SDR que atende pelo n8n.</p>
       <Tabs defaultValue="crm" className="mt-6">
-        <TabsList className="rounded-full">
-          <TabsTrigger value="crm" className="rounded-full">Tryade CRM</TabsTrigger>
-          <TabsTrigger value="sdr" className="rounded-full">SDR (n8n)</TabsTrigger>
-          <TabsTrigger value="fila" className="rounded-full">Fila de eventos</TabsTrigger>
-          <TabsTrigger value="conversas" className="rounded-full">Conversas</TabsTrigger>
+        <TabsList className="grid h-auto w-full grid-cols-2 gap-1 rounded-2xl sm:grid-cols-4">
+          <TabsTrigger value="crm" className="h-11 rounded-xl">Tryade CRM</TabsTrigger>
+          <TabsTrigger value="sdr" className="h-11 rounded-xl">SDR (n8n)</TabsTrigger>
+          <TabsTrigger value="fila" className="h-11 rounded-xl">Fila de eventos</TabsTrigger>
+          <TabsTrigger value="conversas" className="h-11 rounded-xl">Conversas</TabsTrigger>
         </TabsList>
         <TabsContent value="crm"><CrmTab /></TabsContent>
         <TabsContent value="sdr"><SdrTab /></TabsContent>
@@ -56,7 +56,7 @@ function Integracoes() {
 
 function Panel({ title, children, className }: { title?: string; children: React.ReactNode; className?: string }) {
   return (
-    <section className={cn("mt-4 rounded-3xl bg-card p-6 shadow-soft", className)}>
+    <section className={cn("mt-4 min-w-0 border-t py-5", className)}>
       {title && <h2 className="mb-4 text-lg font-semibold">{title}</h2>}
       {children}
     </section>
@@ -82,6 +82,7 @@ function CrmTab() {
   const [units, setUnits] = useState<{ id: string; name: string }[]>([]);
   const [maps, setMaps] = useState<{ id: string; inbox_external_id: string; unit_id: string }[]>([]);
   const [newInbox, setNewInbox] = useState(""); const [newUnit, setNewUnit] = useState("");
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   async function load() {
     const [a, b, c, d] = await Promise.all([
@@ -91,6 +92,8 @@ function CrmTab() {
       sb().from("units").select("id,name").order("name"),
       sb().from("crm_inbox_units").select("id,inbox_external_id,unit_id").order("inbox_external_id"),
     ]);
+    if (a.error || !a.data) { setLoadError(a.error ? friendlyError(a.error) : "Configuração indisponível."); return; }
+    setLoadError(null);
     const st = a.data as Settings;
     setS(st); setUrl(st.base_url ?? ""); setAcc(st.account_id ?? ""); setEnabled(st.enabled);
     setFailed(b.count ?? 0);
@@ -102,6 +105,7 @@ function CrmTab() {
     getCrmRuntimeStatus().then(setRt).catch(() => setRt({ hasApiToken: false, hasHmacSecret: false }));
   }, []);
 
+  if (loadError) return <div role="alert" className="mt-4 space-y-3 text-sm"><p>{loadError}</p><Button variant="outline" onClick={load}>Tentar novamente</Button></div>;
   if (!s || !rt) return <div className="flex justify-center py-16"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>;
 
   const pend = [
@@ -127,7 +131,7 @@ function CrmTab() {
     toast.success("Configuração salva"); load();
   }
   async function rotate() {
-    if (s!.has_webhook_token && !confirm("Gerar um novo token invalida a URL atual do webhook. Continuar?")) return;
+    if (s?.has_webhook_token && !confirm("Gerar um novo token invalida a URL atual do webhook. Continuar?")) return;
     const { data, error } = await sb().rpc("admin_rotate_crm_webhook_token");
     if (error) { toast.error(friendlyError(error)); return; }
     setToken(data as string); load();
@@ -207,7 +211,7 @@ function CrmTab() {
           {maps.map((m) => (
             <div key={m.id} className="flex items-center justify-between rounded-2xl bg-surface px-4 py-2 text-sm">
               <span>Inbox #{m.inbox_external_id} → {units.find((u) => u.id === m.unit_id)?.name ?? "?"}</span>
-              <Button variant="ghost" size="sm" onClick={async () => { await sb().from("crm_inbox_units").delete().eq("id", m.id); load(); }}>Remover</Button>
+              <Button variant="ghost" size="sm" onClick={async () => { const { error } = await sb().from("crm_inbox_units").delete().eq("id", m.id); if (error) toast.error(friendlyError(error)); else load(); }}>Remover</Button>
             </div>
           ))}
           {maps.length === 0 && <p className="text-sm text-muted-foreground">Nenhum mapeamento.</p>}
