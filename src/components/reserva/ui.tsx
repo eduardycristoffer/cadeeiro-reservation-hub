@@ -13,8 +13,8 @@ export function Loading() {
 export function StepTitle({ title, sub }: { title: string; sub?: string }) {
   return (
     <div className="fade-up">
-      <h1 className="text-4xl font-extrabold leading-[1.05] tracking-tight md:text-5xl">{title}</h1>
-      {sub && <p className="mt-3 text-lg leading-snug text-muted-foreground">{sub}</p>}
+      <h1 className="text-2xl font-bold leading-tight sm:text-3xl">{title}</h1>
+      {sub && <p className="mt-1.5 text-sm leading-snug text-muted-foreground">{sub}</p>}
     </div>
   );
 }

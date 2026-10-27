@@ -36,13 +36,16 @@ export function ServicePrices({ tableId, service, canEdit }: { tableId: string; 
   const [hasChild, setHasChild] = useState(false);
   const [saving, setSaving] = useState(false);
   const [dirty, setDirty] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   async function load() {
+    setLoadError(null);
     const sb = requireSupabase();
     const [r, c] = await Promise.all([
       sb.from("price_rules").select("id,weekdays,on_holidays,amount").eq("table_id", tableId).eq("service", service).order("sort_order").order("created_at"),
       sb.from("price_child_policies").select("*").eq("table_id", tableId).eq("service", service).maybeSingle(),
     ]);
+    if (r.error || c.error) { setLoadError(friendlyError(r.error || c.error)); return; }
     setRules(((r.data ?? []) as { id: string; weekdays: number[]; on_holidays: boolean; amount: number }[])
       .map((x) => ({ id: x.id, weekdays: x.weekdays, on_holidays: x.on_holidays, amount: fmt(Number(x.amount).toFixed(2)) })));
     const cp = c.data as { id: string; free_until_age: number | null; child_from_age: number | null; child_to_age: number | null; child_amount: number | null; full_from_age: number | null } | null;
@@ -108,6 +111,7 @@ export function ServicePrices({ tableId, service, canEdit }: { tableId: string; 
     }
   }
 
+  if (loadError) return <div role="alert" className="space-y-3 py-6 text-sm"><p>{loadError}</p><Button variant="outline" onClick={load}>Tentar novamente</Button></div>;
   if (!rules || !child) return <div className="py-6"><Loader2 className="h-4 w-4 animate-spin text-muted-foreground" /></div>;
 
   return (
@@ -121,7 +125,7 @@ export function ServicePrices({ tableId, service, canEdit }: { tableId: string; 
         {rules.length === 0 && <p className="text-sm text-muted-foreground">Nenhuma linha. Adicione os valores por dia da semana.</p>}
         {rules.map((r, i) => (
           <div key={r.id ?? `n${i}`} className="flex flex-wrap items-center gap-2 rounded-xl bg-surface p-2">
-            <div className="flex gap-1" role="group" aria-label="Dias da semana">
+            <div className="flex min-w-0 flex-wrap gap-1" role="group" aria-label="Dias da semana">
               {DAY_BUTTONS.map((b) => {
                 const on = r.weekdays.includes(b.d);
                 return (
@@ -178,7 +182,7 @@ export function ServicePrices({ tableId, service, canEdit }: { tableId: string; 
       </div>
 
       {canEdit && (
-        <div className="mt-4 flex items-center gap-3">
+        <div className="mt-4 flex flex-wrap items-center gap-3">
           <Button onClick={save} disabled={saving || !dirty}>{saving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Salvar valores"}</Button>
           {dirty && <span className="text-xs text-muted-foreground">Alterações não salvas</span>}
           {!dirty && rules.length > 0 && <span className="text-xs text-muted-foreground">{rules.map((r) => brl(Number(toNum(r.amount) ?? 0))).join(" · ")}</span>}

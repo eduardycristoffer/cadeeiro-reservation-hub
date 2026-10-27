@@ -9,7 +9,7 @@ import { formatPhoneE164, waLink } from "@/lib/reservations";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/admin/delivery")({
-  head: () => ({ meta: [{ title: "Delivery — Candeeiro Gestão" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({ meta: [{ name: "description", content: "Gestão de pedidos de delivery da Rede Candeeiro." }, { property: "og:title", content: "Delivery — Candeeiro Gestão" }, { property: "og:description", content: "Gestão de pedidos de delivery da Rede Candeeiro." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }, { title: "Delivery — Candeeiro Gestão" }, { name: "robots", content: "noindex" }] }),
   component: Delivery,
 });
 
@@ -70,7 +70,7 @@ function Delivery() {
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="text-4xl font-semibold">Delivery</h1>
-          <p className="mt-1 text-muted-foreground">Pedidos registrados pelo atendente de WhatsApp. A equipe confirma valor e prazo com o cliente.</p>
+          <p className="mt-1 text-muted-foreground">Valor e prazo dependem da confirmação da equipe.</p>
         </div>
         <Button variant="outline" onClick={() => { setOrders(null); void load(); }}><RefreshCw className="h-4 w-4" /> Atualizar</Button>
       </div>

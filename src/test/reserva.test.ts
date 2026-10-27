@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
-  MAX_PEOPLE, QUICK_PEOPLE, isValidFullName, parsePeople, pessoas, quickLabel, sanitizeCampaign, serviceFromSlug, serviceSlug, unitsForService, upcomingDays,
+  DEFAULT_WHATSAPP_OPT_IN, MAX_PEOPLE, QUICK_PEOPLE, isValidFullName, parsePeople, pessoas, quickLabel, sanitizeCampaign, serviceFromSlug, serviceSlug, unitsForService, upcomingDays,
 } from "@/lib/reserva";
 import { OCCASIONS, OCCASION_LABEL, SERVICES, SERVICE_LABEL } from "@/lib/reservations";
 
@@ -83,6 +83,12 @@ describe("rótulos compartilhados com o painel", () => {
   });
 });
 
+describe("consentimento", () => {
+  it("WhatsApp começa desmarcado", () => {
+    expect(DEFAULT_WHATSAPP_OPT_IN).toBe(false);
+  });
+});
+
 describe("unidades por rodízio", () => {
   const goiania = { slug: "goiania", services: ["almoco_quilo", "rodizio_pizza"] };
   const anapolis = { slug: "anapolis", services: ["rodizio_carnes", "almoco_executivo", "almoco_quilo", "rodizio_pizza"] };
@@ -91,8 +97,10 @@ describe("unidades por rodízio", () => {
     expect(unitsForService([goiania, anapolis], "rodizio_carnes").map((u) => u.slug)).toEqual(["anapolis"]);
     expect(unitsForService([goiania, anapolis], "rodizio_pizza").map((u) => u.slug)).toEqual(["goiania", "anapolis"]);
   });
-  it("sem serviço escolhido ou sem serviços cadastrados não restringe", () => {
+  it("sem serviço escolhido não restringe", () => {
     expect(unitsForService([goiania, anapolis], null)).toHaveLength(2);
-    expect(unitsForService([semCadastro, goiania], "rodizio_carnes").map((u) => u.slug)).toEqual(["nova"]);
+  });
+  it("não oferece rodízio quando os serviços não estão cadastrados", () => {
+    expect(unitsForService([semCadastro, goiania], "rodizio_carnes")).toEqual([]);
   });
 });

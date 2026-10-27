@@ -43,7 +43,7 @@ export const Route = createFileRoute("/admin/reservas")({
     pagina: Math.max(1, Number(s["pagina"]) || 1),
     ref: str(s["ref"]),
   }),
-  head: () => ({ meta: [{ title: "Reservas — Candeeiro Gestão" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({ meta: [{ name: "description", content: "Consulta e gestão das reservas da Rede Candeeiro." }, { property: "og:title", content: "Reservas — Candeeiro Gestão" }, { property: "og:description", content: "Consulta e gestão das reservas da Rede Candeeiro." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }, { title: "Reservas — Candeeiro Gestão" }, { name: "robots", content: "noindex" }] }),
   component: Reservas,
 });
 
@@ -159,12 +159,11 @@ function Reservas() {
 
   return (
     <div className="fade-up">
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
+      <div className="grid min-w-0 gap-3 sm:flex sm:items-end sm:justify-between">
+        <div className="min-w-0">
           <h1 className="text-4xl font-semibold">Reservas</h1>
-          <p className="mt-1 text-muted-foreground">Atualiza sozinho quando entra ou muda uma reserva.</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <div className="flex rounded-full bg-surface p-1 text-sm">
             {(["lista", "calendario"] as const).map((v) => (
               <button key={v} onClick={() => set({ view: v })} className={cn("rounded-full px-4 py-1.5 transition", search.view === v ? "bg-card font-medium shadow-soft" : "text-muted-foreground")}>
@@ -176,7 +175,7 @@ function Reservas() {
         </div>
       </div>
 
-      <div className="mt-6 flex flex-wrap items-center gap-2">
+      <div className="mt-4 grid min-w-0 grid-cols-2 items-center gap-2 sm:flex sm:flex-wrap">
         <NativeSelect aria-label="Unidade" value={search.unidade ?? ""} onChange={(e) => set({ unidade: e.target.value || undefined })}>
           <option value="">Todas as unidades</option>
           {units.map((u) => <option key={u.id} value={u.id}>{u.name}</option>)}
@@ -200,7 +199,7 @@ function Reservas() {
               <option value="">Todas as origens</option>
               {Object.entries(ORIGIN_LABEL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
             </NativeSelect>
-            <div className="relative min-w-56 flex-1">
+            <div className="relative col-span-2 min-w-0 flex-1 sm:min-w-56">
               <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Nome, telefone ou protocolo" className="h-10 rounded-xl pl-9" />
             </div>
@@ -224,18 +223,32 @@ function Reservas() {
           {!rows ? (
             <div className="flex justify-center py-16"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
           ) : rows.length === 0 && !err ? (
-            <div className="px-6 py-16 text-center">
+            <div className="px-4 py-8 text-center sm:py-16">
               <p className="text-lg font-medium">Nenhuma reserva encontrada</p>
               <p className="mt-1 text-sm text-muted-foreground">
                 {hasFilters ? "Tente ampliar o período ou limpar os filtros." : "Quando alguém reservar pela página pública, aparece aqui na hora."}
               </p>
-              <div className="mt-5 flex justify-center gap-2">
+              <div className="mt-5 flex flex-wrap justify-center gap-2">
                 {hasFilters && <Button variant="outline" onClick={() => { setQ(""); navigate({ search: { view: "lista", cal: "mes", periodo: "todas", pagina: 1 } }); }}>Ver todas</Button>}
                 <Button onClick={() => setCreating(true)}>Criar reserva manual</Button>
               </div>
             </div>
           ) : (
-            <div className="overflow-x-auto">
+            <>
+            <div className="divide-y sm:hidden">
+              {rows.map((r) => (
+                <article key={r.id} className="p-4 text-sm">
+                  <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-2">
+                    <div className="min-w-0"><p className="break-words font-semibold">{r.customers?.full_name ?? "Cliente"}</p><p className="mt-1 font-mono text-xs text-muted-foreground">{r.protocol}</p></div>
+                    <StatusBadge status={r.status} />
+                  </div>
+                  <p className="mt-3">{fromIsoDate(r.reservation_date).toLocaleDateString("pt-BR")} · {hhmm(r.reservation_time)} · {r.party_size} pessoas</p>
+                  <p className="mt-1 text-muted-foreground">{r.units?.name}{r.service ? ` · ${SERVICE_LABEL[r.service]}` : ""}</p>
+                  <Button variant="outline" className="mt-3 h-11 w-full" onClick={() => setOpenId(r.id)}>Ver reserva</Button>
+                </article>
+              ))}
+            </div>
+            <div className="hidden overflow-x-auto sm:block">
               <table className="w-full text-sm">
                 <thead className="text-left text-xs uppercase tracking-wide text-muted-foreground">
                   <tr className="border-b">
@@ -277,6 +290,7 @@ function Reservas() {
                 </tbody>
               </table>
             </div>
+            </>
           )}
           {rows && rows.length > 0 && (
             <div className="flex items-center justify-between border-t px-4 py-3 text-sm text-muted-foreground">
@@ -353,7 +367,7 @@ function CalendarView({ unitId, mode, refDate, tick, onMode, onRef, onPick }: {
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-1">
           <Button variant="ghost" size="icon" aria-label="Anterior" onClick={() => shift(-1)}><ChevronLeft className="h-4 w-4" /></Button>
-          <p className="min-w-40 text-center text-lg font-semibold capitalize">{title}</p>
+          <p className="min-w-0 text-center text-sm font-semibold capitalize sm:min-w-40 sm:text-lg">{title}</p>
           <Button variant="ghost" size="icon" aria-label="Próximo" onClick={() => shift(1)}><ChevronRight className="h-4 w-4" /></Button>
           <Button variant="ghost" size="sm" onClick={() => onRef(todayIso)}>Hoje</Button>
         </div>
@@ -378,7 +392,7 @@ function CalendarView({ unitId, mode, refDate, tick, onMode, onRef, onPick }: {
               key={iso}
               onClick={() => onPick(iso)}
               className={cn(
-                "flex flex-col items-start rounded-2xl p-2 text-left transition hover:bg-surface",
+                "flex min-w-0 flex-col items-start rounded-xl p-1 text-left transition hover:bg-surface sm:p-2",
                 mode === "semana" ? "min-h-32" : "min-h-20",
                 out && "opacity-40",
                 iso === todayIso && "ring-1 ring-foreground",
@@ -388,7 +402,7 @@ function CalendarView({ unitId, mode, refDate, tick, onMode, onRef, onPick }: {
               {a && (
                 <span className="mt-auto text-xs leading-tight">
                   <span className="block font-semibold">{a.n} res.</span>
-                  <span className="block text-muted-foreground">{a.p} pessoas</span>
+                  <span className="block text-muted-foreground">{a.p} p.</span>
                   {a.pend > 0 && <span className="mt-0.5 inline-flex items-center gap-1 text-muted-foreground"><span className="h-1.5 w-1.5 rounded-full bg-warning" />{a.pend} pend.</span>}
                 </span>
               )}

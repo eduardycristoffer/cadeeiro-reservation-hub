@@ -4,6 +4,7 @@ export const MAX_PEOPLE = 200;
 export const QUICK_PEOPLE = [5, 10, 20, 30, 100] as const;
 export const NOTE_MAX = 280;
 export const WHO_MAX = 60;
+export const DEFAULT_WHATSAPP_OPT_IN = false;
 
 /** Rótulo do atalho: de 30 em diante vira "+30", "+100". */
 export const quickLabel = (n: number): string => (n >= 30 ? `+${n}` : String(n));
@@ -65,7 +66,7 @@ export const isValidFullName = (name: string): boolean => {
   return n.length >= 3 && n.includes(" ");
 };
 
-/** Unidades que oferecem o serviço escolhido (cada unidade tem seus serviços; sem serviços cadastrados, não restringe). */
+/** Sem serviço escolhido lista todas; com serviço, exige oferta explícita da unidade. */
 export function unitsForService<T extends { services?: string[] | null }>(units: T[], service: string | null): T[] {
-  return units.filter((u) => !service || !u.services?.length || u.services.includes(service));
+  return units.filter((u) => !service || u.services?.includes(service));
 }

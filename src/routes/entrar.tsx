@@ -8,7 +8,7 @@ import { isSupabaseConfigured, supabase } from "@/lib/supabase";
 
 export const Route = createFileRoute("/entrar")({
   head: () => ({
-    meta: [
+    meta: [{ property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }, 
       { title: "Entrar — Candeeiro Gestão" },
       { name: "description", content: "Acesso da equipe ao painel Candeeiro Gestão." },
       { property: "og:title", content: "Entrar — Candeeiro Gestão" },
@@ -53,9 +53,9 @@ function Entrar() {
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-surface px-5">
-      <div className="fade-up w-full max-w-sm rounded-3xl bg-card p-8 shadow-soft">
-        <BrandLogo className="h-20" />
-        <h1 className="mt-2 text-3xl font-semibold">{mode === "login" ? "Entrar" : "Criar conta"}</h1>
+      <div className="fade-up w-full max-w-sm py-6 sm:rounded-3xl sm:bg-card sm:p-8 sm:shadow-soft">
+        <BrandLogo className="h-16" />
+        <h1 className="mt-2 text-2xl font-semibold">{mode === "login" ? "Entrar" : "Criar conta"}</h1>
         {!isSupabaseConfigured ? (
           <p className="mt-4 text-sm text-muted-foreground">O banco de dados ainda não foi conectado a este projeto.</p>
         ) : (
@@ -69,9 +69,9 @@ function Entrar() {
             <Button type="submit" size="lg" className="w-full" disabled={loading}>
               {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : mode === "login" ? "Entrar" : "Criar conta"}
             </Button>
-            <button type="button" onClick={() => setMode(mode === "login" ? "signup" : "login")} className="w-full pt-2 text-center text-sm text-muted-foreground hover:text-foreground">
+            <Button variant="ghost" type="button" onClick={() => setMode(mode === "login" ? "signup" : "login")} className="h-11 w-full text-center text-sm text-muted-foreground">
               {mode === "login" ? "Primeiro acesso? Criar conta" : "Já tenho conta"}
-            </button>
+            </Button>
           </form>
         )}
       </div>

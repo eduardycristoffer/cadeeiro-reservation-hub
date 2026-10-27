@@ -33,37 +33,55 @@ export function ReservationDrawer({ id, tick, onClose, onChanged }: { id: string
   const [cancelMode, setCancelMode] = useState(false);
   const [reason, setReason] = useState("");
   const [note, setNote] = useState("");
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [historyError, setHistoryError] = useState<string | null>(null);
+  const [retry, setRetry] = useState(0);
 
   useEffect(() => {
     if (!id) { setR(null); return; }
+    let cancelled = false;
+    setR(null); setHist([]); setLoadError(null); setHistoryError(null);
     const sb = requireSupabase();
     sb.from("reservations")
       .select("id,protocol,reservation_date,reservation_time,party_size,origin,status,is_large_group,notes,service,occasion,celebrant_name,campaign,arrived_at,created_at,customers(full_name,phone_e164,whatsapp_opt_in),units(name)")
       .eq("id", id).maybeSingle()
-      .then(({ data }) => setR(data as unknown as Detail));
-    sb.rpc("get_reservation_history", { _reservation_id: id }).then(({ data }) => setHist((data ?? []) as Hist[]));
-  }, [id, tick]);
+      .then(({ data, error }) => {
+        if (cancelled) return;
+        if (error || !data) { setLoadError(error ? friendlyError(error) : "Reserva não encontrada ou sem acesso."); return; }
+        setR(data as unknown as Detail);
+      });
+    sb.rpc("get_reservation_history", { _reservation_id: id }).then(({ data, error }) => {
+      if (cancelled) return;
+      setHistoryError(error ? friendlyError(error) : null);
+      setHist((data ?? []) as Hist[]);
+    });
+    return () => { cancelled = true; };
+  }, [id, tick, retry]);
 
   useEffect(() => { setCancelMode(false); setReason(""); setNote(""); }, [id]);
 
   async function run(key: string, fn: () => PromiseLike<{ error: unknown }>, ok: string) {
     setBusy(key);
-    const { error } = await fn();
-    setBusy(null);
-    if (error) { toast.error(friendlyError(error)); return false; }
-    toast.success(ok);
-    onChanged();
-    return true;
+    try {
+      const { error } = await fn();
+      if (error) { toast.error(friendlyError(error)); return false; }
+      toast.success(ok);
+      onChanged();
+      return true;
+    } catch (error) { toast.error(friendlyError(error)); return false; }
+    finally { setBusy(null); }
   }
   const sb = () => requireSupabase();
 
-  const changeStatus = (to: ReservationStatus, n?: string) =>
-    run(to, () => sb().rpc("set_reservation_status", { _reservation_id: r!.id, _status: to, _note: n ?? null }), `Status: ${STATUS_LABEL[to]}`);
+  const changeStatus = (to: ReservationStatus, n?: string) => {
+    if (!r) return Promise.resolve(false);
+    return run(to, () => sb().rpc("set_reservation_status", { _reservation_id: r.id, _status: to, _note: n ?? null }), `Status: ${STATUS_LABEL[to]}`);
+  };
 
   return (
     <Sheet open={Boolean(id)} onOpenChange={(o) => !o && onClose()}>
-      <SheetContent className="w-full overflow-y-auto sm:max-w-lg">
-        {!r ? (
+      <SheetContent className="w-full overflow-y-auto p-4 sm:max-w-lg sm:p-6">
+        {loadError ? <div role="alert" className="space-y-3 py-10 text-sm"><p>{loadError}</p><Button variant="outline" onClick={() => setRetry((n) => n + 1)}>Tentar novamente</Button></div> : !r ? (
           <div className="flex h-full items-center justify-center"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
         ) : (
           <>
@@ -156,6 +174,7 @@ export function ReservationDrawer({ id, tick, onClose, onChanged }: { id: string
 
             <section className="mt-6 pb-6">
               <h3 className="text-sm font-medium">Histórico</h3>
+              {historyError && <p role="alert" className="mt-2 text-sm text-destructive">{historyError}</p>}
               <ol className="mt-2 space-y-3 border-l pl-4">
                 {hist.map((h) => (
                   <li key={h.id} className="text-sm">
@@ -181,9 +200,9 @@ export function ReservationDrawer({ id, tick, onClose, onChanged }: { id: string
 
 function Item({ k, v }: { k: string; v: React.ReactNode }) {
   return (
-    <div className="flex justify-between gap-4 py-2.5">
+    <div className="grid grid-cols-[auto_minmax(0,1fr)] gap-3 py-2.5">
       <dt className="text-muted-foreground">{k}</dt>
-      <dd className="text-right font-medium">{v}</dd>
+      <dd className="break-words text-right font-medium">{v}</dd>
     </div>
   );
 }

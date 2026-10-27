@@ -33,12 +33,15 @@ export function NewReservationDialog({ open, units, onClose, onCreated }: {
 
   useEffect(() => {
     if (!open || !unitId || !date || people < 1) return;
-    setSlots(null); setTime(null);
+    let cancelled = false;
+    setSlots(null); setTime(null); setErr(null);
     requireSupabase().rpc("staff_unit_slots", { _unit_id: unitId, _date: date, _party_size: people })
       .then(({ data, error }) => {
+        if (cancelled) return;
         if (error) { setErr(friendlyError(error)); setSlots([]); return; }
         setSlots(((data ?? []) as Slot[]).filter((s) => s.available));
       });
+    return () => { cancelled = true; };
   }, [open, unitId, date, people, reload]);
 
   const valid = unitId && date && time && people > 0 && name.trim().length >= 2 && isValidBrPhone(phone);
@@ -66,7 +69,7 @@ export function NewReservationDialog({ open, units, onClose, onCreated }: {
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-h-[92vh] overflow-y-auto rounded-3xl sm:max-w-lg">
+      <DialogContent className="max-h-[90dvh] overflow-y-auto rounded-3xl p-4 sm:max-w-lg sm:p-6">
         <DialogHeader><DialogTitle className="text-2xl">Nova reserva</DialogTitle></DialogHeader>
         {units.length === 0 ? (
           <p className="text-muted-foreground">Nenhuma unidade liberada para você.</p>
@@ -85,7 +88,7 @@ export function NewReservationDialog({ open, units, onClose, onCreated }: {
               {!slots ? <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /> : slots.length === 0 ? (
                 <p className="text-sm text-muted-foreground">Sem horários com vaga para {people} pessoa(s) nesse dia.</p>
               ) : (
-                <div className="grid grid-cols-4 gap-2">
+                <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
                   {slots.map((s) => (
                     <button type="button" key={s.slot_time} onClick={() => setTime(s.slot_time)}
                       className={cn("tile py-2 text-sm", time === s.slot_time && "tile-selected")}>

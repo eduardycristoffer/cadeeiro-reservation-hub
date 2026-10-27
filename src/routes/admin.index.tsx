@@ -8,6 +8,15 @@ import { friendlyError, requireSupabase } from "@/lib/supabase";
 import { toIsoDate } from "@/lib/format";
 
 export const Route = createFileRoute("/admin/")({
+  head: () => ({ meta: [
+    { title: "Hoje — Candeeiro Gestão" },
+    { name: "description", content: "Reservas e pessoas previstas na Rede Candeeiro." },
+    { property: "og:title", content: "Hoje — Candeeiro Gestão" },
+    { property: "og:description", content: "Reservas e pessoas previstas na Rede Candeeiro." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary_large_image" },
+    { name: "robots", content: "noindex" },
+  ] }),
   component: AdminHome,
 });
 

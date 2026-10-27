@@ -14,7 +14,7 @@ import { PRICE_SERVICES, SERVICE_BY_ID, formatServices, priceText, type PriceSer
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/admin/valores")({
-  head: () => ({ meta: [{ title: "Valores — Candeeiro Gestão" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({ meta: [{ name: "description", content: "Tabelas de preços por unidade da Rede Candeeiro." }, { property: "og:title", content: "Valores — Candeeiro Gestão" }, { property: "og:description", content: "Tabelas de preços por unidade da Rede Candeeiro." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }, { title: "Valores — Candeeiro Gestão" }, { name: "robots", content: "noindex" }] }),
   component: Valores,
 });
 
@@ -49,18 +49,14 @@ function Valores() {
   return (
     <div className="fade-up">
       <h1 className="text-4xl font-semibold">Valores</h1>
-      <p className="mt-1 max-w-2xl text-muted-foreground">
-        O atendente de WhatsApp lê estes valores na hora de responder: mudou aqui, muda na conversa. Use uma tabela por período
-        (ex.: "Tabela de novembro") e deixe uma tabela padrão sem datas para os demais dias.
-      </p>
 
       <div className="mt-6 flex flex-wrap items-center gap-3">
         <NativeSelect aria-label="Unidade" value={unitId} onChange={(e) => setUnitId(e.target.value)}>
           {units?.map((u) => <option key={u.id} value={u.id}>{u.name}</option>)}
         </NativeSelect>
-        <div className="flex rounded-full bg-surface p-1 text-sm">
+        <div className="grid w-full grid-cols-3 rounded-2xl bg-surface p-1 text-sm sm:flex sm:w-auto">
           {([["tabelas", "Tabelas"], ["previa", "Prévia por data"], ["feriados", "Feriados"]] as const).map(([k, label]) => (
-            <button key={k} onClick={() => setTab(k)} className={cn("rounded-full px-4 py-1.5 transition", tab === k ? "bg-card font-medium shadow-soft" : "text-muted-foreground")}>{label}</button>
+            <Button variant="ghost" key={k} onClick={() => setTab(k)} className={cn("h-11 min-w-0 rounded-xl px-2 text-xs transition sm:text-sm", tab === k ? "bg-card font-medium shadow-soft" : "text-muted-foreground")}>{label}</Button>
           ))}
         </div>
       </div>

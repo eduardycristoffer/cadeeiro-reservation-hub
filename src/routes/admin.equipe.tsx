@@ -9,7 +9,7 @@ import { useAuth, type Role } from "@/lib/auth";
 import { friendlyError, requireSupabase } from "@/lib/supabase";
 
 export const Route = createFileRoute("/admin/equipe")({
-  head: () => ({ meta: [{ title: "Equipe — Candeeiro Gestão" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({ meta: [{ name: "description", content: "Equipe e acesso às unidades da Rede Candeeiro." }, { property: "og:title", content: "Equipe — Candeeiro Gestão" }, { property: "og:description", content: "Equipe e acesso às unidades da Rede Candeeiro." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }, { title: "Equipe — Candeeiro Gestão" }, { name: "robots", content: "noindex" }] }),
   component: Equipe,
 });
 
@@ -70,7 +70,7 @@ function Equipe() {
   return (
     <div className="fade-up">
       <h1 className="text-4xl font-semibold">Equipe</h1>
-      <p className="mt-1 text-muted-foreground">Quem cria conta em /entrar aparece aqui sem acesso até receber um papel.</p>
+      <p className="mt-1 text-muted-foreground">Acessos e unidades da equipe.</p>
       {err && <p className="mt-4 text-destructive">{err}</p>}
       {!list ? (
         <div className="mt-10 flex justify-center"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
