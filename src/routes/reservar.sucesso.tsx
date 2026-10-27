@@ -37,22 +37,22 @@ function Success() {
   const rodizio = SERVICE_LABEL[r as ServiceId];
   const ocasiao = OCCASION_LABEL[o as OccasionId];
   return (
-    <main className="min-h-screen bg-surface px-5 py-16">
-      <div className="fade-up mx-auto max-w-md rounded-3xl bg-card p-8 text-center shadow-soft">
+    <main className="min-h-screen bg-surface px-4 py-6 sm:py-12">
+      <div className="fade-up mx-auto max-w-md text-center sm:rounded-3xl sm:bg-card sm:p-8 sm:shadow-soft">
         <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-brand text-brand-foreground">
           {confirmed ? <Check className="h-7 w-7" /> : <Clock className="h-7 w-7" />}
         </div>
-        <h1 className="mt-6 text-3xl font-semibold">
+        <h1 className="mt-4 text-2xl font-semibold">
           {confirmed ? "Reserva confirmada" : "Solicitação recebida"}
         </h1>
         <p className="mt-3 text-muted-foreground">
           {confirmed
             ? "Tudo certo. Esperamos você!"
-            : "Sua reserva ainda depende de confirmação da unidade. Você será avisado pelo WhatsApp informado."}
+            : "Aguarde a confirmação da unidade."}
         </p>
         <div className="mt-8 rounded-2xl bg-surface p-5 text-left">
           <p className="text-xs uppercase tracking-wider text-muted-foreground">Protocolo</p>
-          <p className="mt-1 font-mono text-2xl font-semibold">{p}</p>
+          <p className="mt-1 break-all font-mono text-lg font-semibold">{p}</p>
           <dl className="mt-5 space-y-3 text-sm">
             {rodizio && <Row k="Rodízio" v={rodizio} />}
             <Row k="Unidade" v={u} />
@@ -74,9 +74,9 @@ function Success() {
 
 function Row({ k, v }: { k: string; v: string }) {
   return (
-    <div className="flex justify-between gap-4">
+    <div className="grid grid-cols-[auto_minmax(0,1fr)] gap-3">
       <dt className="text-muted-foreground">{k}</dt>
-      <dd className="text-right font-medium capitalize-first">{v}</dd>
+      <dd className="break-words text-right font-medium capitalize-first">{v}</dd>
     </div>
   );
 }
