@@ -17,7 +17,7 @@ const lerConfig = node({
 const prefiltro = node({
   type: 'n8n-nodes-base.code',
   version: 2,
-  config: { name: 'Prefiltro', parameters: { mode: 'runOnceForAllItems', jsCode: "// Prefiltro: junta a configuracao e decide se o evento do CRM interessa ao atendente\nconst rows = $input.all().map((i) => i.json).filter((r) => r && r.chave);\nconst cfg = {};\nrows.forEach((r) => { cfg[r.chave] = String(r.valor === null || r.valor === undefined ? '' : r.valor).trim(); });\nconst w = $('Webhook CRM').first().json || {};\nconst b = (w.body && typeof w.body === 'object') ? w.body : w;\nconst out = { ok: false, motivo: '', tipo: '', conv_id: null, msg_id: null, inbox_id: null, phone: '', nome: '', contact_id: null, ts: 0, texto: '', cfg: cfg };\nconst fim = (m) => { out.motivo = m; return [{ json: out }]; };\nconst digits = (s) => String(s || '').replace(/@.*$/, '').replace(/\\D/g, '');\nconst variantes = (d) => {\n  const v = [d];\n  if (d.indexOf('55') === 0 && d.length === 13) v.push(d.slice(0, 4) + d.slice(5));\n  if (d.indexOf('55') === 0 && d.length === 12) v.push(d.slice(0, 4) + '9' + d.slice(4));\n  return v;\n};\n\nif (cfg.ativo !== 'sim') return fim('desligado');\nif (b.event !== 'message_created') return fim('evento:' + b.event);\nif (!b.account || Number(b.account.id) !== Number(cfg.crm_conta)) return fim('conta');\nconst inboxId = Number((b.inbox && b.inbox.id) || (b.conversation && b.conversation.inbox_id) || 0);\nconst caixas = String(cfg.caixas || '').split(',').map((x) => Number(x.trim())).filter(Boolean);\nif (caixas.indexOf(inboxId) < 0) return fim('caixa:' + inboxId);\nif (b.private === true) return fim('privada');\nconst conv = b.conversation || {};\nconst convId = conv.id || conv.display_id;\nif (!convId) return fim('sem_conversa');\n\nconst mt = b.message_type;\nconst entrada = mt === 'incoming' || mt === 0;\nconst saida = mt === 'outgoing' || mt === 1;\nif (!entrada && !saida) return fim('tipo:' + mt);\nconst meta = (conv.meta && conv.meta.sender) || {};\nconst sender = b.sender || {};\nconst contato = entrada ? Object.assign({}, meta, sender) : meta;\nconst ident = String(contato.identifier || '');\nif (/@(g\\.us|broadcast|newsletter)$/.test(ident)) return fim('grupo');\nconst phone = digits(contato.phone_number || ident);\nif (!phone) return fim('sem_telefone');\nif (cfg.modo_teste === 'sim') {\n  const liberados = String(cfg.numeros_teste || '').split(',').map(digits).filter(Boolean);\n  const meus = variantes(phone);\n  if (!liberados.some((n) => variantes(n).some((x) => meus.indexOf(x) >= 0))) return fim('fora_do_teste');\n}\n\nif (saida) {\n  const ca = (b.content_attributes && typeof b.content_attributes === 'object') ? b.content_attributes : {};\n  const tipoRem = String(sender.type || b.sender_type || '').toLowerCase().replace(/[^a-z]/g, '');\n  if (ca.sdr || tipoRem === 'agentbot' || !sender.id) return fim('saida_bot_ou_sistema');\n  out.tipo = 'saida_humana';\n} else {\n  out.tipo = 'entrada';\n}\nout.ok = true;\nout.conv_id = Number(convId);\nout.msg_id = Number(b.id || 0);\nout.inbox_id = inboxId;\nout.phone = phone;\nout.nome = String(contato.name || '');\nout.contact_id = Number(contato.id || 0) || null;\nout.ts = Number(b.created_at || 0);\nout.texto = String(b.content || '');\nreturn [{ json: out }];\n" } },
+  config: { name: 'Prefiltro', parameters: { mode: 'runOnceForAllItems', jsCode: "// Prefiltro: junta a configuracao e decide se o evento do CRM interessa ao atendente\nconst rows = $input.all().map((i) => i.json).filter((r) => r && r.chave);\nconst cfg = {};\nrows.forEach((r) => { cfg[r.chave] = String(r.valor === null || r.valor === undefined ? '' : r.valor).trim(); });\nconst w = $('Webhook CRM').first().json || {};\nconst b = (w.body && typeof w.body === 'object') ? w.body : w;\nconst out = { ok: false, motivo: '', tipo: '', conv_id: null, msg_id: null, inbox_id: null, phone: '', nome: '', contact_id: null, ts: 0, texto: '', cfg: cfg };\nconst fim = (m) => { out.motivo = m; return [{ json: out }]; };\nconst digits = (s) => String(s || '').replace(/@.*$/, '').replace(/\\D/g, '');\nconst variantes = (d) => {\n  const v = [d];\n  if (d.indexOf('55') === 0 && d.length === 13) v.push(d.slice(0, 4) + d.slice(5));\n  if (d.indexOf('55') === 0 && d.length === 12) v.push(d.slice(0, 4) + '9' + d.slice(4));\n  return v;\n};\n\nif (cfg.ativo !== 'sim') return fim('desligado');\nif (b.event !== 'message_created') return fim('evento:' + b.event);\nif (!b.account || Number(b.account.id) !== Number(cfg.crm_conta)) return fim('conta');\nconst inboxId = Number((b.inbox && b.inbox.id) || (b.conversation && b.conversation.inbox_id) || 0);\nconst caixas = String(cfg.caixas || '').split(',').map((x) => Number(x.trim())).filter(Boolean);\nif (caixas.indexOf(inboxId) < 0) return fim('caixa:' + inboxId);\nif (b.private === true) return fim('privada');\nconst conv = b.conversation || {};\nconst convId = conv.id || conv.display_id;\nif (!convId) return fim('sem_conversa');\n\nconst mt = b.message_type;\nconst entrada = mt === 'incoming' || mt === 0;\nconst saida = mt === 'outgoing' || mt === 1;\nif (!entrada && !saida) return fim('tipo:' + mt);\nconst meta = (conv.meta && conv.meta.sender) || {};\nconst sender = b.sender || {};\nconst contato = entrada ? Object.assign({}, meta, sender) : meta;\nconst ident = String(contato.identifier || '');\nif (/@(g\\.us|broadcast|newsletter)$/.test(ident)) return fim('grupo');\nconst phone = digits(contato.phone_number || ident);\nif (!phone) return fim('sem_telefone');\nif (cfg.modo_teste === 'sim') {\n  const liberados = String(cfg.numeros_teste || '').split(',').map(digits).filter(Boolean);\n  const meus = variantes(phone);\n  if (!liberados.some((n) => variantes(n).some((x) => meus.indexOf(x) >= 0))) return fim('fora_do_teste');\n}\n\nif (saida) {\n  const ca = (b.content_attributes && typeof b.content_attributes === 'object') ? b.content_attributes : {};\n  const tipoRem = String(sender.type || b.sender_type || '').toLowerCase().replace(/[^a-z]/g, '');\n  const eco = ca.external_echo === true || String(ca.external_echo_source || '') === 'app';\n  if (ca.sdr || tipoRem === 'agentbot') return fim('saida_bot');\n  if (!sender.id && !eco) return fim('saida_sistema');\n  out.tipo = 'saida_humana';\n} else {\n  out.tipo = 'entrada';\n}\nout.ok = true;\nout.conv_id = Number(convId);\nout.msg_id = Number(b.id || 0);\nout.inbox_id = inboxId;\nout.phone = phone;\nout.nome = String(contato.name || '');\nout.contact_id = Number(contato.id || 0) || null;\nout.ts = Number(b.created_at || 0);\nout.texto = String(b.content || '');\nreturn [{ json: out }];\n" } },
   output: [{ ok: true, tipo: 'entrada', conv_id: 1, phone: '5562993275525', cfg: {} }],
 });
 const passaPre = ifElse({
@@ -211,25 +211,25 @@ const montarPrompt = node({
 const rodada1 = node({
   type: 'n8n-nodes-base.executeWorkflow',
   version: 1.4,
-  config: { name: 'Rodada 1', parameters: { mode: 'each', source: 'database', workflowId: { __rl: true, mode: 'id', value: 'Nf24mfJmZ5VruTd1' } } },
+  config: { name: 'Rodada 1', onError: 'continueErrorOutput', parameters: { mode: 'each', source: 'database', workflowId: { __rl: true, mode: 'id', value: 'Nf24mfJmZ5VruTd1' } } },
   output: [{ final: true, falha: '', texto: 'Oi!', rodada: 1, efeitos: {}, req: {} }],
 });
 const rodada2 = node({
   type: 'n8n-nodes-base.executeWorkflow',
   version: 1.4,
-  config: { name: 'Rodada 2', parameters: { mode: 'each', source: 'database', workflowId: { __rl: true, mode: 'id', value: 'Nf24mfJmZ5VruTd1' } } },
+  config: { name: 'Rodada 2', onError: 'continueErrorOutput', parameters: { mode: 'each', source: 'database', workflowId: { __rl: true, mode: 'id', value: 'Nf24mfJmZ5VruTd1' } } },
   output: [{ final: true, falha: '', texto: 'Oi!', rodada: 2, efeitos: {}, req: {} }],
 });
 const rodada3 = node({
   type: 'n8n-nodes-base.executeWorkflow',
   version: 1.4,
-  config: { name: 'Rodada 3', parameters: { mode: 'each', source: 'database', workflowId: { __rl: true, mode: 'id', value: 'Nf24mfJmZ5VruTd1' } } },
+  config: { name: 'Rodada 3', onError: 'continueErrorOutput', parameters: { mode: 'each', source: 'database', workflowId: { __rl: true, mode: 'id', value: 'Nf24mfJmZ5VruTd1' } } },
   output: [{ final: true, falha: '', texto: 'Oi!', rodada: 3, efeitos: {}, req: {} }],
 });
 const rodada4 = node({
   type: 'n8n-nodes-base.executeWorkflow',
   version: 1.4,
-  config: { name: 'Rodada 4', parameters: { mode: 'each', source: 'database', workflowId: { __rl: true, mode: 'id', value: 'Nf24mfJmZ5VruTd1' } } },
+  config: { name: 'Rodada 4', onError: 'continueErrorOutput', parameters: { mode: 'each', source: 'database', workflowId: { __rl: true, mode: 'id', value: 'Nf24mfJmZ5VruTd1' } } },
   output: [{ final: true, falha: '', texto: 'Oi!', rodada: 4, efeitos: {}, req: {} }],
 });
 const fim1 = ifElse({
@@ -401,14 +401,14 @@ export default workflow('candeeiro-atendente-sdr', 'Candeeiro - Atendente SDR (W
             .onFalse(montarPrompt))))))
       .onFalse(calcPausa.to(gravarPausaHumano))))
   .add(montarPrompt)
-  .to(rodada1)
+  .to(rodada1.onError(finalizar))
   .to(fim1
     .onTrue(finalizar)
-    .onFalse(rodada2.to(fim2
+    .onFalse(rodada2.onError(finalizar).to(fim2
       .onTrue(finalizar)
-      .onFalse(rodada3.to(fim3
+      .onFalse(rodada3.onError(finalizar).to(fim3
         .onTrue(finalizar)
-        .onFalse(rodada4.to(finalizar)))))))
+        .onFalse(rodada4.onError(finalizar).to(finalizar)))))))
   .add(finalizar)
   .to(bolhas.to(enviar))
   .add(finalizar)
@@ -416,4 +416,13 @@ export default workflow('candeeiro-atendente-sdr', 'Candeeiro - Atendente SDR (W
   .add(finalizar)
   .to(pausaBot.to(gravarPausa))
   .add(finalizar)
-  .to(prepararLog.to(registrarLog));
+  .to(prepararLog.to(registrarLog))
+  .group('1. Receber e filtrar', [lerConfig, prefiltro, passaPre, ehCliente], { description: 'Lê a config, ignora o que não é do atendente (modo teste, caixa, grupo, bot) e separa cliente de resposta humana.' })
+  .group('Pessoa respondeu: pausar bot', [calcPausa, gravarPausaHumano], { description: 'Quando uma pessoa responde (painel ou celular), o bot fica quieto por 12 h.' })
+  .group('2. Pausa, espera e leitura da conversa', [lerEstado, portao, responder, debounce, lerMensagens, analisar, seguir], { description: 'Confere a pausa, espera 8 s para juntar mensagens e lê o histórico.' })
+  .group('3. Áudio do cliente', [separarAudios, baixarAudio, nomearAudio, transcrever, juntarTranscricoes], { description: 'Baixa e transcreve os áudios do cliente.' })
+  .group('4. IA + ferramentas', [montarPrompt, rodada1, fim1, rodada2, fim2, rodada3, fim3, rodada4, finalizar], { description: 'Monta as regras, roda até 4 rodadas de OpenAI + ferramentas e valida a resposta.' })
+  .group('5. Responder ao cliente', [bolhas, enviar], { description: 'Envia a resposta em até 3 mensagens pelo CRM, como bot.' })
+  .group('6. Etiquetas, notas e status no CRM', [lerEtiquetas, montarAcoes, executarAcoes], { description: 'Atualiza etiquetas, grava notas privadas e abre a conversa se foi encaminhada.' })
+  .group('7. Pausa após encaminhar', [pausaBot, gravarPausa], { description: 'Se a conversa foi para a equipe, o bot fica quieto nela por 24 h.' })
+  .group('8. Registro do atendimento', [prepararLog, registrarLog], { description: 'Uma linha por resposta na tabela candeeiro_log.' });

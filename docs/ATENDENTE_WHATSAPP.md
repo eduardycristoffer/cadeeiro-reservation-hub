@@ -24,7 +24,7 @@ n8n "Follow-up" (a cada 15 min): pede /followups/due → manda lembrete (vésper
   privada e, nas reclamações, encaminha para a equipe (`atendimento-humano`) e o bot fica quieto na conversa.
 - Delivery: só nas unidades com delivery ligado (Painel > Unidades > Atendente de WhatsApp). Registra o pedido e a equipe
   acompanha em Painel > Delivery.
-- Pessoa assumiu (respondeu na conversa): o bot pausa por 12 h (`pausa_humano_h`). Encaminhado: pausa 24 h
+- Pessoa assumiu (respondeu na conversa, pelo painel do CRM **ou direto pelo celular** da linha): o bot pausa por 12 h (`pausa_humano_h`). Encaminhado: pausa 24 h
   (`pausa_handoff_h`). Para reativar antes, apague a linha da conversa na tabela `candeeiro_estado`.
 
 ## Onde mudar cada coisa
@@ -79,7 +79,8 @@ Ferramentas do atendente: `consultar_valores`, `consultar_disponibilidade`, `cri
 `alterar_reserva`, `cancelar_reserva`, `registrar_atendimento` (SAC), `chamar_atendente`, `registrar_delivery`,
 `consultar_delivery`. Proteções fixas (no nó **Finalizar**): se a IA disser "confirmada" com reserva pendente, vale a
 mensagem do sistema; se prometer prazo/solução em SAC, vale a mensagem do sistema; se a IA falhar, o cliente recebe um aviso
-curto e a conversa vai para a equipe (nota privada com o motivo).
+curto e a conversa vai para a equipe (nota privada com o motivo). Isso vale também se a sub-rotina de IA cair: a saída de erro das
+rodadas 1–4 leva direto ao **Finalizar**, então o cliente nunca fica sem resposta.
 
 ## Replicar (outra instância do CRM / outra empresa)
 
