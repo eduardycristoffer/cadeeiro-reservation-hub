@@ -18,6 +18,7 @@ import { Route as AdminEquipeRouteImport } from './routes/admin.equipe'
 import { Route as AdminIntegracoesRouteImport } from './routes/admin.integracoes'
 import { Route as AdminReservasRouteImport } from './routes/admin.reservas'
 import { Route as AdminValoresRouteImport } from './routes/admin.valores'
+import { Route as GoianiaPizzaRouteImport } from './routes/goiania.pizza'
 import { Route as ReservarIndexRouteImport } from './routes/reservar.index'
 import { Route as ReservarSucessoRouteImport } from './routes/reservar.sucesso'
 import { Route as AdminUnidadesIndexRouteImport } from './routes/admin.unidades.index'
@@ -82,6 +83,11 @@ const AdminValoresRoute = AdminValoresRouteImport.update({
   id: '/valores',
   path: '/valores',
   getParentRoute: () => AdminRoute,
+} as any)
+const GoianiaPizzaRoute = GoianiaPizzaRouteImport.update({
+  id: '/goiania/pizza',
+  path: '/goiania/pizza',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const ReservarIndexRoute = ReservarIndexRouteImport.update({
   id: '/reservar/',
@@ -195,6 +201,7 @@ export interface FileRoutesByFullPath {
   '/admin/integracoes': typeof AdminIntegracoesRoute
   '/admin/reservas': typeof AdminReservasRoute
   '/admin/valores': typeof AdminValoresRoute
+  '/goiania/pizza': typeof GoianiaPizzaRoute
   '/reservar/sucesso': typeof ReservarSucessoRoute
   '/admin/': typeof AdminIndexRoute
   '/reservar/': typeof ReservarIndexRoute
@@ -224,6 +231,7 @@ export interface FileRoutesByTo {
   '/admin/integracoes': typeof AdminIntegracoesRoute
   '/admin/reservas': typeof AdminReservasRoute
   '/admin/valores': typeof AdminValoresRoute
+  '/goiania/pizza': typeof GoianiaPizzaRoute
   '/reservar/sucesso': typeof ReservarSucessoRoute
   '/admin': typeof AdminIndexRoute
   '/reservar': typeof ReservarIndexRoute
@@ -255,6 +263,7 @@ export interface FileRoutesById {
   '/admin/integracoes': typeof AdminIntegracoesRoute
   '/admin/reservas': typeof AdminReservasRoute
   '/admin/valores': typeof AdminValoresRoute
+  '/goiania/pizza': typeof GoianiaPizzaRoute
   '/reservar/sucesso': typeof ReservarSucessoRoute
   '/admin/': typeof AdminIndexRoute
   '/reservar/': typeof ReservarIndexRoute
@@ -287,6 +296,7 @@ export interface FileRouteTypes {
     | '/admin/integracoes'
     | '/admin/reservas'
     | '/admin/valores'
+    | '/goiania/pizza'
     | '/reservar/sucesso'
     | '/admin/'
     | '/reservar/'
@@ -316,6 +326,7 @@ export interface FileRouteTypes {
     | '/admin/integracoes'
     | '/admin/reservas'
     | '/admin/valores'
+    | '/goiania/pizza'
     | '/reservar/sucesso'
     | '/admin'
     | '/reservar'
@@ -346,6 +357,7 @@ export interface FileRouteTypes {
     | '/admin/integracoes'
     | '/admin/reservas'
     | '/admin/valores'
+    | '/goiania/pizza'
     | '/reservar/sucesso'
     | '/admin/'
     | '/reservar/'
@@ -372,6 +384,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRouteWithChildren
   EntrarRoute: typeof EntrarRoute
+  GoianiaPizzaRoute: typeof GoianiaPizzaRoute
   ReservarSucessoRoute: typeof ReservarSucessoRoute
   ReservarIndexRoute: typeof ReservarIndexRoute
   ApiPublicCrmWorkerRoute: typeof ApiPublicCrmWorkerRoute
@@ -453,6 +466,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/valores'
       preLoaderRoute: typeof AdminValoresRouteImport
       parentRoute: typeof AdminRoute
+    }
+    '/goiania/pizza': {
+      id: '/goiania/pizza'
+      path: '/goiania/pizza'
+      fullPath: '/goiania/pizza'
+      preLoaderRoute: typeof GoianiaPizzaRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/reservar/': {
       id: '/reservar/'
@@ -646,6 +666,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRouteWithChildren,
   EntrarRoute: EntrarRoute,
+  GoianiaPizzaRoute: GoianiaPizzaRoute,
   ReservarSucessoRoute: ReservarSucessoRoute,
   ReservarIndexRoute: ReservarIndexRoute,
   ApiPublicCrmWorkerRoute: ApiPublicCrmWorkerRoute,

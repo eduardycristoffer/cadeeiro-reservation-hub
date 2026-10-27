@@ -26,6 +26,7 @@ type Unit = {
   id: string; name: string; address: string | null; city: string | null; description: string | null;
   photo_url: string | null; large_group_threshold: number; max_advance_days: number; services: string[] | null;
 };
+const norm = (v: string) => v.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
 type Slot = { slot_time: string; remaining: number; available: boolean };
 
 const SERVICE_ICON: Record<ServiceId, LucideIcon> = { rodizio_carnes: Beef, rodizio_pizza: Pizza };
@@ -34,7 +35,7 @@ const OCCASION_ICON: Record<OccasionId, LucideIcon> = {
 };
 const STRIP_DAYS = 14;
 
-export function ReservaFlow({ initialService, campaign }: { initialService?: ServiceId | undefined; campaign?: string | undefined }) {
+export function ReservaFlow({ initialService, campaign, city }: { initialService?: ServiceId | undefined; campaign?: string | undefined; city?: string | undefined }) {
   const navigate = useNavigate();
   const [stage, setStage] = useState<Stage>("capa");
   const [pickedService, setPickedService] = useState<ServiceId | null>(null);
@@ -70,7 +71,7 @@ export function ReservaFlow({ initialService, campaign }: { initialService?: Ser
 
   const days = useMemo(() => upcomingDays(new Date(), STRIP_DAYS), []);
   // só as unidades que oferecem o rodízio escolhido (cada unidade tem seus serviços)
-  const offered = useMemo(() => unitsForService(units ?? [], service), [units, service]);
+  const offered = useMemo(() => unitsForService(units ?? [], service).filter((u) => !city || norm(`${u.city ?? ""} ${u.name}`).includes(norm(city))), [units, service, city]);
   const multiUnit = !units || offered.length !== 1;
   const flow: Stage[] = multiUnit ? ["contatos", "unidade", "pessoas", "quando", "ocasiao"] : ["contatos", "pessoas", "quando", "ocasiao"];
 
