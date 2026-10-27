@@ -349,7 +349,7 @@ const executarAcoes = node({
 const pausaBot = node({
   type: 'n8n-nodes-base.code',
   version: 2,
-  config: { name: 'Pausar bot se encaminhou', parameters: { mode: 'runOnceForAllItems', jsCode: "// Se a conversa foi encaminhada para a equipe, o bot fica quieto nela\nconst fin = $('Finalizar').first().json;\nconst pre = $('Prefiltro').first().json;\nif (!fin.efeitos || !fin.efeitos.handoff) return [];\nconst horas = Number(pre.cfg.pausa_handoff_h || 24);\nconst agora = new Date();\nreturn [{ json: { conv_id: String(pre.conv_id), telefone: pre.phone, pausado_ate: new Date(agora.getTime() + horas * 3600 * 1000).toISOString(), motivo: 'encaminhado_equipe', atualizado_em: agora.toISOString() } }];\n" } },
+  config: { name: 'Pausar bot se encaminhou', parameters: { mode: 'runOnceForAllItems', jsCode: "// Se a conversa foi encaminhada para a equipe, o bot fica quieto nela\n// Falha tecnica da IA (sem creditos, instabilidade) pausa pouco: quando voltar, o bot ja atende de novo\nconst fin = $('Finalizar').first().json;\nconst pre = $('Prefiltro').first().json;\nif (!fin.efeitos || !fin.efeitos.handoff) return [];\nconst agora = new Date();\nconst falha = !!fin.falhou;\nconst ms = falha ? Number(pre.cfg.pausa_falha_min || 30) * 60 * 1000 : Number(pre.cfg.pausa_handoff_h || 24) * 3600 * 1000;\nreturn [{ json: { conv_id: String(pre.conv_id), telefone: pre.phone, pausado_ate: new Date(agora.getTime() + ms).toISOString(), motivo: falha ? 'falha_ia' : 'encaminhado_equipe', atualizado_em: agora.toISOString() } }];" } },
   output: [{ conv_id: '1', telefone: '5562993275525', pausado_ate: '2026-10-28T00:00:00.000Z', motivo: 'encaminhado_equipe', atualizado_em: '2026-10-27T00:00:00.000Z' }],
 });
 const gravarPausa = node({

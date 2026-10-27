@@ -18,14 +18,17 @@ n8n "Follow-up" (a cada 15 min): pede /followups/due → manda lembrete (vésper
   mapeada a uma unidade (`crm_inbox_units`), o atendente já sabe; se não (caso da caixa de teste 49), ele pergunta
   "Goiânia ou Anápolis?" antes de falar de valores ou reservar.
 - Reserva: o atendente pega primeiro nome + telefone (o próprio WhatsApp), depois unidade/serviço, dia, pessoas, horário
-  (consultando vagas de verdade), ocasião e pedidos. Resume e pede o ok antes de criar. Se a unidade não confirma
-  automaticamente, a reserva nasce **pendente** e o atendente diz isso (nunca "confirmada").
+  (consultando vagas de verdade), ocasião e pedidos. Resume e pede o ok antes de criar. As duas unidades confirmam
+  automaticamente (a reserva já nasce **confirmada** e entra no follow-up). Se alguma unidade desligar isso, a reserva
+  nasce **pendente** e o atendente diz isso (nunca "confirmada").
 - Reclamação/elogio/sugestão: acolhe, registra no SAC (prioridade conforme gravidade), etiqueta `sac-aberto`, nota
   privada e, nas reclamações, encaminha para a equipe (`atendimento-humano`) e o bot fica quieto na conversa.
 - Delivery: só nas unidades com delivery ligado (Painel > Unidades > Atendente de WhatsApp). Registra o pedido e a equipe
   acompanha em Painel > Delivery.
-- Pessoa assumiu (respondeu na conversa, pelo painel do CRM **ou direto pelo celular** da linha): o bot pausa por 12 h (`pausa_humano_h`). Encaminhado: pausa 24 h
-  (`pausa_handoff_h`). Para reativar antes, apague a linha da conversa na tabela `candeeiro_estado`.
+- Pessoa assumiu (respondeu na conversa, pelo painel do CRM **ou direto pelo celular** da linha): o bot pausa por 12 h
+  (`pausa_humano_h`). Encaminhado pelo próprio atendente (reclamação, pedido de atendente): pausa 24 h (`pausa_handoff_h`).
+  Falha técnica da IA (ex.: OpenAI sem créditos): encaminha, mas pausa só 30 min (`pausa_falha_min`), para o bot voltar
+  sozinho quando o problema acabar. Para reativar antes, apague a linha da conversa na tabela `candeeiro_estado`.
 
 ## Onde mudar cada coisa
 
@@ -33,8 +36,8 @@ n8n "Follow-up" (a cada 15 min): pede /followups/due → manda lembrete (vésper
 | --- | --- |
 | Valores (por dia da semana, feriado, período, infantil), tabela do mês, promoção de um serviço | Painel > **Valores** |
 | Serviços da unidade (churrasco, pizza, quilo, executivo), delivery, observações (brinquedoteca…) | Painel > Unidades > (unidade) > **Atendente de WhatsApp** |
-| Horários e capacidade de reserva (hoje **PROVISÓRIOS**) | Painel > Unidades > (unidade) > horários |
-| Confirmar reserva automaticamente | Painel > Unidades > (unidade) > "Confirmar automaticamente" (hoje desligado) |
+| Horários e capacidade de reserva (almoço 11:00–15:00 a confirmar; última reserva do jantar às 20:30) | Painel > Unidades > (unidade) > horários |
+| Confirmar reserva automaticamente | Painel > Unidades > (unidade) > "Confirmar automaticamente" (hoje ligado nas duas) |
 | Ligar/desligar o bot, modo teste, números de teste, caixas, pausa, modelo | n8n > Data table `candeeiro_config` |
 | Texto das regras do atendente | n8n > workflow "Atendente SDR" > nó **Montar prompt** (ou `regras_extra` na config para avisos temporários) |
 
@@ -55,6 +58,7 @@ o dia da semana. Uma tabela sem datas é a "padrão" (prioridade 0). Feriados fi
 | `api_base` / `api_key` | `https://candeeiro.tryade.com.br/api/public/sdr` / `cdk_…` | API deste sistema e chave (Painel > Integrações). |
 | `debounce_s` | `8` | Segundos esperando mensagens seguidas antes de responder. |
 | `pausa_humano_h` / `pausa_handoff_h` | `12` / `24` (padrão) | Horas de pausa depois de pessoa responder / de encaminhar. |
+| `pausa_falha_min` | `30` (padrão) | Minutos de pausa quando o encaminhamento foi por falha técnica da IA. |
 | `modelo` | `gpt-4.1` | Modelo da OpenAI. |
 | `regras_extra` | (vazio) | Aviso temporário somado às regras (ex.: "hoje o salão fecha às 18h"). |
 | `followup_ativo` | (opcional) | `nao` desliga só os lembretes. |
@@ -108,11 +112,12 @@ Goiânia e Anápolis são empresas diferentes e podem ter CRM próprio. Para cad
 
 ## Limites e pendências conhecidas
 
-- Os horários de reserva das duas unidades são provisórios (almoço 11:00–15:00 e jantar 18:30–23:00); ajustar no painel.
-- Anápolis só tem valor de almoço no quilo na tabela de outubro, e só de segunda a sexta; sábado/domingo e depois de 31/10 o
-  atendente dirá que vai confirmar com a equipe, até cadastrar.
+- Horários de reserva (iguais nas duas unidades): almoço 11:00–14:30 (janela de 11:00 a 15:00, **a confirmar**) e jantar de
+  18:30 a 20:30 (última reserva às 20:30). Ajuste no painel.
+- Delivery só em Goiânia. Rodízio de carnes e almoço executivo só em Anápolis.
+- Almoço no quilo de Anápolis tem o mesmo valor todos os dias (R$ 79,90, inclusive feriados), na tabela do mês e na padrão.
 - A tabela "do mês" vale até 31/10/2026; depois volta a valer a "padrão" (edite o período em Painel > Valores).
-- Reservas nascem **pendentes** (confirmação automática desligada): lembretes só saem para reservas confirmadas.
+- Lembretes só saem para reservas **confirmadas** e de clientes que escreveram pelo WhatsApp (autorização registrada).
 - O bot só abre conversa de lembrete em caixa do WhatsApp configurada; sem caixa (`caixas`), o lembrete falha e é
   reenviado até 3 vezes.
 - O sistema também enfileira eventos para o CRM (`/api/public/crm/worker`) que escrevem etiquetas e notas; com a
