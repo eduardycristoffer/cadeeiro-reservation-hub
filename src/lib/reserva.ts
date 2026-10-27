@@ -64,3 +64,8 @@ export const isValidFullName = (name: string): boolean => {
   const n = name.trim().replace(/\s+/g, " ");
   return n.length >= 3 && n.includes(" ");
 };
+
+/** Unidades que oferecem o serviço escolhido (cada unidade tem seus serviços; sem serviços cadastrados, não restringe). */
+export function unitsForService<T extends { services?: string[] | null }>(units: T[], service: string | null): T[] {
+  return units.filter((u) => !service || !u.services?.length || u.services.includes(service));
+}

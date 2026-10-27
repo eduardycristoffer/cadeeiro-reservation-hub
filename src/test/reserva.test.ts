@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
-  MAX_PEOPLE, QUICK_PEOPLE, isValidFullName, parsePeople, pessoas, quickLabel, sanitizeCampaign, serviceFromSlug, serviceSlug, upcomingDays,
+  MAX_PEOPLE, QUICK_PEOPLE, isValidFullName, parsePeople, pessoas, quickLabel, sanitizeCampaign, serviceFromSlug, serviceSlug, unitsForService, upcomingDays,
 } from "@/lib/reserva";
 import { OCCASIONS, OCCASION_LABEL, SERVICES, SERVICE_LABEL } from "@/lib/reservations";
 
@@ -80,5 +80,19 @@ describe("rótulos compartilhados com o painel", () => {
   });
   it("só aniversário e comemoração perguntam quem está comemorando", () => {
     expect(OCCASIONS.filter((o) => o.asksWho).map((o) => o.id)).toEqual(["aniversario", "comemoracao"]);
+  });
+});
+
+describe("unidades por rodízio", () => {
+  const goiania = { slug: "goiania", services: ["almoco_quilo", "rodizio_pizza"] };
+  const anapolis = { slug: "anapolis", services: ["rodizio_carnes", "almoco_executivo", "almoco_quilo", "rodizio_pizza"] };
+  const semCadastro = { slug: "nova", services: [] as string[] };
+  it("churrasco só em Anápolis; pizza nas duas", () => {
+    expect(unitsForService([goiania, anapolis], "rodizio_carnes").map((u) => u.slug)).toEqual(["anapolis"]);
+    expect(unitsForService([goiania, anapolis], "rodizio_pizza").map((u) => u.slug)).toEqual(["goiania", "anapolis"]);
+  });
+  it("sem serviço escolhido ou sem serviços cadastrados não restringe", () => {
+    expect(unitsForService([goiania, anapolis], null)).toHaveLength(2);
+    expect(unitsForService([semCadastro, goiania], "rodizio_carnes").map((u) => u.slug)).toEqual(["nova"]);
   });
 });
