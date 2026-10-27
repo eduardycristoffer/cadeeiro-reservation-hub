@@ -45,7 +45,8 @@ src/integrations/      clientes Supabase e autenticação
 db/migrations/         SQL canônico, numerado (fonte da verdade do schema)
 db/maintenance/        scripts pontuais, NÃO são migrations (rodar à mão, uma vez)
 drizzle/               gerado pelo Lovable ao aplicar migrations; não editar
-docs/                  INTEGRACAO.md (CRM + SDR) e PROMPT_MASTER.md (prompt original, referência histórica)
+docs/                  INTEGRACAO.md (CRM + SDR), ATENDENTE_WHATSAPP.md (atendente n8n: config, testes, replicar) e PROMPT_MASTER.md (prompt original, referência histórica)
+n8n/                   código-fonte (SDK do n8n) dos workflows do atendente de WhatsApp e do follow-up
 ```
 
 ## Rodando localmente
