@@ -169,12 +169,12 @@
     background-color: var(--color-background);
     color: var(--color-foreground);
     font-family: var(--font-sans);
-    letter-spacing: -0.011em;
+    letter-spacing: 0;
   }
   h1,
   h2,
   h3 {
-    letter-spacing: -0.025em;
+    letter-spacing: 0;
   }
 }
 
@@ -226,6 +226,17 @@
 }
 
 .logo-on-dark { display: none; }
+.reserva-content button { white-space: normal; }
+.reserva-footer { padding-bottom: max(1rem, env(safe-area-inset-bottom)); }
+@media (max-width: 767px) {
+  .admin-content h1 { font-size: 1.5rem; line-height: 1.25; }
+  .admin-content h1 + p { font-size: 0.875rem; }
+  .admin-content input, .admin-content select, [role="dialog"] input, [role="dialog"] select { min-width: 0; max-width: 100%; }
+  .admin-content select { min-height: 44px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
 .dark .logo-on-light { display: none; }
 .dark .logo-on-dark { display: inline-block; }
 @media (prefers-color-scheme: dark) {

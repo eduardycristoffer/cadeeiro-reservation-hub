@@ -81,20 +81,26 @@ function AdminShell() {
         </nav>
         <div className="border-t pt-4">
           <p className="truncate px-3 text-xs text-muted-foreground">{user.email}</p>
-          <button onClick={() => supabase?.auth.signOut()} className="mt-2 flex w-full items-center gap-3 rounded-xl px-3 py-2 text-sm text-muted-foreground hover:bg-sidebar-accent hover:text-foreground">
+          <Button variant="ghost" onClick={() => supabase?.auth.signOut()} className="mt-2 w-full justify-start gap-3 rounded-xl px-3 text-muted-foreground">
             <LogOut className="h-4 w-4" /> Sair
-          </button>
+          </Button>
         </div>
       </aside>
-      <div className="flex-1">
-        <nav className="flex gap-2 overflow-x-auto border-b px-4 py-3 md:hidden">
+      <div className="min-w-0 flex-1">
+        <header className="border-b bg-background px-4 py-3 md:hidden">
+          <div className="mb-3 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
+            <BrandLogo className="h-10" />
+            <Button variant="ghost" size="icon" aria-label="Sair" onClick={() => supabase?.auth.signOut()}><LogOut /></Button>
+          </div>
+        <nav aria-label="Navegação do painel" className="grid grid-cols-4 gap-1">
           {nav.map((n) => (
-            <Link key={n.to} to={n.to} activeOptions={{ exact: n.exact }} className="rounded-full px-4 py-1.5 text-sm text-muted-foreground data-[status=active]:bg-primary data-[status=active]:text-primary-foreground">
-              {n.label}
+            <Link key={n.to} to={n.to} activeOptions={{ exact: n.exact }} className="flex min-h-12 min-w-0 flex-col items-center justify-center gap-1 rounded-xl px-1 py-2 text-[11px] text-muted-foreground data-[status=active]:bg-primary data-[status=active]:text-primary-foreground">
+              <n.icon className="h-4 w-4 shrink-0" aria-hidden="true" /><span>{n.label}</span>
             </Link>
           ))}
         </nav>
-        <main className="mx-auto max-w-6xl px-5 py-8 md:px-10 md:py-12">
+        </header>
+        <main className="admin-content mx-auto min-w-0 max-w-6xl px-4 py-5 md:px-10 md:py-10">
           <Outlet />
         </main>
       </div>
