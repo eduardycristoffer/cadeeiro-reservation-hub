@@ -15,7 +15,7 @@ import { Chip, Eyebrow, Field, Loading, StepTitle } from "@/components/reserva/u
 import { friendlyError, isSupabaseConfigured, supabase } from "@/lib/supabase";
 import { formatDateLong, fromIsoDate, hhmm, isValidBrPhone, maskBrPhone, toIsoDate } from "@/lib/format";
 import {
-  MAX_PEOPLE, NOTE_MAX, QUICK_PEOPLE, WHO_MAX, isValidFullName, parsePeople, pessoas, quickLabel, upcomingDays,
+  DEFAULT_WHATSAPP_OPT_IN, MAX_PEOPLE, NOTE_MAX, QUICK_PEOPLE, WHO_MAX, isValidFullName, parsePeople, pessoas, quickLabel, upcomingDays,
   unitsForService,
 } from "@/lib/reserva";
 import { OCCASIONS, SERVICES, SERVICE_LABEL, type OccasionId, type ServiceId } from "@/lib/reservations";
@@ -47,7 +47,7 @@ export function ReservaFlow({ initialService, campaign }: { initialService?: Ser
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [privacy, setPrivacy] = useState(false);
-  const [optIn, setOptIn] = useState(false);
+  const [optIn, setOptIn] = useState(DEFAULT_WHATSAPP_OPT_IN);
   const [website, setWebsite] = useState("");
   const [touched, setTouched] = useState(false);
 
@@ -295,10 +295,10 @@ export function ReservaFlow({ initialService, campaign }: { initialService?: Ser
             {service && <Chip className="mt-3">{SERVICE_LABEL[service]}</Chip>}
             <div className="mt-4 space-y-3">
               <Field label="Nome e sobrenome" error={touched && !nameOk ? "Informe nome e sobrenome." : null}>
-                <Input value={name} maxLength={120} autoComplete="name" onChange={(e) => setName(e.target.value)} className="h-14 rounded-2xl border-0 bg-surface text-base" placeholder="Como você se chama?" />
+                <Input value={name} maxLength={120} autoComplete="name" onChange={(e) => setName(e.target.value)} className="h-12 rounded-2xl border-0 bg-surface text-base" placeholder="Como você se chama?" />
               </Field>
               <Field label="WhatsApp" error={touched && !phoneOk ? "Informe DDD + número, ex.: (11) 98765-4321." : null}>
-                <Input value={phone} inputMode="tel" autoComplete="tel-national" onChange={(e) => setPhone(maskBrPhone(e.target.value))} className="h-14 rounded-2xl border-0 bg-surface text-base tabular-nums" placeholder="(11) 90000-0000" />
+                <Input value={phone} inputMode="tel" autoComplete="tel-national" onChange={(e) => setPhone(maskBrPhone(e.target.value))} className="h-12 rounded-2xl border-0 bg-surface text-base tabular-nums" placeholder="(11) 90000-0000" />
               </Field>
               {/* honeypot anti-spam */}
               <input tabIndex={-1} autoComplete="off" value={website} onChange={(e) => setWebsite(e.target.value)} className="hidden" aria-hidden name="website" />
@@ -525,7 +525,7 @@ export function ReservaFlow({ initialService, campaign }: { initialService?: Ser
             {occ?.asksWho && (
               <div className="fade-up mt-5">
                 <Field label="Quem está comemorando? (opcional)">
-                  <Input value={who} maxLength={WHO_MAX} onChange={(e) => setWho(e.target.value)} className="h-14 rounded-2xl border-0 bg-surface text-base" placeholder="Nome" autoComplete="off" />
+                  <Input value={who} maxLength={WHO_MAX} onChange={(e) => setWho(e.target.value)} className="h-12 rounded-2xl border-0 bg-surface text-base" placeholder="Nome" autoComplete="off" />
                 </Field>
               </div>
             )}

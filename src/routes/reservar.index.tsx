@@ -14,7 +14,7 @@ export const Route = createFileRoute("/reservar/")({
     campanha: sanitizeCampaign(s["campanha"]),
   }),
   head: () => ({
-    meta: [
+    meta: [{ property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }, 
       { title: "Reservar mesa — Rede Candeeiro" },
       { name: "description", content: "Reserve sua mesa no Candeeiro: rodízio de carnes ou de pizza. Leva menos de um minuto." },
       { property: "og:title", content: "Reservar mesa — Rede Candeeiro" },

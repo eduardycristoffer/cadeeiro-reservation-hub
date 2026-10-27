@@ -15,7 +15,7 @@ import { OUTBOUND_TYPES } from "@/lib/integration/crm-mapping";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/admin/integracoes")({
-  head: () => ({ meta: [{ title: "Integrações — Candeeiro Gestão" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({ meta: [{ name: "description", content: "Configuração de integrações da Rede Candeeiro." }, { property: "og:title", content: "Integrações — Candeeiro Gestão" }, { property: "og:description", content: "Configuração de integrações da Rede Candeeiro." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }, { title: "Integrações — Candeeiro Gestão" }, { name: "robots", content: "noindex" }] }),
   component: Integracoes,
 });
 

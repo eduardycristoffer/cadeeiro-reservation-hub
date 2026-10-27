@@ -9,7 +9,7 @@ import { formatPhoneE164, waLink } from "@/lib/reservations";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/admin/delivery")({
-  head: () => ({ meta: [{ title: "Delivery — Candeeiro Gestão" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({ meta: [{ name: "description", content: "Gestão de pedidos de delivery da Rede Candeeiro." }, { property: "og:title", content: "Delivery — Candeeiro Gestão" }, { property: "og:description", content: "Gestão de pedidos de delivery da Rede Candeeiro." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }, { title: "Delivery — Candeeiro Gestão" }, { name: "robots", content: "noindex" }] }),
   component: Delivery,
 });
 

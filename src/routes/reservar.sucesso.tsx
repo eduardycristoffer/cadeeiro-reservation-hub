@@ -20,7 +20,7 @@ const search = z.object({
 export const Route = createFileRoute("/reservar/sucesso")({
   validateSearch: search,
   head: () => ({
-    meta: [
+    meta: [{ property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }, 
       { title: "Solicitação recebida — Rede Candeeiro" },
       { name: "description", content: "Acompanhe o protocolo da sua reserva na Rede Candeeiro." },
       { property: "og:title", content: "Solicitação recebida — Rede Candeeiro" },

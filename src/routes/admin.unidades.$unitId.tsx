@@ -10,6 +10,7 @@ import { requireSupabase } from "@/lib/supabase";
 import { WEEKDAYS, hhmm } from "@/lib/format";
 
 export const Route = createFileRoute("/admin/unidades/$unitId")({
+  head: () => ({ meta: [{ title: "Configurar unidade — Candeeiro Gestão" }, { name: "description", content: "Configurações de unidade, serviços e disponibilidade da Rede Candeeiro." }, { property: "og:title", content: "Configurar unidade — Candeeiro Gestão" }, { property: "og:description", content: "Configurações de unidade, serviços e disponibilidade da Rede Candeeiro." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }, { name: "robots", content: "noindex" }] }),
   component: UnitDetail,
 });
 

@@ -10,7 +10,7 @@ import { Toaster } from "@/components/ui/sonner";
 export const Route = createFileRoute("/admin")({
   ssr: false,
   head: () => ({
-    meta: [
+    meta: [{ property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }, 
       { title: "Painel — Candeeiro Gestão" },
       { name: "description", content: "Painel de gestão de reservas da Rede Candeeiro." },
       { property: "og:title", content: "Painel — Candeeiro Gestão" },

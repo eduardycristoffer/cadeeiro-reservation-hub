@@ -9,7 +9,7 @@ import { useAuth, type Role } from "@/lib/auth";
 import { friendlyError, requireSupabase } from "@/lib/supabase";
 
 export const Route = createFileRoute("/admin/equipe")({
-  head: () => ({ meta: [{ title: "Equipe — Candeeiro Gestão" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({ meta: [{ name: "description", content: "Equipe e acesso às unidades da Rede Candeeiro." }, { property: "og:title", content: "Equipe — Candeeiro Gestão" }, { property: "og:description", content: "Equipe e acesso às unidades da Rede Candeeiro." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }, { title: "Equipe — Candeeiro Gestão" }, { name: "robots", content: "noindex" }] }),
   component: Equipe,
 });
 

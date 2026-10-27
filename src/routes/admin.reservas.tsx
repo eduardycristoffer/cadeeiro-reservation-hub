@@ -43,7 +43,7 @@ export const Route = createFileRoute("/admin/reservas")({
     pagina: Math.max(1, Number(s["pagina"]) || 1),
     ref: str(s["ref"]),
   }),
-  head: () => ({ meta: [{ title: "Reservas — Candeeiro Gestão" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({ meta: [{ name: "description", content: "Consulta e gestão das reservas da Rede Candeeiro." }, { property: "og:title", content: "Reservas — Candeeiro Gestão" }, { property: "og:description", content: "Consulta e gestão das reservas da Rede Candeeiro." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }, { title: "Reservas — Candeeiro Gestão" }, { name: "robots", content: "noindex" }] }),
   component: Reservas,
 });
 

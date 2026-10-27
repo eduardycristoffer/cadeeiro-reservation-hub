@@ -14,7 +14,7 @@ import { PRICE_SERVICES, SERVICE_BY_ID, formatServices, priceText, type PriceSer
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/admin/valores")({
-  head: () => ({ meta: [{ title: "Valores — Candeeiro Gestão" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({ meta: [{ name: "description", content: "Tabelas de preços por unidade da Rede Candeeiro." }, { property: "og:title", content: "Valores — Candeeiro Gestão" }, { property: "og:description", content: "Tabelas de preços por unidade da Rede Candeeiro." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }, { title: "Valores — Candeeiro Gestão" }, { name: "robots", content: "noindex" }] }),
   component: Valores,
 });
 

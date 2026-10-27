@@ -8,7 +8,7 @@ import { isSupabaseConfigured, supabase } from "@/lib/supabase";
 
 export const Route = createFileRoute("/entrar")({
   head: () => ({
-    meta: [
+    meta: [{ property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }, 
       { title: "Entrar — Candeeiro Gestão" },
       { name: "description", content: "Acesso da equipe ao painel Candeeiro Gestão." },
       { property: "og:title", content: "Entrar — Candeeiro Gestão" },

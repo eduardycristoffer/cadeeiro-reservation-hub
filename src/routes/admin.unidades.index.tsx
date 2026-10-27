@@ -7,6 +7,7 @@ import { requireSupabase, friendlyError } from "@/lib/supabase";
 import { useAuth } from "@/lib/auth";
 
 export const Route = createFileRoute("/admin/unidades/")({
+  head: () => ({ meta: [{ title: "Unidades — Candeeiro Gestão" }, { name: "description", content: "Unidades, horários e capacidade da Rede Candeeiro." }, { property: "og:title", content: "Unidades — Candeeiro Gestão" }, { property: "og:description", content: "Unidades, horários e capacidade da Rede Candeeiro." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }, { name: "robots", content: "noindex" }] }),
   component: Unidades,
 });
 
