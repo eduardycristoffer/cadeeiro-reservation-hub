@@ -18,6 +18,7 @@ export const API_ERRORS: Record<string, { status: number; message: string }> = {
   UNIT_UNAVAILABLE: { status: 404, message: "Esta unidade não está aceitando reservas no momento." },
   DELIVERY_UNAVAILABLE: { status: 409, message: "Esta unidade não faz delivery." },
   INVALID_SERVICE: { status: 422, message: "Serviço inválido. Use rodizio_carnes, rodizio_pizza, almoco_quilo ou almoco_executivo." },
+  SERVICE_NOT_OFFERED: { status: 422, message: "Esta unidade não oferece esse serviço. Consulte os serviços da unidade em /context ou /units." },
   INVALID_OCCASION: { status: 422, message: "Ocasião inválida." },
   INVALID_CELEBRANT: { status: 422, message: "O nome de quem está comemorando pode ter até 60 caracteres." },
   UNIT_NOT_FOUND: { status: 404, message: "Não encontrei essa unidade." },

@@ -16,6 +16,7 @@ import { friendlyError, isSupabaseConfigured, supabase } from "@/lib/supabase";
 import { formatDateLong, fromIsoDate, hhmm, isValidBrPhone, maskBrPhone, toIsoDate } from "@/lib/format";
 import {
   MAX_PEOPLE, NOTE_MAX, QUICK_PEOPLE, WHO_MAX, isValidFullName, parsePeople, pessoas, quickLabel, upcomingDays,
+  unitsForService,
 } from "@/lib/reserva";
 import { OCCASIONS, SERVICES, SERVICE_LABEL, type OccasionId, type ServiceId } from "@/lib/reservations";
 import { cn } from "@/lib/utils";
@@ -23,7 +24,7 @@ import { cn } from "@/lib/utils";
 type Stage = "capa" | "contatos" | "unidade" | "pessoas" | "quando" | "ocasiao";
 type Unit = {
   id: string; name: string; address: string | null; city: string | null; description: string | null;
-  photo_url: string | null; large_group_threshold: number; max_advance_days: number;
+  photo_url: string | null; large_group_threshold: number; max_advance_days: number; services: string[] | null;
 };
 type Slot = { slot_time: string; remaining: number; available: boolean };
 
@@ -68,18 +69,24 @@ export function ReservaFlow({ initialService, campaign }: { initialService?: Ser
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   const days = useMemo(() => upcomingDays(new Date(), STRIP_DAYS), []);
-  const multiUnit = !units || units.length !== 1;
+  // só as unidades que oferecem o rodízio escolhido (cada unidade tem seus serviços)
+  const offered = useMemo(() => unitsForService(units ?? [], service), [units, service]);
+  const multiUnit = !units || offered.length !== 1;
   const flow: Stage[] = multiUnit ? ["contatos", "unidade", "pessoas", "quando", "ocasiao"] : ["contatos", "pessoas", "quando", "ocasiao"];
 
   useEffect(() => {
     if (!supabase) return;
     supabase.rpc("public_list_units").then(({ data, error }) => {
       if (error) { setLoadError(friendlyError(error)); return; }
-      const list = (data ?? []) as Unit[];
-      setUnits(list);
-      if (list.length === 1) setUnit(list[0]!);
+      setUnits((data ?? []) as Unit[]);
     });
   }, []);
+
+  useEffect(() => {
+    if (!units) return;
+    if (offered.length === 1) setUnit(offered[0]!);
+    else setUnit((cur) => (cur && offered.some((u) => u.id === cur.id) ? cur : null));
+  }, [units, offered]);
 
   // mudou a quantidade: dia e horário escolhidos antes deixam de valer
   useEffect(() => { setDate(null); setTime(null); setSlots(null); }, [people]);
@@ -311,8 +318,8 @@ export function ReservaFlow({ initialService, campaign }: { initialService?: Ser
             <div className="mt-6 grid gap-3">
               {loadError && <p className="text-destructive">{loadError}</p>}
               {!units && !loadError && <Loading />}
-              {units?.length === 0 && <p className="text-muted-foreground">Nenhuma unidade disponível para reservas online no momento.</p>}
-              {units?.map((u) => (
+              {units && offered.length === 0 && <p className="text-muted-foreground">Nenhuma unidade disponível para reservas online deste rodízio no momento.</p>}
+              {offered.map((u) => (
                 <button
                   key={u.id}
                   onClick={() => { setUnit(u); setDate(null); setTime(null); next(); }}

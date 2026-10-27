@@ -31,6 +31,7 @@ const ERRORS: Record<string, string> = {
   PRIVACY_REQUIRED: "É preciso aceitar o aviso de privacidade.",
   RATE_LIMITED: "Muitas tentativas em pouco tempo. Aguarde alguns minutos.",
   INVALID_SERVICE: "Escolha o rodízio para continuar.",
+  SERVICE_NOT_OFFERED: "Esta unidade não oferece esse rodízio. Volte e escolha outra unidade.",
   INVALID_OCCASION: "Ocasião inválida. Escolha uma das opções.",
   INVALID_CELEBRANT: "O nome de quem está comemorando pode ter até 60 caracteres.",
   NOTES_TOO_LONG: "A observação pode ter no máximo 500 caracteres.",
