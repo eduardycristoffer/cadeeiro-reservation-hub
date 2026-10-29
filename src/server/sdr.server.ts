@@ -6,10 +6,11 @@ import { API_ERRORS, ApiError, codeFromDbError, errorBody } from "@/lib/integrat
 import { sha256Hex } from "@/lib/integration/crypto";
 import { decideIdempotency, IDEMPOTENCY_KEY_RE, type IdemRecord } from "@/lib/integration/idempotency";
 import { maskPhone } from "@/lib/integration/phone";
+import { authorizeSdrScope } from "./sdr-scope.server";
 
 export const db = () => supabaseAdmin as unknown as SupabaseClient;
 
-export type ApiKeyCtx = { id: string; organization_id: string; prefix: string; scopes: string[] };
+export type ApiKeyCtx = { id: string; organization_id: string; prefix: string; scopes: string[]; unit_ids: string[] };
 
 const json = (status: number, body: unknown) =>
   new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" } });
@@ -68,7 +69,7 @@ async function authenticate(request: Request, scope: "read" | "write"): Promise<
   const k = data as ApiKeyCtx & { rate_limited: boolean };
   if (k.rate_limited) throw new ApiError("RATE_LIMITED");
   if (!k.scopes.includes(scope)) throw new ApiError("FORBIDDEN_SCOPE");
-  return k;
+  return { ...k, unit_ids: k.unit_ids ?? [] };
 }
 
 /**
@@ -91,6 +92,9 @@ export async function handleSdr(
       try { body = text ? JSON.parse(text) : {}; } catch { throw new ApiError("VALIDATION_ERROR", "O corpo da requisição precisa ser JSON válido."); }
     }
 
+    const scopeBody = opts.endpoint === "/reservations/{protocol}" && body && typeof body === "object"
+      ? { ...body, protocol: url.pathname.split("/").at(-1) } : body;
+    await authorizeSdrScope(db(), key, opts.endpoint, request.method, scopeBody);
     const idem = request.headers.get("idempotency-key");
     if (opts.idempotent && idem) {
       if (!IDEMPOTENCY_KEY_RE.test(idem)) throw new ApiError("VALIDATION_ERROR", "Idempotency-Key inválida (8 a 128 caracteres: letras, números, - _ : .).");

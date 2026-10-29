@@ -6,6 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
+import { Checkbox } from "@/components/ui/checkbox";
 import { NativeSelect } from "@/components/admin/bits";
 import { useAuth } from "@/lib/auth";
 import { friendlyError, requireSupabase } from "@/lib/supabase";
@@ -236,7 +237,7 @@ function CrmTab() {
   );
 }
 
-type Key = { id: string; name: string; prefix: string; scopes: string[]; is_active: boolean; last_used_at: string | null; created_at: string };
+type Key = { id: string; name: string; prefix: string; scopes: string[]; unit_ids?: string[]; units?: { id: string; name: string }[]; is_active: boolean; last_used_at: string | null; created_at: string };
 
 const ENDPOINTS = [
   ["GET", "/units", "Unidades ativas, limites e horários"],
@@ -255,33 +256,57 @@ function SdrTab() {
   const [name, setName] = useState("n8n SDR");
   const [writeScope, setWriteScope] = useState(true);
   const [created, setCreated] = useState<string | null>(null);
+  const [units, setUnits] = useState<{ id: string; name: string }[]>([]);
+  const [allUnits, setAllUnits] = useState(false);
+  const [unitIds, setUnitIds] = useState<string[]>([]);
+  const [saving, setSaving] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const base = `${publicOrigin()}/api/public/sdr`;
 
   async function load() {
-    const { data, error } = await sb().rpc("admin_list_api_keys");
-    if (error) toast.error(friendlyError(error));
+    const [{ data, error }, unitResult] = await Promise.all([
+      sb().rpc("admin_list_api_keys"),
+      sb().from("units").select("id,name").eq("is_active", true).order("name"),
+    ]);
+    if (error || unitResult.error) { setLoadError(friendlyError(error ?? unitResult.error)); return; }
+    setLoadError(null);
+    setUnits(unitResult.data ?? []);
     setKeys((data ?? []) as Key[]);
   }
   useEffect(() => { load(); }, []);
 
   async function create() {
-    const { data, error } = await sb().rpc("admin_create_api_key", { _name: name, _scopes: writeScope ? ["read", "write"] : ["read"] });
-    if (error) { toast.error(friendlyError(error)); return; }
-    setCreated((data as { key: string }).key); load();
+    if (!allUnits && !unitIds.length) { toast.error("Escolha pelo menos uma unidade ou Todas as unidades."); return; }
+    setSaving(true);
+    try {
+      const { data, error } = await sb().rpc("admin_create_api_key", { _name: name, _scopes: writeScope ? ["read", "write"] : ["read"], _unit_ids: allUnits ? [] : unitIds });
+      if (error) { toast.error(friendlyError(error)); return; }
+      setCreated((data as { key: string }).key); await load();
+    } catch (e) { toast.error(friendlyError(e)); } finally { setSaving(false); }
   }
   async function revoke(id: string) {
     if (!confirm("Revogar esta chave? O SDR que a usa para de funcionar na hora.")) return;
-    await sb().rpc("admin_revoke_api_key", { _id: id }); load();
+    const { error } = await sb().rpc("admin_revoke_api_key", { _id: id });
+    if (error) toast.error(friendlyError(error)); else load();
   }
 
   return (
     <>
       <Panel title="Chaves de API">
+        {loadError && <div role="alert" className="mb-4 text-sm"><p>{loadError}</p><Button variant="outline" onClick={load}>Tentar novamente</Button></div>}
         <div className="flex flex-wrap gap-2">
           <Input value={name} onChange={(e) => setName(e.target.value)} className="h-10 w-56 rounded-xl" aria-label="Nome da chave" />
           <label className="flex items-center gap-2 text-sm"><Switch checked={writeScope} onCheckedChange={setWriteScope} /> Pode criar e alterar</label>
-          <Button onClick={create} disabled={name.trim().length < 2}>Criar chave</Button>
         </div>
+        <fieldset className="mt-4 space-y-2">
+          <legend className="mb-2 text-sm font-medium">Unidades que esta chave atende</legend>
+          <label className="flex min-h-11 items-center gap-3 text-sm"><Checkbox checked={allUnits} onCheckedChange={(v) => { setAllUnits(v === true); setUnitIds([]); }} />Todas as unidades</label>
+          <div className="grid gap-2 sm:grid-cols-2">
+            {units.map((u) => <label key={u.id} className="flex min-h-11 items-center gap-3 text-sm"><Checkbox checked={unitIds.includes(u.id)} disabled={allUnits}
+              onCheckedChange={(v) => setUnitIds((ids) => v === true ? [...ids, u.id] : ids.filter((id) => id !== u.id))} />{u.name}</label>)}
+          </div>
+        </fieldset>
+        <Button className="mt-3" onClick={create} disabled={saving || !!loadError || name.trim().length < 2 || (!allUnits && !unitIds.length)}>{saving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Criar chave"}</Button>
         {created && (
           <div className="mt-4 rounded-2xl bg-surface p-4">
             <p className="text-sm font-medium">Copie agora: esta chave não será mostrada de novo.</p>
@@ -298,6 +323,7 @@ function SdrTab() {
               <div>
                 <p className="font-medium">{k.name} <span className="font-mono text-xs text-muted-foreground">{k.prefix}…</span></p>
                 <p className="text-xs text-muted-foreground">{k.scopes.join(", ")} · {k.last_used_at ? `usada em ${new Date(k.last_used_at).toLocaleString("pt-BR")}` : "nunca usada"}</p>
+                <p className="mt-1 text-sm">{k.unit_ids?.length ? k.units?.map((u) => u.name).join(", ") || "Unidades restritas" : "Todas as unidades"}</p>
               </div>
               {k.is_active ? <Button variant="outline" size="sm" onClick={() => revoke(k.id)}>Revogar</Button> : <Pill tone="idle">Revogada</Pill>}
             </div>

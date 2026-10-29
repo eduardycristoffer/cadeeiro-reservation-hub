@@ -58,6 +58,36 @@ export type Database = {
           },
         ]
       }
+      api_key_units: {
+        Row: {
+          api_key_id: string
+          unit_id: string
+        }
+        Insert: {
+          api_key_id: string
+          unit_id: string
+        }
+        Update: {
+          api_key_id?: string
+          unit_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "api_key_units_api_key_id_fkey"
+            columns: ["api_key_id"]
+            isOneToOne: false
+            referencedRelation: "api_keys"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "api_key_units_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       api_keys: {
         Row: {
           created_at: string
@@ -1723,10 +1753,12 @@ export type Database = {
         Args: { _note: string; _reservation_id: string }
         Returns: undefined
       }
-      admin_create_api_key: {
-        Args: { _name: string; _scopes?: string[] }
-        Returns: Json
-      }
+      admin_create_api_key:
+        | { Args: { _name: string; _scopes?: string[] }; Returns: Json }
+        | {
+            Args: { _name: string; _scopes: string[]; _unit_ids: string[] }
+            Returns: Json
+          }
       admin_get_crm_settings: { Args: never; Returns: Json }
       admin_list_api_keys: { Args: never; Returns: Json }
       admin_list_users: {
@@ -2024,6 +2056,10 @@ export type Database = {
           _protocol: string
         }
         Returns: undefined
+      }
+      sdr_scoped_followups_due: {
+        Args: { _limit?: number; _now?: string; _unit_ids: string[] }
+        Returns: Json
       }
       sdr_unit_by_inbox: { Args: { _inbox: string }; Returns: string }
       sdr_update_reservation: {
