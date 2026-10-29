@@ -22,8 +22,7 @@ async function lookup(client: SupabaseClient, key: UnitScope, table: string, fie
 
 async function record(client: SupabaseClient, key: UnitScope, table: string, field: string, value: string, code: string, nullable = false) {
   // Only conversations have link columns; other records need only their unit.
-  const columns = table === "crm_conversations" ? "unit_id,reservation_id,sac_ticket_id" : "unit_id";
-  const { data, error } = await client.from(table).select(columns)
+  const { data, error } = await client.from(table).select("unit_id")
     .eq("organization_id", key.organization_id).eq(field, value).maybeSingle();
   if (error) throw new ApiError("INTERNAL_ERROR");
   if (!data || (!allowsUnit(key, data.unit_id) && !(nullable && data.unit_id === null))) throw new ApiError(code);
@@ -63,7 +62,7 @@ export async function authorizeSdrScope(client: SupabaseClient, key: UnitScope, 
     await unit(b.unit_id, "UNIT_NOT_FOUND");
     await conversation(client, key, b.conversation_external_id);
   } else if (endpoint === "/reservations/{protocol}" || endpoint === "/followups") {
-    const protocol = endpoint === "/followups" ? parse(followupMarkBody).protocol : (body as { protocol?: string }).protocol;
+    const protocol = endpoint === "/followups" ? parse(followupMarkBody).protocol : (body as { protocol?: string } | null)?.protocol;
     if (!protocol) throw new ApiError("RESERVATION_NOT_FOUND");
     await record(client, key, "reservations", "protocol", protocol.trim().toUpperCase(), "RESERVATION_NOT_FOUND");
   } else if (endpoint === "/sac") {

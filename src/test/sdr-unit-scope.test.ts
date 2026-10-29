@@ -30,11 +30,11 @@ vi.mock("@/integrations/supabase/client.server", () => ({ supabaseAdmin: {
     const out: Record<string, unknown> = {
       sdr_auth: { ...state.key, rate_limited: false },
       sdr_list_units: state.units,
-      sdr_unit_by_inbox: state.units[1]?.id,
-      sdr_find_reservations: state.rows.reservations,
-      sdr_get_delivery_orders: state.rows.delivery_orders,
-      sdr_followups_due: state.rows.reservations,
-      sdr_scoped_followups_due: (state.rows.reservations ?? []).filter((r) => (args._unit_ids as string[]).includes(r.unit_id as string)),
+      sdr_unit_by_inbox: state.units[1]?.['id'],
+      sdr_find_reservations: (state.rows['reservations'] ?? []).filter((r) => !args['_protocol'] || r['protocol'] === args['_protocol']),
+      sdr_get_delivery_orders: (state.rows['delivery_orders'] ?? []).filter((r) => !args['_protocol'] || r['protocol'] === args['_protocol']),
+      sdr_followups_due: state.rows['reservations'],
+      sdr_scoped_followups_due: (state.rows['reservations'] ?? []).filter((r) => (args['_unit_ids'] as string[]).includes(r['unit_id'] as string)),
       get_unit_slots: [{ slot_time: "19:00:00", remaining: 10, available: true }],
       get_unit_available_dates: [{ available_date: "2026-11-20" }],
       resolve_unit_prices: { unit: { name: "Unidade" }, date: "2026-11-20", weekday: 5, is_holiday: false, services: [] },
@@ -100,8 +100,8 @@ describe("chave Goiânia: todos os endpoints", () => {
   ] as const)("GET /%s filtra telefone e protocolo", async (path, handler, protocol) => {
     const r = await (await handler(request(`/${path}?phone=${phone}`))).json();
     expect(r.data.map((x: { protocol: string }) => x.protocol)).toEqual([protocol]);
-    const onlyOther = await (await handler(request(`/${path}?phone=${phone}&protocol=OTHER`))).json();
-    expect(onlyOther.data.every((x: { unit_id: string }) => x.unit_id === GO)).toBe(true);
+    const onlyOther = await (await handler(request(`/${path}?phone=${phone}&protocol=${path === 'delivery' ? 'DEL-ANAPOLIS' : 'CAD-ANAPOLIS'}`))).json();
+    expect(onlyOther.data).toEqual([]);
   });
   it("/followups/due passa escopo ao RPC antes do limite", async () => {
     const r = await (await h.followupsDue(request("/followups/due?limit=1"))).json();
@@ -127,13 +127,13 @@ describe("chave Goiânia: todos os endpoints", () => {
     expect(r.status).toBe(404); expect(mutatingCalls()).toEqual([]);
   });
   it.each([h.createReservation, h.createSac, h.handoff, h.createDelivery])("rejeita conversa existente de outra unidade", async (handler) => {
-    const bodies = new Map([[h.createReservation, reservation(GO)], [h.createDelivery, delivery(GO)], [h.createSac, { phone, category: "duvida", subject: "Dúvida teste" }], [h.handoff, { phone }]]);
+    const bodies = new Map<(request: Request) => Promise<Response>, Record<string, unknown>>([[h.createReservation, reservation(GO)], [h.createDelivery, delivery(GO)], [h.createSac, { phone, category: "duvida", subject: "Dúvida teste" }], [h.handoff, { phone }]]);
     const paths = new Map([[h.createReservation, "/reservations"], [h.createDelivery, "/delivery"], [h.createSac, "/sac"], [h.handoff, "/handoff"]]);
     const r = await handler(request(paths.get(handler) ?? "", { ...bodies.get(handler), conversation_external_id: "anapolis-conv" }));
     expect(r.status).toBe(404); expect(mutatingCalls()).toEqual([]);
   });
   it("conversa sem unidade com reserva de Anápolis também é rejeitada", async () => {
-    state.rows.crm_conversations = [{ external_id: "sem-unidade", unit_id: null, reservation_id: "r-an", organization_id: "org" }];
+    state.rows['crm_conversations'] = [{ external_id: "sem-unidade", unit_id: null, reservation_id: "r-an", organization_id: "org" }];
     const r = await h.handoff(request("/handoff", { phone, conversation_external_id: "sem-unidade" }));
     expect(r.status).toBe(404); expect(mutatingCalls()).toEqual([]);
   });
