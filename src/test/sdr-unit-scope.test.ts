@@ -159,6 +159,30 @@ describe("chave Goiânia: todos os endpoints", () => {
     expect((await h.createReservation(request("/reservations", reservation(GO)))).status).toBe(500);
     expect(mutatingCalls()).toEqual([]);
   });
+  it.each([
+    ["reserva", () => h.createReservation(request("/reservations", reservation(GO)))],
+    ["delivery", () => h.createDelivery(request("/delivery", delivery(GO)))],
+    ["alteração", () => h.patchReservation(request("/reservations/CAD-GOIANIA", { action: "alterar", phone, party_size: 3 }, "PATCH"), "CAD-GOIANIA")],
+    ["cancelamento", () => h.patchReservation(request("/reservations/CAD-GOIANIA", { action: "cancelar", phone, reason: "Mudança de planos" }, "PATCH"), "CAD-GOIANIA")],
+    ["SAC", () => h.createSac(request("/sac", { unit_id: GO, phone, category: "duvida", subject: "Dúvida teste" }))],
+    ["handoff", () => h.handoff(request("/handoff", { unit_id: GO, phone, conversation_external_id: "novo" }))],
+    ["classificação", () => h.classify(request("/conversations/classify", { unit_id: GO, external_id: "novo", classification: "outros", reservation_protocol: "CAD-GOIANIA" }))],
+    ["lembrete", () => h.markFollowup(request("/followups", { protocol: "CAD-GOIANIA", kind: "lembrete_dia", ok: true }))],
+  ])("permite %s na própria unidade", async (_label, call) => {
+    const r = await call(); expect(r.status).toBeLessThan(300); expect((await r.json()).ok).toBe(true);
+    expect(mutatingCalls()).toHaveLength(1);
+  });
+  it("chave apenas de leitura não pode escrever", async () => {
+    state.key.scopes = ["read"];
+    const r = await h.createReservation(request("/reservations", reservation(GO)));
+    expect(r.status).toBe(403); expect((await r.json()).error.code).toBe("FORBIDDEN_SCOPE");
+    expect(mutatingCalls()).toEqual([]);
+  });
+  it("consultas autorizadas de preços e vagas continuam disponíveis", async () => {
+    expect((await h.prices(request(`/prices?unit_id=${GO}`))).status).toBe(200);
+    const slots = await (await h.availability(request(`/availability?unit_id=${GO}&date=2026-11-20`))).json();
+    expect(slots.data.slots).toEqual([{ time: "19:00", remaining_seats: 10 }]);
+  });
 });
 
 describe("chave sem restrição: compatibilidade em todos os endpoints", () => {
