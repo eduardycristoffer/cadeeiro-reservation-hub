@@ -38,8 +38,9 @@ begin
 end $$;
 
 -- Keep the original two-argument signature for old callers. Scoped creation uses
--- a three-argument overload; only the new parameter has a default to avoid ambiguous calls.
-create or replace function public.admin_create_api_key(_name text, _scopes text[], _unit_ids uuid[] default null)
+-- a three-argument overload. Omitting _unit_ids resolves to the old function
+-- (equivalent to default null), avoiding PostgREST ambiguity between overloads.
+create or replace function public.admin_create_api_key(_name text, _scopes text[], _unit_ids uuid[])
 returns jsonb language plpgsql volatile security definer set search_path = public as $$
 declare v_key text; v_id uuid; v_name text := btrim(coalesce(_name,'')); v_org uuid := public._default_org();
 begin
