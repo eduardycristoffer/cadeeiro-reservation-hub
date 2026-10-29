@@ -58,7 +58,7 @@ export const context = (request: Request) =>
     const date = q.date ?? todaySp();
     const units = scopedUnits(key, await rpc<Unit[]>("sdr_list_units", {}));
     const unit = await findUnit(key, q);
-    if ((q.unit_id || q.unit_slug) && !unit) throw new ApiError("UNIT_NOT_FOUND");
+    if (key.unit_ids.length && (q.unit_id || q.unit_slug) && !unit) throw new ApiError("UNIT_NOT_FOUND");
     const unidades = units.map((u) => ({ id: u.id, slug: u.slug, nome: u.name, cidade: u.city ?? null, servicos: u.services ?? [], delivery: u.has_delivery ?? false }));
     const precos = unit ? await pricesFor(unit.id, date) : null;
     return {
