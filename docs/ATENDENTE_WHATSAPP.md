@@ -16,7 +16,8 @@ n8n "Follow-up" (a cada 15 min): pede /followups/due → manda lembrete (vésper
 
 - Unidade: Goiânia e Anápolis são operações separadas (serviços, valores e horários próprios). Se a caixa do CRM estiver
   mapeada a uma unidade (`crm_inbox_units`), o atendente já sabe; se não (caso da caixa de teste 49), ele pergunta
-  "Goiânia ou Anápolis?" antes de falar de valores ou reservar.
+  a unidade dentre as devolvidas por `/context`, antes de falar de valores ou reservar. Com chave só de Goiânia,
+  nunca oferece Anápolis, mesmo que o prompt ou a caixa de entrada indiquem outra unidade.
 - Reserva: o atendente pega primeiro nome + telefone (o próprio WhatsApp), depois unidade/serviço, dia, pessoas, horário
   (consultando vagas de verdade), ocasião e pedidos. Resume e pede o ok antes de criar. As duas unidades confirmam
   automaticamente (a reserva já nasce **confirmada** e entra no follow-up). Se alguma unidade desligar isso, a reserva
@@ -88,6 +89,20 @@ rodadas 1–4 leva direto ao **Finalizar**, então o cliente nunca fica sem resp
 
 ## Replicar (outra instância do CRM / outra empresa)
 
+### Restrição por chave: Goiânia agora, Anápolis depois
+
+1. Como super admin, abra **Integrações → SDR (n8n)** e nomeie a chave `SDR Goiânia`.
+2. Em **Unidades que esta chave atende**, escolha somente **Candeeiro Goiânia**. Não escolha **Todas as unidades**.
+3. Crie a chave e copie-a imediatamente para a configuração/credencial do n8n de Goiânia, tanto atendente como follow-up.
+4. Confira `/units`: só deve listar Goiânia; `/context` deve ignorar caixa mapeada para Anápolis (unidade/preços `null`).
+5. Teste a rejeição de valores, disponibilidade, reservas, delivery e protocolos de Anápolis. O servidor aplica a restrição,
+   independentemente do que a IA enviar; SAC/handoff sem unidade permanecem permitidos, sem acesso a conversas de outra unidade.
+6. Publique a versão do app/API antes de usar a nova chave no domínio de produção; esta alteração **não publica** nem troca configurações no n8n.
+
+Futuramente, crie outra chave `SDR Anápolis`, selecionando só **Candeeiro Anápolis**, e use configuração, caixa e credencial
+separadas. **Não foi implantado nada de Anápolis agora.** A chave antiga sem restrição continua com todas as unidades;
+não a revogue antes de validar a substituição. A opção explícita **Todas as unidades** cria esse mesmo comportamento legado.
+
 Goiânia e Anápolis são empresas diferentes e podem ter CRM próprio. Para cada instância:
 
 1. n8n: crie as 3 data tables (`candeeiro_config`, `candeeiro_estado`, `candeeiro_log`) e preencha a config (`crm_base`,
@@ -101,9 +116,9 @@ Goiânia e Anápolis são empresas diferentes e podem ter CRM próprio. Para cad
 
 ## Roteiro de testes (modo teste, só o número liberado)
 
-1. Valores sem unidade: "Quanto é o rodízio de pizza?" → pergunta Goiânia ou Anápolis; depois informa o valor do dia.
+1. Valores sem unidade: "Quanto é o rodízio de pizza?" → usa somente as unidades de `/context`; chave de Goiânia nunca oferece Anápolis.
 2. Valores por data: "E no sábado?" / "No feriado de 02/11?" → valor da tabela certa; criança → política infantil.
-3. Churrasco em Goiânia → informa que lá não tem e oferece Anápolis; delivery → só se a unidade tiver.
+3. Churrasco em Goiânia → informa que lá não tem, sem consultar/oferecer Anápolis com chave restrita; delivery → só se a unidade tiver.
 4. Reserva: dar nome, confirmar o número, dia, pessoas, horário, aniversário → resumo → "pode" → protocolo e "pendente".
 5. Alterar e cancelar a reserva pelo protocolo.
 6. Reclamação → empatia, SAC, etiqueta `sac-aberto` + `atendimento-humano`, bot fica quieto; resposta de uma pessoa também pausa.

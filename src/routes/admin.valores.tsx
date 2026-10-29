@@ -40,7 +40,8 @@ function Valores() {
     requireSupabase().from("units").select("id,name,services").order("sort_order").order("name").then(({ data }) => {
       const list = (data ?? []) as Unit[];
       setUnits(list);
-      if (list[0]) setUnitId((cur) => cur || list[0]!.id);
+      const first = list[0];
+      if (first) setUnitId((cur) => cur || first.id);
     });
   }, []);
 
@@ -70,7 +71,7 @@ function Valores() {
       )}
       {unit && tab === "tabelas" && <Tables unit={unit} canEdit={canEdit} />}
       {unit && tab === "previa" && <Preview unit={unit} />}
-      {tab === "feriados" && <Holidays canEdit={canEdit} />}
+      {tab === "feriados" && <Holidays canEdit={roles.includes("super_admin")} />}
     </div>
   );
 }

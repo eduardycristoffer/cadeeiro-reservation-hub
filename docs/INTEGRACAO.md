@@ -29,6 +29,38 @@ o banco guarda só o hash SHA-256. Escopos: `read` (GET) e `write` (POST/PATCH).
 mesma chave + mesmo corpo em até 24h devolve a resposta original; corpo diferente → `409 IDEMPOTENCY_CONFLICT`.
 Sugestão no n8n: `{{conversation_id}}-{{acao}}-{{n}}`.
 
+### Chave por unidade (migração 008)
+
+- `api_key_units` associa cada chave às suas unidades; **nenhuma linha = todas as unidades**, preservando chaves antigas.
+- `sdr_auth` devolve `unit_ids`; somente o servidor valida esse escopo. Não basta limitar o prompt.
+- `admin_create_api_key` aceita `_unit_ids` opcional: a assinatura antiga continua válida; a nova recebe o terceiro argumento explicitamente. Omitir equivale a `null` (todas), sem ambiguidade entre assinaturas no Data API.
+- `/units`, `/context`, reservas/delivery por telefone e follow-ups só retornam unidades permitidas. Os follow-ups são filtrados antes do limite.
+- Unidade fora do escopo é indistinguível de inexistente. PATCH e marcação de lembretes de outra unidade retornam `RESERVATION_NOT_FOUND`.
+- SAC/handoff sem unidade continuam permitidos, mas não podem modificar conversas ou vincular protocolos de outra unidade.
+- Classificação valida a unidade, a conversa existente e os protocolos vinculados; idempotência também revalida escopo antes do replay.
+
+#### Criar a chave somente de Goiânia
+
+1. Entre como super admin em **Integrações → SDR (n8n)**.
+2. Nomeie a chave `SDR Goiânia`; mantenha leitura e, se necessário, escrita.
+3. Em **Unidades que esta chave atende**, marque somente **Candeeiro Goiânia**; não marque **Todas as unidades**.
+4. Crie e copie a chave uma única vez para a credencial/configuração do fluxo de Goiânia no n8n, inclusive follow-up.
+5. Mapeie a caixa de Goiânia à unidade correta e confira `/units` e `/context`. Um mapeamento de Anápolis será ignorado por essa chave.
+6. Teste valores, disponibilidade, consulta de reservas e a rejeição de um protocolo de outra unidade antes de ativar o fluxo.
+
+#### Anápolis depois (não implantado nesta alteração)
+
+Repita esses passos futuramente com uma **nova** chave `SDR Anápolis`, marcando somente **Candeeiro Anápolis**.
+Use credencial, caixa e fluxo/configuração próprios; não reutilize a chave de Goiânia. Nenhuma chave ou implantação de Anápolis foi criada.
+O app/API precisa ser publicado antes de trocar a credencial do n8n que chama o domínio de produção.
+
+### Isolamento do painel (migração 009)
+
+`can_access_unit` e `can_manage_unit` permanecem inalteradas. Contadores, filtros, exportação de reservas e joins usam o cliente autenticado e RLS.
+Contatos CRM agora exigem conversa em unidade gerenciável; a atribuição de SAC não permite atravessar unidades.
+Clientes exclusivos do delivery aparecem apenas em pedidos de unidades autorizadas. Leads, Integrações e Equipe seguem exclusivos do super admin.
+Feriados são um calendário compartilhado da organização (não possuem unidade): leitura permanece compartilhada, edição agora exclusiva do super admin.
+
 ## Formato das respostas
 
 Sucesso: `{"ok": true, "data": {...}, "mensagem_sugerida": "..."}`

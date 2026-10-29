@@ -27,14 +27,16 @@ export function buildOpenApi(origin: string) {
     openapi: "3.0.3",
     info: {
       title: "Candeeiro — API do SDR",
-      version: "1.1.0",
+      version: "1.2.0",
       description: "Ferramentas do SDR de WhatsApp. Nunca afirme disponibilidade sem consultar /availability. " +
-        "Valores só pelo /prices (nunca invente). Use o campo mensagem_sugerida: ele não promete confirmação nem prazo.",
+        "Valores só pelo /prices (nunca invente). Use o campo mensagem_sugerida: ele não promete confirmação nem prazo. " +
+        "Cada chave pode atender unidades específicas. Chaves sem restrição continuam atendendo todas. Todos os endpoints validam o escopo no servidor; " +
+        "unidades fora dele são tratadas como inexistentes e consultas por telefone retornam somente registros permitidos.",
     },
     servers: [{ url: `${origin}/api/public/sdr` }],
     security: [{ bearer: [] }],
     components: {
-      securitySchemes: { bearer: { type: "http", scheme: "bearer", description: "Chave criada em Painel > Integrações > SDR" } },
+      securitySchemes: { bearer: { type: "http", scheme: "bearer", description: "Chave criada em Painel > Integrações > SDR. Selecione explicitamente as unidades atendidas ou Todas as unidades. Chaves antigas sem vínculos mantêm acesso irrestrito." } },
       responses: {
         Error: {
           description: "Erro padronizado",
@@ -59,7 +61,7 @@ export function buildOpenApi(origin: string) {
         401: err, 429: err } } },
       "/context": { get: { operationId: "contextoDaConversa",
         summary: "Abertura da conversa: data de hoje, unidade da caixa de entrada, unidades e valores de hoje",
-        description: "Informe inbox (conta:caixa, ex.: 15:49). Se a caixa não estiver mapeada a uma unidade, unidade vem null e o atendente pergunta qual unidade.",
+        description: "Informe inbox (conta:caixa, ex.: 15:49). Caixa sem mapeamento ou mapeada fora do escopo: unidade e precos vêm null. A lista contém somente unidades permitidas. unit_id/unit_slug fora do escopo: UNIT_NOT_FOUND.",
         parameters: [q("inbox", "string"), q("unit_slug", "string"), q("date", "string", false, { format: "date" })],
         responses: { 200: resp("Contexto", { type: "object", properties: {
           hoje: { type: "object", properties: { data: { type: "string" }, dia_da_semana: { type: "string" } } },

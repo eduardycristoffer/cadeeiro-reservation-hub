@@ -11,6 +11,9 @@
 
 # Project rules
 
+- SDR API key unit authorization is centralized in server scope guards before idempotency replay, with filtered reads and pre-limit scoped follow-ups; empty api_key_units mappings preserve legacy access, so linked protocols and existing conversations must also be checked.
+- Admin unit visibility remains enforced by existing can_access_unit/can_manage_unit RLS; SAC assignment cannot bypass unit access, CRM contact reads require an authorized conversation, and organization-wide holidays are shared read-only except for super admins.
+
 - Keep mobile admin navigation in a visible grid and constrain the shared content column with min-width zero; wide data belongs in local scrollers or mobile item lists to prevent page-level overflow.
 
 - Backend is Lovable Cloud (enabled by the owner on 2026-10-26, reversing the earlier "own Supabase" plan); `db/migrations/` keeps the canonical SQL and every change is applied through the migration tool, so the file and the live schema must stay in sync.
