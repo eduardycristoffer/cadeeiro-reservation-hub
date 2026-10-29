@@ -9,9 +9,10 @@ Limites da verificação: nenhuma reserva ou pedido fictício foi gravado; confi
 
 # Isolamento das chaves SDR por unidade
 
-- [ ] Aplicar migration aditiva de unidades por chave preservando chaves antigas.
-- [ ] Validar o escopo em todos os endpoints SDR, inclusive vínculos e protocolos.
-- [ ] Adicionar seleção explícita de unidades na criação e listagem de chaves.
-- [ ] Auditar consultas e RLS do painel, corrigindo vazamentos sem mudar o acesso existente às unidades.
-- [ ] Atualizar documentação e OpenAPI.
-- [ ] Executar testes de isolamento e compatibilidade e verificar o painel, sem publicar ou alterar unidades.
+- [x] Aplicar migrations 008 e 009, preservando chaves antigas e helpers de acesso às unidades.
+- [x] Validar o escopo em todos os endpoints SDR, inclusive vínculos, protocolos e replay.
+- [x] Adicionar seleção explícita de unidades na criação e listagem de chaves.
+- [x] Auditar consultas e RLS do painel e corrigir contatos CRM/SAC; feriados permanecem compartilhados com edição só pelo super admin.
+- [x] Atualizar documentação e OpenAPI.
+- [x] Executar testes de isolamento e compatibilidade: 59 testes SDR, 126 totais aprovados; sem publicar ou alterar unidades.
+- [ ] Verificar criação/leitura de uma chave restrita no painel com sessão real: sem sessão disponível; tentativa de acesso automático não encontrou conta correspondente ao solicitante. Requer login na prévia. Nenhuma chave real foi criada, nem n8n alterado; testes SDR usam clientes de banco simulados, não gravam reservas/delivery reais.
