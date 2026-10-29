@@ -34,7 +34,7 @@ vi.mock("@/integrations/supabase/client.server", () => ({ supabaseAdmin: {
       sdr_find_reservations: (state.rows['reservations'] ?? []).filter((r) => !args['_protocol'] || r['protocol'] === args['_protocol']),
       sdr_get_delivery_orders: (state.rows['delivery_orders'] ?? []).filter((r) => !args['_protocol'] || r['protocol'] === args['_protocol']),
       sdr_followups_due: state.rows['reservations'],
-      sdr_scoped_followups_due: (state.rows['reservations'] ?? []).filter((r) => (args['_unit_ids'] as string[]).includes(r['unit_id'] as string)),
+      sdr_scoped_followups_due: (state.rows['reservations'] ?? []).filter((r) => ((args['_unit_ids'] ?? []) as string[]).includes(r['unit_id'] as string)),
       get_unit_slots: [{ slot_time: "19:00:00", remaining: 10, available: true }],
       get_unit_available_dates: [{ available_date: "2026-11-20" }],
       resolve_unit_prices: { unit: { name: "Unidade" }, date: "2026-11-20", weekday: 5, is_holiday: false, services: [] },
