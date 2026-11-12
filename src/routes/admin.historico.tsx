@@ -164,5 +164,5 @@ function Historico() {
 }
 
 function Fld({ id, label, children }: { id: string; label: string; children: React.ReactNode }) {
-  return <div className="min-w-0 space-y-1.5"><Label htmlFor={id}>{label}</Label>{children}</div>;
+  return <div className="flex min-w-0 flex-col gap-1.5 [&>*:last-child]:w-full"><Label htmlFor={id}>{label}</Label>{children}</div>;
 }

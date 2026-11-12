@@ -272,7 +272,7 @@ function TicketSheet({ id, onClose, onChanged }: { id: string | null; onClose: (
                   </div>
                 </section>
               )}
-              {d.reservation && <p className="text-sm">Reserva: <a className="font-medium underline" href={`/admin/reservas?id=${d.reservation.id}`}>{d.reservation.protocol}</a> · {d.reservation.date.split("-").reverse().join("/")} {d.reservation.time.slice(0, 5)}</p>}
+              {d.reservation && <p className="text-sm">Reserva: <a className="font-medium underline" href={`/admin/reservas?periodo=todas&q=${encodeURIComponent(d.reservation.protocol)}`}>{d.reservation.protocol}</a> · {d.reservation.date.split("-").reverse().join("/")} {d.reservation.time.slice(0, 5)}</p>}
               {d.description && <p className="whitespace-pre-wrap break-words text-sm">{d.description}</p>}
               {d.resolution && <p className="rounded-xl bg-status-confirmed-bg p-3 text-sm text-status-confirmed">Resolução: {d.resolution}</p>}
 
@@ -411,5 +411,5 @@ function NewTicketSheet({ open, onOpenChange, units, onCreated }: { open: boolea
 }
 
 function Fld({ id, label, children }: { id: string; label: string; children: React.ReactNode }) {
-  return <div className="min-w-0 space-y-1.5"><Label htmlFor={id}>{label}</Label>{children}</div>;
+  return <div className="flex min-w-0 flex-col gap-1.5 [&>*:last-child]:w-full"><Label htmlFor={id}>{label}</Label>{children}</div>;
 }

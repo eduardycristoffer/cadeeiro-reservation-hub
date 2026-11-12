@@ -20,6 +20,7 @@ import { Route as AdminEquipeRouteImport } from './routes/admin.equipe'
 import { Route as AdminHistoricoRouteImport } from './routes/admin.historico'
 import { Route as AdminIntegracoesRouteImport } from './routes/admin.integracoes'
 import { Route as AdminPerfilRouteImport } from './routes/admin.perfil'
+import { Route as AdminRelatoriosRouteImport } from './routes/admin.relatorios'
 import { Route as AdminReservasRouteImport } from './routes/admin.reservas'
 import { Route as AdminSacRouteImport } from './routes/admin.sac'
 import { Route as AdminValoresRouteImport } from './routes/admin.valores'
@@ -97,6 +98,11 @@ const AdminIntegracoesRoute = AdminIntegracoesRouteImport.update({
 const AdminPerfilRoute = AdminPerfilRouteImport.update({
   id: '/perfil',
   path: '/perfil',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminRelatoriosRoute = AdminRelatoriosRouteImport.update({
+  id: '/relatorios',
+  path: '/relatorios',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminReservasRoute = AdminReservasRouteImport.update({
@@ -233,6 +239,7 @@ export interface FileRoutesByFullPath {
   '/admin/historico': typeof AdminHistoricoRoute
   '/admin/integracoes': typeof AdminIntegracoesRoute
   '/admin/perfil': typeof AdminPerfilRoute
+  '/admin/relatorios': typeof AdminRelatoriosRoute
   '/admin/reservas': typeof AdminReservasRoute
   '/admin/sac': typeof AdminSacRoute
   '/admin/valores': typeof AdminValoresRoute
@@ -268,6 +275,7 @@ export interface FileRoutesByTo {
   '/admin/historico': typeof AdminHistoricoRoute
   '/admin/integracoes': typeof AdminIntegracoesRoute
   '/admin/perfil': typeof AdminPerfilRoute
+  '/admin/relatorios': typeof AdminRelatoriosRoute
   '/admin/reservas': typeof AdminReservasRoute
   '/admin/sac': typeof AdminSacRoute
   '/admin/valores': typeof AdminValoresRoute
@@ -305,6 +313,7 @@ export interface FileRoutesById {
   '/admin/historico': typeof AdminHistoricoRoute
   '/admin/integracoes': typeof AdminIntegracoesRoute
   '/admin/perfil': typeof AdminPerfilRoute
+  '/admin/relatorios': typeof AdminRelatoriosRoute
   '/admin/reservas': typeof AdminReservasRoute
   '/admin/sac': typeof AdminSacRoute
   '/admin/valores': typeof AdminValoresRoute
@@ -343,6 +352,7 @@ export interface FileRouteTypes {
     | '/admin/historico'
     | '/admin/integracoes'
     | '/admin/perfil'
+    | '/admin/relatorios'
     | '/admin/reservas'
     | '/admin/sac'
     | '/admin/valores'
@@ -378,6 +388,7 @@ export interface FileRouteTypes {
     | '/admin/historico'
     | '/admin/integracoes'
     | '/admin/perfil'
+    | '/admin/relatorios'
     | '/admin/reservas'
     | '/admin/sac'
     | '/admin/valores'
@@ -414,6 +425,7 @@ export interface FileRouteTypes {
     | '/admin/historico'
     | '/admin/integracoes'
     | '/admin/perfil'
+    | '/admin/relatorios'
     | '/admin/reservas'
     | '/admin/sac'
     | '/admin/valores'
@@ -540,6 +552,13 @@ declare module '@tanstack/react-router' {
       path: '/perfil'
       fullPath: '/admin/perfil'
       preLoaderRoute: typeof AdminPerfilRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/relatorios': {
+      id: '/admin/relatorios'
+      path: '/relatorios'
+      fullPath: '/admin/relatorios'
+      preLoaderRoute: typeof AdminRelatoriosRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/reservas': {
@@ -713,6 +732,7 @@ interface AdminRouteChildren {
   AdminHistoricoRoute: typeof AdminHistoricoRoute
   AdminIntegracoesRoute: typeof AdminIntegracoesRoute
   AdminPerfilRoute: typeof AdminPerfilRoute
+  AdminRelatoriosRoute: typeof AdminRelatoriosRoute
   AdminReservasRoute: typeof AdminReservasRoute
   AdminSacRoute: typeof AdminSacRoute
   AdminValoresRoute: typeof AdminValoresRoute
@@ -728,6 +748,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminHistoricoRoute: AdminHistoricoRoute,
   AdminIntegracoesRoute: AdminIntegracoesRoute,
   AdminPerfilRoute: AdminPerfilRoute,
+  AdminRelatoriosRoute: AdminRelatoriosRoute,
   AdminReservasRoute: AdminReservasRoute,
   AdminSacRoute: AdminSacRoute,
   AdminValoresRoute: AdminValoresRoute,

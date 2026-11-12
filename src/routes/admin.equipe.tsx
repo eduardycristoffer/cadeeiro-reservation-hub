@@ -146,7 +146,7 @@ function InviteSheet({ open, onOpenChange, units, isSuper, onDone }: { open: boo
             <Input id="iv-email" required type="email" inputMode="email" autoComplete="off" value={email} onChange={(e) => setEmail(e.target.value)} className="h-12 rounded-xl" /></div>
           <div className="space-y-1.5"><Label htmlFor="iv-name">Nome</Label>
             <Input id="iv-name" required minLength={2} value={name} onChange={(e) => setName(e.target.value)} className="h-12 rounded-xl" /></div>
-          <div className="space-y-1.5"><Label htmlFor="iv-role">Papel</Label>
+          <div className="flex flex-col gap-1.5 [&>*:last-child]:w-full"><Label htmlFor="iv-role">Papel</Label>
             <NativeSelect id="iv-role" value={role} onChange={(e) => setRole(e.target.value as Role)}>
               {assignableRoles(isSuper).map((r) => <option key={r} value={r}>{ROLE_LABEL[r]}</option>)}
             </NativeSelect></div>
@@ -225,7 +225,7 @@ function PersonSheet({ person, me, units, isSuper, unitName, onClose, onChanged 
                 : lockedSuper ? <p className="text-sm text-muted-foreground">Somente um Super Admin altera outro Super Admin.</p>
                 : (
                   <div className="space-y-4">
-                    <div className="space-y-1.5"><Label htmlFor="ps-role">Papel</Label>
+                    <div className="flex flex-col gap-1.5 [&>*:last-child]:w-full"><Label htmlFor="ps-role">Papel</Label>
                       <NativeSelect id="ps-role" value={role} onChange={(e) => setRole(e.target.value as Role)}>
                         {assignableRoles(isSuper).map((r) => <option key={r} value={r}>{ROLE_LABEL[r]}</option>)}
                       </NativeSelect></div>

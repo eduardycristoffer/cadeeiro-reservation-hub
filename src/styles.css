@@ -278,3 +278,14 @@
   :root:not(.light) .logo-on-light { display: none; }
   :root:not(.light) .logo-on-dark { display: inline-block; }
 }
+
+/* Relatórios: impressão / PDF do consolidado */
+.print-only { display: none; }
+@media print {
+  @page { size: A4; margin: 12mm; }
+  aside, header, nav, .no-print, [data-sonner-toaster] { display: none !important; }
+  .print-only { display: block; }
+  .admin-main { padding: 0 !important; max-width: none !important; }
+  body { background: #fff !important; color: #000 !important; }
+  .kpi, section { box-shadow: none !important; border: 1px solid #ddd; break-inside: avoid; }
+}

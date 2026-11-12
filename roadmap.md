@@ -33,7 +33,8 @@ Limites da verificação: nenhuma reserva ou pedido fictício foi gravado; confi
 - [x] audit_log append-only, login/logout/bloqueio, /admin/historico, histórico na reserva
 
 # Etapa 3 — SAC e relatórios
-- [ ] Migration 011 (SAC: categorias/prioridade/SLA/eventos; RPCs de relatório por unidade)
-- [ ] /admin/sac (kanban/cards, filtros, detalhe, criar, reabrir, indicadores)
-- [ ] /admin/relatorios (abas, consolidado imprimível, CSV)
-- [ ] Navegação com SAC (badge) e Relatórios
+- [x] Migration 011 (SAC: categorias/prioridade/SLA/eventos; RPCs de relatório por unidade)
+- [x] /admin/sac (kanban/cards, filtros, detalhe, criar, reabrir, indicadores)
+- [x] /admin/relatorios (abas, consolidado imprimível, CSV)
+- [x] Navegação com SAC (badge) e Relatórios
+- [x] Lint/build/testes e lista do que faltou por falta de dado

@@ -1,7 +1,7 @@
 import { BrandLogo } from "@/components/BrandLogo";
 import { createFileRoute, Link, Outlet, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Building2, CalendarDays, CheckCircle2, History, LayoutGrid, LogOut, Loader2, Menu, Plug, Tag, Truck, UserCircle, Users } from "lucide-react";
+import { BarChart3, Building2, CalendarDays, Headset, CheckCircle2, History, LayoutGrid, LogOut, Loader2, Menu, Plug, Tag, Truck, UserCircle, Users } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { usePendingCount } from "@/lib/approvals";
 import { AuthProvider, signOutLogged, useAuth } from "@/lib/auth";
@@ -32,10 +32,12 @@ const NAV = [
   { to: "/admin", label: "Início", icon: LayoutGrid, exact: true },
   { to: "/admin/reservas", label: "Reservas", icon: CalendarDays, exact: false },
   { to: "/admin/aprovacoes", label: "Aprovações", icon: CheckCircle2, exact: false },
+  { to: "/admin/sac", label: "SAC", icon: Headset, exact: false },
   { to: "/admin/delivery", label: "Delivery", icon: Truck, exact: false },
   { to: "/admin/valores", label: "Valores", icon: Tag, exact: false, managerOnly: true },
   { to: "/admin/unidades", label: "Unidades", icon: Building2, exact: false },
   { to: "/admin/equipe", label: "Equipe", icon: Users, exact: false, managerOnly: true },
+  { to: "/admin/relatorios", label: "Relatórios", icon: BarChart3, exact: false, managerOnly: true },
   { to: "/admin/historico", label: "Histórico", icon: History, exact: false, managerOnly: true },
   { to: "/admin/integracoes", label: "Integrações", icon: Plug, exact: false, superOnly: true },
   { to: "/admin/perfil", label: "Meu perfil", icon: UserCircle, exact: false },
@@ -73,7 +75,22 @@ function AdminShell() {
 }
 
 type NavItem = (typeof NAV)[number];
-const PRIMARY: string[] = ["/admin", "/admin/reservas", "/admin/aprovacoes"];
+const PRIMARY: string[] = ["/admin", "/admin/reservas", "/admin/aprovacoes", "/admin/sac"];
+
+/** Chamados de SAC abertos (só das unidades do usuário), atualizado em tempo real. */
+function useSacOpenCount() {
+  const [n, setN] = useState<number | null>(null);
+  useEffect(() => {
+    if (!supabase) return;
+    const sb = supabase;
+    const load = () => sb.rpc("sac_open_count").then(({ data }) => setN(typeof data === "number" ? data : null));
+    load();
+    const ch = sb.channel("sac-badge").on("postgres_changes", { event: "*", schema: "public", table: "sac_tickets" }, load).subscribe();
+    const t = setInterval(load, 60_000);
+    return () => { clearInterval(t); sb.removeChannel(ch); };
+  }, []);
+  return n;
+}
 
 function Badge({ n }: { n: number | null }) {
   if (!n) return null;
@@ -82,6 +99,8 @@ function Badge({ n }: { n: number | null }) {
 
 function Shell({ nav, email }: { nav: readonly NavItem[]; email: string }) {
   const pending = usePendingCount();
+  const sacOpen = useSacOpenCount();
+  const badge = (to: string) => (to === "/admin/aprovacoes" ? pending : to === "/admin/sac" ? sacOpen : null);
   const [more, setMore] = useState(false);
   const primary = nav.filter((n) => PRIMARY.includes(n.to));
   const rest = nav.filter((n) => !PRIMARY.includes(n.to));
@@ -99,7 +118,7 @@ function Shell({ nav, email }: { nav: readonly NavItem[]; email: string }) {
               className="flex min-h-11 items-center gap-3 rounded-xl px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-foreground data-[status=active]:bg-sidebar-accent data-[status=active]:font-medium data-[status=active]:text-foreground"
             >
               <n.icon className="h-4 w-4" aria-hidden="true" /> {n.label}
-              {n.to === "/admin/aprovacoes" && <Badge n={pending} />}
+              <Badge n={badge(n.to)} />
             </Link>
           ))}
         </nav>
@@ -121,13 +140,13 @@ function Shell({ nav, email }: { nav: readonly NavItem[]; email: string }) {
       </div>
 
       <nav aria-label="Atalhos" className="safe-bottom fixed inset-x-0 bottom-0 z-40 border-t bg-background/95 backdrop-blur md:hidden">
-        <div className="grid grid-cols-4">
+        <div className="grid grid-cols-5">
           {primary.map((n) => (
             <Link key={n.to} to={n.to} activeOptions={{ exact: n.exact }} className="relative flex min-h-14 flex-col items-center justify-center gap-0.5 text-[11px] text-muted-foreground data-[status=active]:font-semibold data-[status=active]:text-foreground">
               <span className="relative">
                 <n.icon className="h-5 w-5" aria-hidden="true" />
-                {n.to === "/admin/aprovacoes" && pending ? (
-                  <span className="absolute -right-3 -top-1.5 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-brand px-1 text-[10px] font-bold text-brand-foreground">{pending > 99 ? "99+" : pending}<span className="sr-only"> pendentes</span></span>
+                {badge(n.to) ? (
+                  <span className="absolute -right-3 -top-1.5 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-brand px-1 text-[10px] font-bold text-brand-foreground">{badge(n.to)! > 99 ? "99+" : badge(n.to)}<span className="sr-only"> pendentes</span></span>
                 ) : null}
               </span>
               {n.label}
