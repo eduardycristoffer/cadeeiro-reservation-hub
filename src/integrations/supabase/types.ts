@@ -1492,6 +1492,35 @@ export type Database = {
           },
         ]
       }
+      sac_sla_settings: {
+        Row: {
+          hours: number
+          organization_id: string
+          priority: Database["public"]["Enums"]["sac_priority"]
+          updated_at: string
+        }
+        Insert: {
+          hours: number
+          organization_id: string
+          priority: Database["public"]["Enums"]["sac_priority"]
+          updated_at?: string
+        }
+        Update: {
+          hours?: number
+          organization_id?: string
+          priority?: Database["public"]["Enums"]["sac_priority"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sac_sla_settings_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sac_ticket_events: {
         Row: {
           author_id: string | null
@@ -1540,6 +1569,7 @@ export type Database = {
         Row: {
           assigned_to: string | null
           category: Database["public"]["Enums"]["sac_category"]
+          complaint_type: string | null
           created_at: string
           customer_id: string | null
           description: string | null
@@ -1552,6 +1582,7 @@ export type Database = {
           origin: string
           priority: Database["public"]["Enums"]["sac_priority"]
           protocol: string
+          reopened_count: number
           reservation_id: string | null
           resolution: string | null
           resolved_at: string | null
@@ -1563,6 +1594,7 @@ export type Database = {
         Insert: {
           assigned_to?: string | null
           category: Database["public"]["Enums"]["sac_category"]
+          complaint_type?: string | null
           created_at?: string
           customer_id?: string | null
           description?: string | null
@@ -1575,6 +1607,7 @@ export type Database = {
           origin?: string
           priority?: Database["public"]["Enums"]["sac_priority"]
           protocol: string
+          reopened_count?: number
           reservation_id?: string | null
           resolution?: string | null
           resolved_at?: string | null
@@ -1586,6 +1619,7 @@ export type Database = {
         Update: {
           assigned_to?: string | null
           category?: Database["public"]["Enums"]["sac_category"]
+          complaint_type?: string | null
           created_at?: string
           customer_id?: string | null
           description?: string | null
@@ -1598,6 +1632,7 @@ export type Database = {
           origin?: string
           priority?: Database["public"]["Enums"]["sac_priority"]
           protocol?: string
+          reopened_count?: number
           reservation_id?: string | null
           resolution?: string | null
           resolved_at?: string | null
@@ -1827,7 +1862,20 @@ export type Database = {
         Returns: boolean
       }
       _default_org: { Args: never; Returns: string }
+      _is_manager: { Args: { _uid: string }; Returns: boolean }
       _rand_hex: { Args: { _len: number }; Returns: string }
+      _report_guard: { Args: { _unit: string }; Returns: undefined }
+      _sac_can: { Args: { _uid: string; _unit: string }; Returns: boolean }
+      _sac_event: {
+        Args: {
+          _body: string
+          _from: Database["public"]["Enums"]["sac_status"]
+          _t: string
+          _to: Database["public"]["Enums"]["sac_status"]
+          _type: string
+        }
+        Returns: undefined
+      }
       add_reservation_note: {
         Args: { _note: string; _reservation_id: string }
         Returns: undefined
@@ -2070,6 +2118,10 @@ export type Database = {
       hit_rate_limit: { Args: { _key: string; _max: number }; Returns: boolean }
       is_staff: { Args: { _user_id: string }; Returns: boolean }
       log_auth_event: { Args: { _action: string }; Returns: boolean }
+      log_report_export: {
+        Args: { _from: string; _tab: string; _to: string; _unit?: string }
+        Returns: undefined
+      }
       mark_reservation_arrived: {
         Args: { _reservation_id: string }
         Returns: string
@@ -2090,15 +2142,174 @@ export type Database = {
           slug: string
         }[]
       }
+      report_customers: {
+        Args: {
+          _from: string
+          _origin?: string
+          _service?: string
+          _to: string
+          _unit?: string
+        }
+        Returns: Json
+      }
+      report_funnel: {
+        Args: {
+          _from: string
+          _origin?: string
+          _service?: string
+          _to: string
+          _unit?: string
+        }
+        Returns: Json
+      }
+      report_reservations: {
+        Args: {
+          _from: string
+          _origin?: string
+          _service?: string
+          _to: string
+          _unit?: string
+        }
+        Returns: Json
+      }
+      report_sac: {
+        Args: { _from: string; _to: string; _unit?: string }
+        Returns: Json
+      }
+      report_sdr: {
+        Args: { _from: string; _to: string; _unit?: string }
+        Returns: Json
+      }
+      report_summary: {
+        Args: {
+          _from: string
+          _origin?: string
+          _service?: string
+          _to: string
+          _unit?: string
+        }
+        Returns: Json
+      }
+      report_team: {
+        Args: { _from: string; _to: string; _unit?: string }
+        Returns: Json
+      }
       resolve_unit_prices: {
         Args: { _date: string; _unit_id: string }
         Returns: Json
       }
       run_data_retention: { Args: never; Returns: Json }
+      sac_add_note: { Args: { _body: string; _id: string }; Returns: undefined }
+      sac_create_manual: {
+        Args: {
+          _assigned_to?: string
+          _category: Database["public"]["Enums"]["sac_category"]
+          _channel: string
+          _complaint_type: string
+          _description: string
+          _full_name: string
+          _phone: string
+          _priority: Database["public"]["Enums"]["sac_priority"]
+          _reservation_protocol?: string
+          _subject: string
+          _unit_id: string
+        }
+        Returns: Json
+      }
+      sac_get: { Args: { _id: string }; Returns: Json }
+      sac_list: {
+        Args: {
+          _assignee?: string
+          _category?: Database["public"]["Enums"]["sac_category"]
+          _from?: string
+          _limit?: number
+          _offset?: number
+          _origin?: string
+          _overdue?: boolean
+          _priority?: Database["public"]["Enums"]["sac_priority"]
+          _q?: string
+          _status?: Database["public"]["Enums"]["sac_status"]
+          _to?: string
+          _type?: string
+          _unit?: string
+        }
+        Returns: {
+          assigned_to: string
+          assignee_name: string
+          category: Database["public"]["Enums"]["sac_category"]
+          complaint_type: string
+          customer_name: string
+          customer_phone: string
+          due_at: string
+          first_response_at: string
+          id: string
+          opened_at: string
+          origin: string
+          priority: Database["public"]["Enums"]["sac_priority"]
+          protocol: string
+          reopened_count: number
+          resolved_at: string
+          sla_state: string
+          status: Database["public"]["Enums"]["sac_status"]
+          subject: string
+          total: number
+          unit_id: string
+          unit_name: string
+        }[]
+      }
+      sac_open_count: { Args: never; Returns: number }
+      sac_priority_hours: {
+        Args: { _org: string; _p: Database["public"]["Enums"]["sac_priority"] }
+        Returns: number
+      }
+      sac_register_contact: {
+        Args: { _channel: string; _id: string; _summary: string }
+        Returns: undefined
+      }
+      sac_reopen: { Args: { _id: string; _reason: string }; Returns: undefined }
+      sac_resolve: {
+        Args: { _id: string; _resolution: string }
+        Returns: undefined
+      }
+      sac_set_sla: {
+        Args: {
+          _hours: number
+          _priority: Database["public"]["Enums"]["sac_priority"]
+        }
+        Returns: undefined
+      }
       sac_sla_hours: {
         Args: { _category: Database["public"]["Enums"]["sac_category"] }
         Returns: number
       }
+      sac_stats: { Args: { _unit?: string }; Returns: Json }
+      sac_team_for_unit: {
+        Args: { _unit: string }
+        Returns: {
+          full_name: string
+          id: string
+          role: string
+        }[]
+      }
+      sac_timeline: {
+        Args: { _id: string }
+        Returns: {
+          action: string
+          actor_role: string
+          after: Json
+          author_name: string
+          before: Json
+          body: string
+          created_at: string
+          event_type: string
+          from_status: string
+          id: string
+          kind: string
+          source: string
+          to_status: string
+        }[]
+      }
+      sac_update: { Args: { _id: string; _patch: Json }; Returns: undefined }
       sdr_auth: { Args: { _key_hash: string }; Returns: Json }
       sdr_cancel_reservation: {
         Args: { _phone: string; _protocol: string; _reason: string }
