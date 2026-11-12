@@ -1,3 +1,4 @@
+import { ReservationTimeline } from "@/components/admin/ReservationTimeline";
 import { useEffect, useState } from "react";
 import { Loader2, MessageCircle, MoreHorizontal, Phone, Users } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -159,7 +160,7 @@ export function ReservationDrawer({ id, tick, onClose, onChanged }: { id: string
             )}
 
             <section className="mt-6">
-              <h3 className="text-sm font-medium">Histórico</h3>
+              <h3 className="text-sm font-medium">Status e observações</h3>
               {historyError && <p role="alert" className="mt-2 text-sm text-destructive">{historyError}</p>}
               <ol className="mt-2 space-y-3 border-l pl-4">
                 {hist.map((h) => (
@@ -177,6 +178,8 @@ export function ReservationDrawer({ id, tick, onClose, onChanged }: { id: string
                 ))}
               </ol>
             </section>
+
+            <ReservationTimeline id={r.id} status={r.status} />
             </div>
 
             <footer className="safe-bottom shrink-0 border-t bg-background px-4 pt-3 sm:px-6" style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}>

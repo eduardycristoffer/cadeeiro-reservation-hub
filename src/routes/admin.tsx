@@ -1,10 +1,10 @@
 import { BrandLogo } from "@/components/BrandLogo";
 import { createFileRoute, Link, Outlet, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Building2, CalendarDays, CheckCircle2, LayoutGrid, LogOut, Loader2, Menu, Plug, Tag, Truck, Users } from "lucide-react";
+import { Building2, CalendarDays, CheckCircle2, History, LayoutGrid, LogOut, Loader2, Menu, Plug, Tag, Truck, UserCircle, Users } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { usePendingCount } from "@/lib/approvals";
-import { AuthProvider, useAuth } from "@/lib/auth";
+import { AuthProvider, signOutLogged, useAuth } from "@/lib/auth";
 import { isSupabaseConfigured, supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Toaster } from "@/components/ui/sonner";
@@ -35,17 +35,20 @@ const NAV = [
   { to: "/admin/delivery", label: "Delivery", icon: Truck, exact: false },
   { to: "/admin/valores", label: "Valores", icon: Tag, exact: false, managerOnly: true },
   { to: "/admin/unidades", label: "Unidades", icon: Building2, exact: false },
-  { to: "/admin/equipe", label: "Equipe", icon: Users, exact: false, superOnly: true },
+  { to: "/admin/equipe", label: "Equipe", icon: Users, exact: false, managerOnly: true },
+  { to: "/admin/historico", label: "Histórico", icon: History, exact: false, managerOnly: true },
   { to: "/admin/integracoes", label: "Integrações", icon: Plug, exact: false, superOnly: true },
+  { to: "/admin/perfil", label: "Meu perfil", icon: UserCircle, exact: false },
 ] as const;
 
 function AdminShell() {
-  const { loading, user, roles } = useAuth();
+  const { loading, user, roles, isActive, needsOnboarding } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
     if (!loading && !user && isSupabaseConfigured) navigate({ to: "/entrar" });
-  }, [loading, user, navigate]);
+    if (!loading && user && needsOnboarding && isActive) navigate({ to: "/primeiro-acesso" });
+  }, [loading, user, needsOnboarding, isActive, navigate]);
 
   if (!isSupabaseConfigured) {
     return <Center>O banco de dados ainda não foi conectado a este projeto.</Center>;
@@ -55,9 +58,9 @@ function AdminShell() {
     return (
       <Center>
         <div className="max-w-sm text-center">
-          <h1 className="text-2xl font-semibold">Acesso pendente</h1>
-          <p className="mt-2 text-muted-foreground">Sua conta foi criada, mas ainda não tem permissão. Peça a um administrador para liberar seu acesso.</p>
-          <Button variant="outline" className="mt-6" onClick={() => supabase?.auth.signOut()}>Sair</Button>
+          <h1 className="text-2xl font-semibold">{isActive ? "Acesso pendente" : "Acesso desativado"}</h1>
+          <p className="mt-2 text-muted-foreground">{isActive ? "Sua conta ainda não tem permissão. Fale com o gestor da unidade." : "Seu acesso foi desativado. Fale com o gestor da unidade."}</p>
+          <Button variant="outline" className="mt-6 h-11" onClick={() => supabase?.auth.signOut()}>Sair</Button>
         </div>
       </Center>
     );
@@ -70,7 +73,7 @@ function AdminShell() {
 }
 
 type NavItem = (typeof NAV)[number];
-const PRIMARY = ["/admin", "/admin/reservas", "/admin/aprovacoes"];
+const PRIMARY: string[] = ["/admin", "/admin/reservas", "/admin/aprovacoes"];
 
 function Badge({ n }: { n: number | null }) {
   if (!n) return null;
@@ -82,7 +85,7 @@ function Shell({ nav, email }: { nav: readonly NavItem[]; email: string }) {
   const [more, setMore] = useState(false);
   const primary = nav.filter((n) => PRIMARY.includes(n.to));
   const rest = nav.filter((n) => !PRIMARY.includes(n.to));
-  const signOut = () => supabase?.auth.signOut();
+  const signOut = () => signOutLogged();
   return (
     <div className="flex min-h-screen bg-background">
       <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col border-r bg-sidebar p-4 md:flex">

@@ -12,11 +12,14 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as EntrarRouteImport } from './routes/entrar'
+import { Route as PrimeiroAcessoRouteImport } from './routes/primeiro-acesso'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as AdminAprovacoesRouteImport } from './routes/admin.aprovacoes'
 import { Route as AdminDeliveryRouteImport } from './routes/admin.delivery'
 import { Route as AdminEquipeRouteImport } from './routes/admin.equipe'
+import { Route as AdminHistoricoRouteImport } from './routes/admin.historico'
 import { Route as AdminIntegracoesRouteImport } from './routes/admin.integracoes'
+import { Route as AdminPerfilRouteImport } from './routes/admin.perfil'
 import { Route as AdminReservasRouteImport } from './routes/admin.reservas'
 import { Route as AdminValoresRouteImport } from './routes/admin.valores'
 import { Route as GoianiaPizzaRouteImport } from './routes/goiania.pizza'
@@ -55,6 +58,11 @@ const EntrarRoute = EntrarRouteImport.update({
   path: '/entrar',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PrimeiroAcessoRoute = PrimeiroAcessoRouteImport.update({
+  id: '/primeiro-acesso',
+  path: '/primeiro-acesso',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminIndexRoute = AdminIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -75,9 +83,19 @@ const AdminEquipeRoute = AdminEquipeRouteImport.update({
   path: '/equipe',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminHistoricoRoute = AdminHistoricoRouteImport.update({
+  id: '/historico',
+  path: '/historico',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminIntegracoesRoute = AdminIntegracoesRouteImport.update({
   id: '/integracoes',
   path: '/integracoes',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminPerfilRoute = AdminPerfilRouteImport.update({
+  id: '/perfil',
+  path: '/perfil',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminReservasRoute = AdminReservasRouteImport.update({
@@ -202,10 +220,13 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
   '/entrar': typeof EntrarRoute
+  '/primeiro-acesso': typeof PrimeiroAcessoRoute
   '/admin/aprovacoes': typeof AdminAprovacoesRoute
   '/admin/delivery': typeof AdminDeliveryRoute
   '/admin/equipe': typeof AdminEquipeRoute
+  '/admin/historico': typeof AdminHistoricoRoute
   '/admin/integracoes': typeof AdminIntegracoesRoute
+  '/admin/perfil': typeof AdminPerfilRoute
   '/admin/reservas': typeof AdminReservasRoute
   '/admin/valores': typeof AdminValoresRoute
   '/goiania/pizza': typeof GoianiaPizzaRoute
@@ -233,10 +254,13 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/entrar': typeof EntrarRoute
+  '/primeiro-acesso': typeof PrimeiroAcessoRoute
   '/admin/aprovacoes': typeof AdminAprovacoesRoute
   '/admin/delivery': typeof AdminDeliveryRoute
   '/admin/equipe': typeof AdminEquipeRoute
+  '/admin/historico': typeof AdminHistoricoRoute
   '/admin/integracoes': typeof AdminIntegracoesRoute
+  '/admin/perfil': typeof AdminPerfilRoute
   '/admin/reservas': typeof AdminReservasRoute
   '/admin/valores': typeof AdminValoresRoute
   '/goiania/pizza': typeof GoianiaPizzaRoute
@@ -266,10 +290,13 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
   '/entrar': typeof EntrarRoute
+  '/primeiro-acesso': typeof PrimeiroAcessoRoute
   '/admin/aprovacoes': typeof AdminAprovacoesRoute
   '/admin/delivery': typeof AdminDeliveryRoute
   '/admin/equipe': typeof AdminEquipeRoute
+  '/admin/historico': typeof AdminHistoricoRoute
   '/admin/integracoes': typeof AdminIntegracoesRoute
+  '/admin/perfil': typeof AdminPerfilRoute
   '/admin/reservas': typeof AdminReservasRoute
   '/admin/valores': typeof AdminValoresRoute
   '/goiania/pizza': typeof GoianiaPizzaRoute
@@ -300,10 +327,13 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/entrar'
+    | '/primeiro-acesso'
     | '/admin/aprovacoes'
     | '/admin/delivery'
     | '/admin/equipe'
+    | '/admin/historico'
     | '/admin/integracoes'
+    | '/admin/perfil'
     | '/admin/reservas'
     | '/admin/valores'
     | '/goiania/pizza'
@@ -331,10 +361,13 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/entrar'
+    | '/primeiro-acesso'
     | '/admin/aprovacoes'
     | '/admin/delivery'
     | '/admin/equipe'
+    | '/admin/historico'
     | '/admin/integracoes'
+    | '/admin/perfil'
     | '/admin/reservas'
     | '/admin/valores'
     | '/goiania/pizza'
@@ -363,10 +396,13 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/entrar'
+    | '/primeiro-acesso'
     | '/admin/aprovacoes'
     | '/admin/delivery'
     | '/admin/equipe'
+    | '/admin/historico'
     | '/admin/integracoes'
+    | '/admin/perfil'
     | '/admin/reservas'
     | '/admin/valores'
     | '/goiania/pizza'
@@ -396,6 +432,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRouteWithChildren
   EntrarRoute: typeof EntrarRoute
+  PrimeiroAcessoRoute: typeof PrimeiroAcessoRoute
   GoianiaPizzaRoute: typeof GoianiaPizzaRoute
   ReservarSucessoRoute: typeof ReservarSucessoRoute
   ReservarIndexRoute: typeof ReservarIndexRoute
@@ -437,6 +474,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EntrarRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/primeiro-acesso': {
+      id: '/primeiro-acesso'
+      path: '/primeiro-acesso'
+      fullPath: '/primeiro-acesso'
+      preLoaderRoute: typeof PrimeiroAcessoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/': {
       id: '/admin/'
       path: '/'
@@ -465,11 +509,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminEquipeRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/historico': {
+      id: '/admin/historico'
+      path: '/historico'
+      fullPath: '/admin/historico'
+      preLoaderRoute: typeof AdminHistoricoRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/integracoes': {
       id: '/admin/integracoes'
       path: '/integracoes'
       fullPath: '/admin/integracoes'
       preLoaderRoute: typeof AdminIntegracoesRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/perfil': {
+      id: '/admin/perfil'
+      path: '/perfil'
+      fullPath: '/admin/perfil'
+      preLoaderRoute: typeof AdminPerfilRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/reservas': {
@@ -633,7 +691,9 @@ interface AdminRouteChildren {
   AdminAprovacoesRoute: typeof AdminAprovacoesRoute
   AdminDeliveryRoute: typeof AdminDeliveryRoute
   AdminEquipeRoute: typeof AdminEquipeRoute
+  AdminHistoricoRoute: typeof AdminHistoricoRoute
   AdminIntegracoesRoute: typeof AdminIntegracoesRoute
+  AdminPerfilRoute: typeof AdminPerfilRoute
   AdminReservasRoute: typeof AdminReservasRoute
   AdminValoresRoute: typeof AdminValoresRoute
   AdminIndexRoute: typeof AdminIndexRoute
@@ -645,7 +705,9 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminAprovacoesRoute: AdminAprovacoesRoute,
   AdminDeliveryRoute: AdminDeliveryRoute,
   AdminEquipeRoute: AdminEquipeRoute,
+  AdminHistoricoRoute: AdminHistoricoRoute,
   AdminIntegracoesRoute: AdminIntegracoesRoute,
+  AdminPerfilRoute: AdminPerfilRoute,
   AdminReservasRoute: AdminReservasRoute,
   AdminValoresRoute: AdminValoresRoute,
   AdminIndexRoute: AdminIndexRoute,
@@ -687,6 +749,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRouteWithChildren,
   EntrarRoute: EntrarRoute,
+  PrimeiroAcessoRoute: PrimeiroAcessoRoute,
   GoianiaPizzaRoute: GoianiaPizzaRoute,
   ReservarSucessoRoute: ReservarSucessoRoute,
   ReservarIndexRoute: ReservarIndexRoute,

@@ -141,6 +141,72 @@ export type Database = {
           },
         ]
       }
+      app_private_config: {
+        Row: {
+          key: string
+          updated_at: string
+          value: string
+        }
+        Insert: {
+          key: string
+          updated_at?: string
+          value: string
+        }
+        Update: {
+          key?: string
+          updated_at?: string
+          value?: string
+        }
+        Relationships: []
+      }
+      audit_log: {
+        Row: {
+          action: string
+          actor_name: string | null
+          actor_role: string | null
+          actor_user_id: string | null
+          after: Json | null
+          before: Json | null
+          created_at: string
+          entity_id: string | null
+          entity_type: string | null
+          id: string
+          note: string | null
+          source: string
+          unit_id: string | null
+        }
+        Insert: {
+          action: string
+          actor_name?: string | null
+          actor_role?: string | null
+          actor_user_id?: string | null
+          after?: Json | null
+          before?: Json | null
+          created_at?: string
+          entity_id?: string | null
+          entity_type?: string | null
+          id?: string
+          note?: string | null
+          source: string
+          unit_id?: string | null
+        }
+        Update: {
+          action?: string
+          actor_name?: string | null
+          actor_role?: string | null
+          actor_user_id?: string | null
+          after?: Json | null
+          before?: Json | null
+          created_at?: string
+          entity_id?: string | null
+          entity_type?: string | null
+          id?: string
+          note?: string | null
+          source?: string
+          unit_id?: string | null
+        }
+        Relationships: []
+      }
       audit_logs: {
         Row: {
           action: string
@@ -1656,7 +1722,10 @@ export type Database = {
           created_at: string
           full_name: string | null
           id: string
+          invited_at: string | null
+          invited_by: string | null
           is_active: boolean
+          needs_onboarding: boolean
           organization_id: string | null
           phone: string | null
           updated_at: string
@@ -1665,7 +1734,10 @@ export type Database = {
           created_at?: string
           full_name?: string | null
           id: string
+          invited_at?: string | null
+          invited_by?: string | null
           is_active?: boolean
+          needs_onboarding?: boolean
           organization_id?: string | null
           phone?: string | null
           updated_at?: string
@@ -1674,7 +1746,10 @@ export type Database = {
           created_at?: string
           full_name?: string | null
           id?: string
+          invited_at?: string | null
+          invited_by?: string | null
           is_active?: boolean
+          needs_onboarding?: boolean
           organization_id?: string | null
           phone?: string | null
           updated_at?: string
@@ -1747,11 +1822,22 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      _can_manage_user: {
+        Args: { _target: string; _uid: string }
+        Returns: boolean
+      }
       _default_org: { Args: never; Returns: string }
       _rand_hex: { Args: { _len: number }; Returns: string }
       add_reservation_note: {
         Args: { _note: string; _reservation_id: string }
         Returns: undefined
+      }
+      admin_check_invite: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _unit_ids: string[]
+        }
+        Returns: boolean
       }
       admin_create_api_key:
         | { Args: { _name: string; _scopes?: string[] }; Returns: Json }
@@ -1761,6 +1847,21 @@ export type Database = {
           }
       admin_get_crm_settings: { Args: never; Returns: Json }
       admin_list_api_keys: { Args: never; Returns: Json }
+      admin_list_team: {
+        Args: never
+        Returns: {
+          created_at: string
+          email: string
+          full_name: string
+          id: string
+          invited_at: string
+          is_active: boolean
+          last_sign_in_at: string
+          needs_onboarding: boolean
+          roles: Database["public"]["Enums"]["app_role"][]
+          unit_ids: string[]
+        }[]
+      }
       admin_list_users: {
         Args: never
         Returns: {
@@ -1779,16 +1880,41 @@ export type Database = {
         Args: { _account_id: string; _base_url: string; _enabled: boolean }
         Returns: undefined
       }
+      admin_set_user_access: {
+        Args: {
+          _full_name?: string
+          _invited?: boolean
+          _role: Database["public"]["Enums"]["app_role"]
+          _unit_ids: string[]
+          _user_id: string
+        }
+        Returns: undefined
+      }
+      admin_set_user_active: {
+        Args: { _active: boolean; _user_id: string }
+        Returns: undefined
+      }
       anonymize_inactive_customers: {
         Args: { _months: number }
         Returns: number
       }
+      auth_user_id_by_email: { Args: { _email: string }; Returns: string }
       can_access_unit: {
         Args: { _unit_id: string; _user_id: string }
         Returns: boolean
       }
       can_manage_unit: {
         Args: { _unit_id: string; _user_id: string }
+        Returns: boolean
+      }
+      can_read_audit: {
+        Args: {
+          _actor: string
+          _entity_id: string
+          _entity_type: string
+          _uid: string
+          _unit_id: string
+        }
         Returns: boolean
       }
       capture_reservation_lead: {
@@ -1801,6 +1927,10 @@ export type Database = {
           _website?: string
           _whatsapp_opt_in?: boolean
         }
+        Returns: undefined
+      }
+      complete_first_access: {
+        Args: { _full_name: string }
         Returns: undefined
       }
       create_public_reservation: {
@@ -1880,6 +2010,7 @@ export type Database = {
         Args: { _event_id: string; _event_type: string; _payload: Json }
         Returns: string
       }
+      dispatch_reservation_confirmations: { Args: never; Returns: number }
       get_reservation_history: {
         Args: { _reservation_id: string }
         Returns: {
@@ -1889,6 +2020,21 @@ export type Database = {
           id: string
           note: string
           to_status: Database["public"]["Enums"]["reservation_status"]
+        }[]
+      }
+      get_reservation_timeline: {
+        Args: { _reservation_id: string }
+        Returns: {
+          action: string
+          actor_name: string
+          actor_role: string
+          after: Json
+          before: Json
+          created_at: string
+          id: string
+          kind: string
+          note: string
+          source: string
         }[]
       }
       get_unit_available_dates: {
@@ -1923,6 +2069,7 @@ export type Database = {
       }
       hit_rate_limit: { Args: { _key: string; _max: number }; Returns: boolean }
       is_staff: { Args: { _user_id: string }; Returns: boolean }
+      log_auth_event: { Args: { _action: string }; Returns: boolean }
       mark_reservation_arrived: {
         Args: { _reservation_id: string }
         Returns: string
@@ -2091,6 +2238,19 @@ export type Database = {
           remaining: number
           slot_time: string
         }[]
+      }
+      write_audit: {
+        Args: {
+          _action: string
+          _after: Json
+          _before: Json
+          _entity_id: string
+          _entity_type: string
+          _note?: string
+          _source: string
+          _unit_id: string
+        }
+        Returns: undefined
       }
     }
     Enums: {
