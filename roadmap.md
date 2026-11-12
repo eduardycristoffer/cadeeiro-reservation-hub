@@ -27,3 +27,13 @@ Limites da verificação: nenhuma reserva ou pedido fictício foi gravado; confi
 - [x] Cores de status padronizadas; texto "Grupo grande acima de N pessoas".
 - [ ] Testar o painel logado no celular: banco indisponível no momento do teste.
 - [ ] Alterar horário de reserva: não existe ação para isso no banco (fica para etapa com banco).
+
+# Etapa 2 — Usuários individuais e histórico
+- [x] Convite (sem cadastro aberto), Equipe para gestor, primeiro acesso, Meu perfil
+- [x] audit_log append-only, login/logout/bloqueio, /admin/historico, histórico na reserva
+
+# Etapa 3 — SAC e relatórios
+- [ ] Migration 011 (SAC: categorias/prioridade/SLA/eventos; RPCs de relatório por unidade)
+- [ ] /admin/sac (kanban/cards, filtros, detalhe, criar, reabrir, indicadores)
+- [ ] /admin/relatorios (abas, consolidado imprimível, CSV)
+- [ ] Navegação com SAC (badge) e Relatórios
