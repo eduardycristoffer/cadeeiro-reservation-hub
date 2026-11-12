@@ -187,7 +187,7 @@ function TableMeta({ t, onSave }: { t: PTable; onSave: (p: Partial<PTable>) => v
       <label className="text-xs text-muted-foreground sm:col-span-2">Nome<Input value={f.name} maxLength={80} onChange={(e) => setF({ ...f, name: e.target.value })} className="mt-1 h-9 rounded-xl text-foreground" /></label>
       <label className="text-xs text-muted-foreground">Vale de<Input type="date" value={f.valid_from} onChange={(e) => setF({ ...f, valid_from: e.target.value })} className="mt-1 h-9 rounded-xl text-foreground" /></label>
       <label className="text-xs text-muted-foreground">até<Input type="date" value={f.valid_until} onChange={(e) => setF({ ...f, valid_until: e.target.value })} className="mt-1 h-9 rounded-xl text-foreground" /></label>
-      <label className="text-xs text-muted-foreground">Prioridade<Input type="number" value={f.priority} onChange={(e) => setF({ ...f, priority: e.target.value })} className="mt-1 h-9 rounded-xl text-foreground" /></label>
+      <label className="text-xs text-muted-foreground">Prioridade<Input type="number" inputMode="numeric" value={f.priority} onChange={(e) => setF({ ...f, priority: e.target.value })} className="mt-1 h-9 rounded-xl text-foreground" /></label>
       <div className="sm:col-span-5">
         <Button size="sm" onClick={() => {
           if (f.valid_from && f.valid_until && f.valid_until < f.valid_from) { toast.error("A data final precisa ser igual ou depois da inicial."); return; }
@@ -219,7 +219,7 @@ function NewTable({ unitId, onDone }: { unitId: string; onDone: (id?: string) =>
       <label className="text-xs text-muted-foreground sm:col-span-2">Nome<Input value={f.name} placeholder="Tabela de novembro" onChange={(e) => setF({ ...f, name: e.target.value })} className="mt-1 h-9 rounded-xl text-foreground" /></label>
       <label className="text-xs text-muted-foreground">Vale de<Input type="date" value={f.valid_from} onChange={(e) => setF({ ...f, valid_from: e.target.value })} className="mt-1 h-9 rounded-xl text-foreground" /></label>
       <label className="text-xs text-muted-foreground">até<Input type="date" value={f.valid_until} onChange={(e) => setF({ ...f, valid_until: e.target.value })} className="mt-1 h-9 rounded-xl text-foreground" /></label>
-      <label className="text-xs text-muted-foreground">Prioridade<Input type="number" value={f.priority} onChange={(e) => setF({ ...f, priority: e.target.value })} className="mt-1 h-9 rounded-xl text-foreground" /></label>
+      <label className="text-xs text-muted-foreground">Prioridade<Input type="number" inputMode="numeric" value={f.priority} onChange={(e) => setF({ ...f, priority: e.target.value })} className="mt-1 h-9 rounded-xl text-foreground" /></label>
       <div className="flex gap-2 sm:col-span-5">
         <Button onClick={create} disabled={busy}>{busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Criar tabela"}</Button>
         <Button variant="ghost" onClick={() => onDone()}>Cancelar</Button>

@@ -1,14 +1,16 @@
 import { useEffect, useState } from "react";
-import { Loader2, MessageCircle, Users } from "lucide-react";
+import { Loader2, MessageCircle, MoreHorizontal, Phone, Users } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { PendingActions } from "@/components/admin/approvals";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { toast } from "sonner";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { StatusBadge } from "@/components/admin/bits";
-import { useAuth } from "@/lib/auth";
 import { friendlyError, requireSupabase } from "@/lib/supabase";
 import { STATUS_LABEL, formatDateLong, hhmm } from "@/lib/format";
-import { OCCASION_LABEL, ORIGIN_LABEL, SERVICE_LABEL, TRANSITIONS, canConfirmLargeGroup, formatPhoneE164, waLink, type OccasionId, type ReservationStatus, type ServiceId } from "@/lib/reservations";
+import { OCCASION_LABEL, ORIGIN_LABEL, SERVICE_LABEL, TRANSITIONS, formatPhoneE164, waLink, type OccasionId, type ReservationStatus, type ServiceId } from "@/lib/reservations";
 
 type Detail = {
   id: string; protocol: string; reservation_date: string; reservation_time: string; party_size: number;
@@ -25,8 +27,6 @@ const ACTION_LABEL: Record<string, string> = {
 };
 
 export function ReservationDrawer({ id, tick, onClose, onChanged }: { id: string | null; tick: number; onClose: () => void; onChanged: () => void }) {
-  const { roles } = useAuth();
-  const canManage = roles.includes("super_admin") || roles.includes("gestor");
   const [r, setR] = useState<Detail | null>(null);
   const [hist, setHist] = useState<Hist[]>([]);
   const [busy, setBusy] = useState<string | null>(null);
@@ -36,6 +36,8 @@ export function ReservationDrawer({ id, tick, onClose, onChanged }: { id: string
   const [loadError, setLoadError] = useState<string | null>(null);
   const [historyError, setHistoryError] = useState<string | null>(null);
   const [retry, setRetry] = useState(0);
+  const [noteOpen, setNoteOpen] = useState(false);
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     if (!id) { setR(null); return; }
@@ -58,7 +60,7 @@ export function ReservationDrawer({ id, tick, onClose, onChanged }: { id: string
     return () => { cancelled = true; };
   }, [id, tick, retry]);
 
-  useEffect(() => { setCancelMode(false); setReason(""); setNote(""); }, [id]);
+  useEffect(() => { setCancelMode(false); setReason(""); setNote(""); setNoteOpen(false); }, [id]);
 
   async function run(key: string, fn: () => PromiseLike<{ error: unknown }>, ok: string) {
     setBusy(key);
@@ -78,28 +80,32 @@ export function ReservationDrawer({ id, tick, onClose, onChanged }: { id: string
     return run(to, () => sb().rpc("set_reservation_status", { _reservation_id: r.id, _status: to, _note: n ?? null }), `Status: ${STATUS_LABEL[to]}`);
   };
 
+  const secondary = r ? TRANSITIONS[r.status].filter((to) => to !== "confirmada" && to !== "cancelada") : [];
+  const canCancel = r ? TRANSITIONS[r.status].includes("cancelada") : false;
+
   return (
     <Sheet open={Boolean(id)} onOpenChange={(o) => !o && onClose()}>
-      <SheetContent className="w-full overflow-y-auto p-4 sm:max-w-lg sm:p-6">
-        {loadError ? <div role="alert" className="space-y-3 py-10 text-sm"><p>{loadError}</p><Button variant="outline" onClick={() => setRetry((n) => n + 1)}>Tentar novamente</Button></div> : !r ? (
-          <div className="flex h-full items-center justify-center"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
+      <SheetContent side={isMobile ? "bottom" : "right"} className={isMobile ? "flex h-[92dvh] flex-col gap-0 rounded-t-3xl p-0" : "flex w-full flex-col gap-0 p-0 sm:max-w-lg"}>
+        {loadError ? <div className="p-6"><SheetTitle className="sr-only">Reserva</SheetTitle><p role="alert" className="py-10 text-sm">{loadError}</p><Button variant="outline" onClick={() => setRetry((n) => n + 1)}>Tentar de novo</Button></div> : !r ? (
+          <div className="flex h-full items-center justify-center"><SheetTitle className="sr-only">Carregando reserva</SheetTitle><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
         ) : (
           <>
-            <SheetHeader className="text-left">
+            <SheetHeader className="shrink-0 border-b px-4 pb-3 pr-14 pt-4 text-left sm:px-6">
               <SheetDescription className="font-mono text-xs">{r.protocol}</SheetDescription>
-              <SheetTitle className="text-2xl">{r.customers?.full_name ?? "Cliente"}</SheetTitle>
+              <SheetTitle className="break-words text-xl sm:text-2xl">{r.customers?.full_name ?? "Cliente"}</SheetTitle>
               <div className="flex flex-wrap items-center gap-2 pt-1">
                 <StatusBadge status={r.status} />
                 {r.is_large_group && (
                   <span className="inline-flex items-center gap-1 rounded-full border border-foreground px-2.5 py-1 text-xs font-semibold">
-                    <Users className="h-3 w-3" /> Grupo grande
+                    <Users className="h-3 w-3" aria-hidden="true" /> Grupo grande
                   </span>
                 )}
-                {r.arrived_at && <span className="rounded-full bg-surface px-2.5 py-1 text-xs">Chegou às {new Date(r.arrived_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</span>}
+                {r.arrived_at && <span className="rounded-full bg-status-done-bg px-2.5 py-1 text-xs font-semibold text-status-done">Chegou às {new Date(r.arrived_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</span>}
               </div>
             </SheetHeader>
 
-            <dl className="mt-6 divide-y rounded-2xl bg-surface px-4 text-sm">
+            <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-6 sm:px-6">
+            <dl className="mt-4 divide-y rounded-2xl bg-surface px-4 text-sm">
               <Item k="Unidade" v={r.units?.name ?? "—"} />
               {r.service && <Item k="Rodízio" v={SERVICE_LABEL[r.service]} />}
               <Item k="Data" v={<span className="capitalize">{formatDateLong(r.reservation_date)}</span>} />
@@ -114,65 +120,45 @@ export function ReservationDrawer({ id, tick, onClose, onChanged }: { id: string
               <Item k="Criada em" v={new Date(r.created_at).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })} />
             </dl>
             {r.customers && (
-              <Button asChild variant="outline" className="mt-3 w-full">
-                <a href={waLink(r.customers.phone_e164)} target="_blank" rel="noreferrer"><MessageCircle className="h-4 w-4" /> Abrir no WhatsApp</a>
-              </Button>
+              <div className="mt-3 grid grid-cols-2 gap-2">
+                <Button asChild variant="outline" className="h-11"><a href={`tel:${r.customers.phone_e164}`}><Phone className="h-4 w-4" /> Ligar</a></Button>
+                <Button asChild variant="outline" className="h-11"><a href={waLink(r.customers.phone_e164)} target="_blank" rel="noreferrer"><MessageCircle className="h-4 w-4" /> WhatsApp</a></Button>
+              </div>
             )}
 
             {r.notes && (
               <section className="mt-6">
-                <h3 className="text-sm font-medium">O que preparar / observação do cliente</h3>
+                <h3 className="text-sm font-medium">Observação do cliente</h3>
                 <p className="mt-1 whitespace-pre-wrap rounded-2xl bg-surface p-3 text-sm">{r.notes}</p>
               </section>
             )}
 
-            <section className="mt-6">
-              <h3 className="text-sm font-medium">Ações</h3>
-              {TRANSITIONS[r.status].length === 0 && <p className="mt-1 text-sm text-muted-foreground">Status final, sem ações disponíveis.</p>}
-              {r.is_large_group && r.status === "pendente" && !canManage && (
-                <p className="mt-1 text-sm text-muted-foreground">Grupo grande: a confirmação fica com o gestor da unidade.</p>
-              )}
-              <div className="mt-2 flex flex-wrap gap-2">
-                {r.status === "confirmada" && !r.arrived_at && (
-                  <Button disabled={!!busy} onClick={() => run("arrived", () => sb().rpc("mark_reservation_arrived", { _reservation_id: r.id }), "Chegada registrada")}>
-                    {busy === "arrived" ? <Loader2 className="h-4 w-4 animate-spin" /> : "Confirmar chegada"}
+            {cancelMode && (
+              <section className="mt-6 space-y-2 rounded-2xl bg-status-cancelled-bg p-3">
+                <p className="text-sm font-semibold text-status-cancelled">O cliente será avisado por WhatsApp.</p>
+                <label htmlFor="cancel-reason" className="block text-sm font-medium">Motivo do cancelamento</label>
+                <Textarea id="cancel-reason" value={reason} onChange={(e) => setReason(e.target.value)} maxLength={500} placeholder="Obrigatório" className="rounded-xl bg-background" />
+                <div className="grid grid-cols-2 gap-2">
+                  <Button variant="ghost" className="h-11" onClick={() => setCancelMode(false)}>Voltar</Button>
+                  <Button variant="destructive" className="h-11" disabled={!reason.trim() || !!busy} onClick={async () => { if (await changeStatus("cancelada", reason.trim())) setCancelMode(false); }}>
+                    {busy === "cancelada" ? <Loader2 className="h-4 w-4 animate-spin" /> : "Cancelar reserva"}
                   </Button>
-                )}
-                {TRANSITIONS[r.status].map((to) => {
-                  if (to === "confirmada" && !canConfirmLargeGroup(r.is_large_group, canManage)) return null;
-                  if (to === "cancelada") return (
-                    <Button key={to} variant="outline" disabled={!!busy} onClick={() => setCancelMode(true)}>Cancelar</Button>
-                  );
-                  return (
-                    <Button key={to} variant={to === "confirmada" ? "default" : "outline"} disabled={!!busy} onClick={() => changeStatus(to)}>
-                      {busy === to ? <Loader2 className="h-4 w-4 animate-spin" /> : ACTION_LABEL[to]}
-                    </Button>
-                  );
-                })}
-              </div>
-              {cancelMode && (
-                <div className="mt-3 space-y-2 rounded-2xl bg-surface p-3">
-                  <Textarea value={reason} onChange={(e) => setReason(e.target.value)} maxLength={500} placeholder="Motivo do cancelamento (obrigatório)" className="rounded-xl bg-background" />
-                  <div className="flex gap-2">
-                    <Button variant="destructive" disabled={!reason.trim() || !!busy} onClick={async () => { if (await changeStatus("cancelada", reason.trim())) setCancelMode(false); }}>
-                      {busy === "cancelada" ? <Loader2 className="h-4 w-4 animate-spin" /> : "Confirmar cancelamento"}
-                    </Button>
-                    <Button variant="ghost" onClick={() => setCancelMode(false)}>Voltar</Button>
-                  </div>
                 </div>
-              )}
-            </section>
+              </section>
+            )}
+
+            {noteOpen && (
+              <section className="mt-6">
+                <label htmlFor="internal-note" className="text-sm font-medium">Observação interna</label>
+                <Textarea id="internal-note" value={note} onChange={(e) => setNote(e.target.value)} maxLength={500} placeholder="Ex.: mesa perto da janela" className="mt-2 rounded-xl" />
+                <Button variant="outline" className="mt-2 h-11" disabled={!note.trim() || !!busy}
+                  onClick={async () => { if (await run("note", () => sb().rpc("add_reservation_note", { _reservation_id: r.id, _note: note.trim() }), "Observação registrada")) { setNote(""); setNoteOpen(false); } }}>
+                  Salvar observação
+                </Button>
+              </section>
+            )}
 
             <section className="mt-6">
-              <h3 className="text-sm font-medium">Observação interna</h3>
-              <Textarea value={note} onChange={(e) => setNote(e.target.value)} maxLength={500} placeholder="Ex.: cliente pediu mesa perto da janela" className="mt-2 rounded-xl" />
-              <Button variant="outline" className="mt-2" disabled={!note.trim() || !!busy}
-                onClick={async () => { if (await run("note", () => sb().rpc("add_reservation_note", { _reservation_id: r.id, _note: note.trim() }), "Observação registrada")) setNote(""); }}>
-                Registrar observação
-              </Button>
-            </section>
-
-            <section className="mt-6 pb-6">
               <h3 className="text-sm font-medium">Histórico</h3>
               {historyError && <p role="alert" className="mt-2 text-sm text-destructive">{historyError}</p>}
               <ol className="mt-2 space-y-3 border-l pl-4">
@@ -191,6 +177,41 @@ export function ReservationDrawer({ id, tick, onClose, onChanged }: { id: string
                 ))}
               </ol>
             </section>
+            </div>
+
+            <footer className="safe-bottom shrink-0 border-t bg-background px-4 pt-3 sm:px-6" style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}>
+              <div className="flex items-start gap-2">
+                <div className="min-w-0 flex-1">
+                  {r.status === "pendente" ? (
+                    <PendingActions id={r.id} isLargeGroup={r.is_large_group} onChanged={() => { onChanged(); onClose(); }} />
+                  ) : r.status === "confirmada" && !r.arrived_at ? (
+                    <Button className="h-12 w-full text-base" disabled={!!busy} onClick={() => run("arrived", () => sb().rpc("mark_reservation_arrived", { _reservation_id: r.id }), "Chegada registrada")}>
+                      {busy === "arrived" ? <Loader2 className="h-4 w-4 animate-spin" /> : "Confirmar chegada"}
+                    </Button>
+                  ) : r.status === "confirmada" ? (
+                    <Button className="h-12 w-full text-base" disabled={!!busy} onClick={() => changeStatus("concluida")}>
+                      {busy === "concluida" ? <Loader2 className="h-4 w-4 animate-spin" /> : "Concluir"}
+                    </Button>
+                  ) : (
+                    <p className="flex h-12 items-center text-sm text-muted-foreground">Status final.</p>
+                  )}
+                </div>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="icon" className="h-12 w-12 shrink-0" aria-label="Mais ações"><MoreHorizontal className="h-5 w-5" /></Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="min-w-52">
+                    <DropdownMenuItem className="min-h-11" onSelect={() => setNoteOpen(true)}>Adicionar observação</DropdownMenuItem>
+                    {r.status === "confirmada" && secondary.map((to) => (
+                      <DropdownMenuItem key={to} className="min-h-11" disabled={!!busy} onSelect={() => { void changeStatus(to); }}>{ACTION_LABEL[to]}</DropdownMenuItem>
+                    ))}
+                    {canCancel && r.status !== "pendente" && (
+                      <DropdownMenuItem className="min-h-11 text-destructive" onSelect={() => setCancelMode(true)}>Cancelar reserva</DropdownMenuItem>
+                    )}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            </footer>
           </>
         )}
       </SheetContent>

@@ -82,7 +82,7 @@ export function NewReservationDialog({ open, units, onClose, onCreated }: {
                 </NativeSelect>
               </L>
               <L label="Data"><Input type="date" value={date} min={toIsoDate(new Date())} onChange={(e) => setDate(e.target.value)} className="h-10 rounded-xl" /></L>
-              <L label="Pessoas"><Input type="number" min={1} max={200} value={people} onChange={(e) => setPeople(Math.max(1, Math.min(200, Number(e.target.value) || 1)))} className="h-10 rounded-xl" /></L>
+              <L label="Pessoas"><Input type="number" inputMode="numeric" min={1} max={200} value={people} onChange={(e) => setPeople(Math.max(1, Math.min(200, Number(e.target.value) || 1)))} className="h-10 rounded-xl" /></L>
             </div>
             <L label="Horário (somente com vaga)">
               {!slots ? <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /> : slots.length === 0 ? (

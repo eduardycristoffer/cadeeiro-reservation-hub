@@ -16,3 +16,14 @@ Limites da verificação: nenhuma reserva ou pedido fictício foi gravado; confi
 - [x] Atualizar documentação e OpenAPI.
 - [x] Executar testes de isolamento e compatibilidade: 59 testes SDR, 126 totais aprovados; sem publicar ou alterar unidades.
 - [ ] Verificar criação/leitura de uma chave restrita no painel com sessão real: sem sessão disponível; tentativa de acesso automático não encontrou conta correspondente ao solicitante. Requer login na prévia. Nenhuma chave real foi criada, nem n8n alterado; testes SDR usam clientes de banco simulados, não gravam reservas/delivery reais.
+# Etapa 1 de 4 — Mobile, aprovação em 1 toque e polimento
+
+- [x] Barra inferior no celular (Início, Reservas, Aprovações com contador, Mais).
+- [x] Tela Aprovações com Aprovar/Recusar, desfazer em 8 s e aprovação em lote.
+- [x] Reservas: cards no celular, filtros em painel, calendário em faixa de dias.
+- [x] Detalhe da reserva em painel inferior com ações fixas e menu "⋯".
+- [x] Início com resumo do dia, pendências e atalhos.
+- [x] /reservar em duas colunas no computador; avisos do que falta preencher.
+- [x] Cores de status padronizadas; texto "Grupo grande acima de N pessoas".
+- [ ] Testar o painel logado no celular: banco indisponível no momento do teste.
+- [ ] Alterar horário de reserva: não existe ação para isso no banco (fica para etapa com banco).

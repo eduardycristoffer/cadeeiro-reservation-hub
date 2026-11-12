@@ -1,6 +1,11 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { ChevronLeft, ChevronRight, Loader2, Plus, Search, Users } from "lucide-react";
+import { CalendarX, ChevronLeft, ChevronRight, Loader2, Plus, Search, SlidersHorizontal, Users } from "lucide-react";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { EmptyState, ErrorState, ListSkeleton } from "@/components/admin/bits";
+import { PendingActions } from "@/components/admin/approvals";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { useQueued } from "@/lib/approvals";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -87,6 +92,9 @@ function Reservas() {
   const [openId, setOpenId] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
   const [q, setQ] = useState(search.q ?? "");
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const isMobile = useIsMobile();
+  const queued = useQueued();
 
   useEffect(() => {
     requireSupabase().from("units").select("id,name").order("sort_order").order("name")
@@ -166,48 +174,85 @@ function Reservas() {
         <div className="flex flex-wrap gap-2">
           <div className="flex rounded-full bg-surface p-1 text-sm">
             {(["lista", "calendario"] as const).map((v) => (
-              <button key={v} onClick={() => set({ view: v })} className={cn("rounded-full px-4 py-1.5 transition", search.view === v ? "bg-card font-medium shadow-soft" : "text-muted-foreground")}>
+              <button key={v} type="button" aria-pressed={search.view === v} onClick={() => set({ view: v })} className={cn("min-h-10 rounded-full px-4 py-1.5 transition", search.view === v ? "bg-card font-medium shadow-soft" : "text-muted-foreground")}>
                 {v === "lista" ? "Lista" : "Calendário"}
               </button>
             ))}
           </div>
-          <Button onClick={() => setCreating(true)}><Plus className="h-4 w-4" /> Nova reserva</Button>
+          <Button className="h-11" onClick={() => setCreating(true)}><Plus className="h-4 w-4" /> Nova reserva</Button>
         </div>
       </div>
 
-      <div className="mt-4 grid min-w-0 grid-cols-2 items-center gap-2 sm:flex sm:flex-wrap">
-        <NativeSelect aria-label="Unidade" value={search.unidade ?? ""} onChange={(e) => set({ unidade: e.target.value || undefined })}>
-          <option value="">Todas as unidades</option>
-          {units.map((u) => <option key={u.id} value={u.id}>{u.name}</option>)}
-        </NativeSelect>
-        {search.view === "lista" && (
+      {(() => {
+        const filters = (
           <>
-            <NativeSelect aria-label="Período" value={search.periodo} onChange={(e) => set({ periodo: e.target.value as Period })}>
-              {PERIODS.map((p) => <option key={p} value={p}>{PERIOD_LABEL[p]}</option>)}
+            <NativeSelect aria-label="Unidade" value={search.unidade ?? ""} onChange={(e) => set({ unidade: e.target.value || undefined })}>
+              <option value="">Todas as unidades</option>
+              {units.map((u) => <option key={u.id} value={u.id}>{u.name}</option>)}
             </NativeSelect>
-            {search.periodo === "intervalo" && (
+            {search.view === "lista" && (
               <>
-                <Input type="date" aria-label="De" value={search.de ?? ""} onChange={(e) => set({ de: e.target.value || undefined })} className="h-10 w-auto rounded-xl" />
-                <Input type="date" aria-label="Até" value={search.ate ?? ""} onChange={(e) => set({ ate: e.target.value || undefined })} className="h-10 w-auto rounded-xl" />
+                <NativeSelect aria-label="Período" value={search.periodo} onChange={(e) => set({ periodo: e.target.value as Period })}>
+                  {PERIODS.map((p) => <option key={p} value={p}>{PERIOD_LABEL[p]}</option>)}
+                </NativeSelect>
+                {search.periodo === "intervalo" && (
+                  <div className="grid grid-cols-2 gap-2">
+                    <Input type="date" aria-label="De" value={search.de ?? ""} onChange={(e) => set({ de: e.target.value || undefined })} className="h-11 rounded-xl" />
+                    <Input type="date" aria-label="Até" value={search.ate ?? ""} onChange={(e) => set({ ate: e.target.value || undefined })} className="h-11 rounded-xl" />
+                  </div>
+                )}
+                <NativeSelect aria-label="Status" value={search.status ?? ""} onChange={(e) => set({ status: e.target.value || undefined })}>
+                  <option value="">Todos os status</option>
+                  {Object.entries(STATUS_LABEL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+                </NativeSelect>
+                <NativeSelect aria-label="Origem" value={search.origem ?? ""} onChange={(e) => set({ origem: e.target.value || undefined })}>
+                  <option value="">Todas as origens</option>
+                  {Object.entries(ORIGIN_LABEL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+                </NativeSelect>
               </>
             )}
-            <NativeSelect aria-label="Status" value={search.status ?? ""} onChange={(e) => set({ status: e.target.value || undefined })}>
-              <option value="">Todos os status</option>
-              {Object.entries(STATUS_LABEL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
-            </NativeSelect>
-            <NativeSelect aria-label="Origem" value={search.origem ?? ""} onChange={(e) => set({ origem: e.target.value || undefined })}>
-              <option value="">Todas as origens</option>
-              {Object.entries(ORIGIN_LABEL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
-            </NativeSelect>
-            <div className="relative col-span-2 min-w-0 flex-1 sm:min-w-56">
-              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Nome, telefone ou protocolo" className="h-10 rounded-xl pl-9" />
+          </>
+        );
+        const active = [search.unidade, search.status, search.origem, search.periodo !== "hoje" ? "p" : undefined].filter(Boolean).length;
+        return (
+          <>
+            <div className="mt-4 grid grid-cols-[minmax(0,1fr)_auto] gap-2 md:hidden">
+              {search.view === "lista" ? (
+                <div className="relative min-w-0">
+                  <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
+                  <Input type="search" aria-label="Buscar reserva" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Nome, telefone ou protocolo" className="h-11 rounded-xl pl-9" />
+                </div>
+              ) : <span />}
+              <Button variant="outline" className="h-11" onClick={() => setFiltersOpen(true)}>
+                <SlidersHorizontal className="h-4 w-4" /> Filtrar{active ? <span className="ml-1 rounded-full bg-primary px-1.5 text-xs text-primary-foreground">{active}</span> : null}
+              </Button>
+            </div>
+            <Sheet open={filtersOpen} onOpenChange={setFiltersOpen}>
+              <SheetContent side="bottom" className="rounded-t-3xl px-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-5 md:hidden">
+                <SheetHeader className="text-left"><SheetTitle>Filtros</SheetTitle></SheetHeader>
+                <div className="mt-4 grid gap-3 [&_select]:w-full">{filters}</div>
+                <div className="mt-5 grid grid-cols-2 gap-2">
+                  <Button variant="ghost" className="h-12" onClick={() => { set({ unidade: undefined, status: undefined, origem: undefined, periodo: "hoje", de: undefined, ate: undefined }); }}>Limpar</Button>
+                  <Button className="h-12" onClick={() => setFiltersOpen(false)}>Ver resultados</Button>
+                </div>
+              </SheetContent>
+            </Sheet>
+            <div className="mt-4 hidden min-w-0 flex-wrap items-center gap-2 md:flex">
+              {filters}
+              {search.view === "lista" && (
+                <div className="relative min-w-56 flex-1">
+                  <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
+                  <Input type="search" aria-label="Buscar reserva" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Nome, telefone ou protocolo" className="h-11 rounded-xl pl-9" />
+                </div>
+              )}
             </div>
           </>
-        )}
-      </div>
+        );
+      })()}
 
-      {search.view === "calendario" ? (
+      {search.view === "calendario" && isMobile ? (
+        <MobileDayView unitId={search.unidade} refDate={search.ref} tick={tick} onRef={(ref) => set({ ref })} onOpen={setOpenId} onChanged={() => setTick((t) => t + 1)} />
+      ) : search.view === "calendario" ? (
         <CalendarView
           unitId={search.unidade}
           mode={search.cal}
@@ -219,36 +264,23 @@ function Reservas() {
         />
       ) : (
         <div className="mt-6 overflow-hidden rounded-3xl bg-card shadow-soft">
-          {err && <p className="p-6 text-destructive">{err}</p>}
-          {!rows ? (
-            <div className="flex justify-center py-16"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
-          ) : rows.length === 0 && !err ? (
-            <div className="px-4 py-8 text-center sm:py-16">
-              <p className="text-lg font-medium">Nenhuma reserva encontrada</p>
-              <p className="mt-1 text-sm text-muted-foreground">
-                {hasFilters ? "Tente ampliar o período ou limpar os filtros." : "Quando alguém reservar pela página pública, aparece aqui na hora."}
-              </p>
-              <div className="mt-5 flex flex-wrap justify-center gap-2">
-                {hasFilters && <Button variant="outline" onClick={() => { setQ(""); navigate({ search: { view: "lista", cal: "mes", periodo: "todas", pagina: 1 } }); }}>Ver todas</Button>}
-                <Button onClick={() => setCreating(true)}>Criar reserva manual</Button>
-              </div>
-            </div>
+          {err ? <ErrorState message={err} onRetry={() => setTick((t) => t + 1)} /> : !rows ? (
+            <ListSkeleton />
+          ) : rows.length === 0 ? (
+            <EmptyState icon={CalendarX} title="Nenhuma reserva encontrada"
+              text={hasFilters ? "Tente ampliar o período ou limpar os filtros." : "Quando alguém reservar pela página pública, aparece aqui na hora."}
+              action={<>
+                {hasFilters && <Button variant="outline" className="h-11" onClick={() => { setQ(""); navigate({ search: { view: "lista", cal: "mes", periodo: "todas", pagina: 1 } }); }}>Ver todas</Button>}
+                <Button className="h-11" onClick={() => setCreating(true)}>Criar reserva manual</Button>
+              </>} />
           ) : (
             <>
-            <div className="divide-y sm:hidden">
+            <div className="divide-y md:hidden">
               {rows.map((r) => (
-                <article key={r.id} className="p-4 text-sm">
-                  <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-2">
-                    <div className="min-w-0"><p className="break-words font-semibold">{r.customers?.full_name ?? "Cliente"}</p><p className="mt-1 font-mono text-xs text-muted-foreground">{r.protocol}</p></div>
-                    <StatusBadge status={r.status} />
-                  </div>
-                  <p className="mt-3">{fromIsoDate(r.reservation_date).toLocaleDateString("pt-BR")} · {hhmm(r.reservation_time)} · {r.party_size} pessoas</p>
-                  <p className="mt-1 text-muted-foreground">{r.units?.name}{r.service ? ` · ${SERVICE_LABEL[r.service]}` : ""}</p>
-                  <Button variant="outline" className="mt-3 h-11 w-full" onClick={() => setOpenId(r.id)}>Ver reserva</Button>
-                </article>
+                <ReservationCard key={r.id} r={r} queued={queued.has(r.id)} onOpen={() => setOpenId(r.id)} onChanged={() => setTick((t) => t + 1)} />
               ))}
             </div>
-            <div className="hidden overflow-x-auto sm:block">
+            <div className="hidden overflow-x-auto md:block">
               <table className="w-full text-sm">
                 <thead className="text-left text-xs uppercase tracking-wide text-muted-foreground">
                   <tr className="border-b">
@@ -283,7 +315,7 @@ function Reservas() {
                         )}
                       </td>
                       <td className="whitespace-nowrap px-4 py-3 text-muted-foreground">{ORIGIN_LABEL[r.origin]}</td>
-                      <td className="px-4 py-3"><StatusBadge status={r.status} /></td>
+                      <td className="px-4 py-3"><StatusBadge status={queued.has(r.id) ? "confirmada" : r.status} /></td>
                       <td className="whitespace-nowrap px-4 py-3 text-muted-foreground">{new Date(r.created_at).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })}</td>
                     </tr>
                   ))}
@@ -411,6 +443,79 @@ function CalendarView({ unitId, mode, refDate, tick, onMode, onRef, onPick }: {
         })}
       </div>
       {!agg && <div className="flex justify-center pt-4"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>}
+    </div>
+  );
+}
+
+function ReservationCard({ r, queued, onOpen, onChanged }: { r: Row; queued: boolean; onOpen: () => void; onChanged: () => void }) {
+  const status = queued ? "confirmada" : r.status;
+  return (
+    <article className="p-4 text-sm">
+      <button type="button" onClick={onOpen} className="block w-full text-left">
+        <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-2">
+          <div className="min-w-0">
+            <p className="break-words text-base font-semibold">{r.customers?.full_name ?? "Cliente"}</p>
+            <p className="mt-0.5 text-muted-foreground">{r.units?.name}{r.service ? ` · ${SERVICE_LABEL[r.service]}` : ""}</p>
+          </div>
+          <StatusBadge status={status} />
+        </div>
+        <p className="mt-2 font-medium tabular-nums">
+          {hhmm(r.reservation_time)} · {fromIsoDate(r.reservation_date).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" })} · <span className="inline-flex items-center gap-1"><Users className="h-3.5 w-3.5" aria-hidden="true" />{r.party_size} pessoas</span>
+        </p>
+      </button>
+      {status === "pendente" ? (
+        <PendingActions id={r.id} isLargeGroup={r.is_large_group} onChanged={onChanged} size="default" className="mt-3" />
+      ) : (
+        <Button variant="outline" className="mt-3 h-11 w-full" onClick={onOpen}>Ver reserva</Button>
+      )}
+    </article>
+  );
+}
+
+function MobileDayView({ unitId, refDate, tick, onRef, onOpen, onChanged }: {
+  unitId?: string | undefined; refDate?: string | undefined; tick: number; onRef: (d: string) => void; onOpen: (id: string) => void; onChanged: () => void;
+}) {
+  const day = refDate ?? toIsoDate(new Date());
+  const queued = useQueued();
+  const strip = useMemo(() => {
+    const t = new Date(); const start = new Date(t.getFullYear(), t.getMonth(), t.getDate() - 3);
+    return Array.from({ length: 31 }, (_, i) => new Date(start.getFullYear(), start.getMonth(), start.getDate() + i));
+  }, []);
+  const [rows, setRows] = useState<Row[] | null>(null);
+  const [err, setErr] = useState<string | null>(null);
+  const [retry, setRetry] = useState(0);
+  useEffect(() => {
+    let alive = true; setRows(null); setErr(null);
+    let q = requireSupabase().from("reservations")
+      .select("id,protocol,reservation_date,reservation_time,party_size,origin,status,is_large_group,notes,service,occasion,celebrant_name,campaign,arrived_at,created_at,unit_id,customers(full_name,phone_e164),units(name)")
+      .eq("reservation_date", day).order("reservation_time").limit(300);
+    if (unitId) q = q.eq("unit_id", unitId);
+    q.then(({ data, error }) => { if (!alive) return; if (error) { setErr(friendlyError(error)); return; } setRows((data ?? []) as unknown as Row[]); });
+    return () => { alive = false; };
+  }, [day, unitId, tick, retry]);
+  const people = (rows ?? []).filter((r) => r.status !== "cancelada").reduce((s, r) => s + r.party_size, 0);
+  return (
+    <div className="mt-4">
+      <div className="no-scrollbar -mx-4 flex snap-x gap-2 overflow-x-auto px-4 pb-1" role="listbox" aria-label="Escolha o dia">
+        {strip.map((d) => {
+          const iso = toIsoDate(d); const on = iso === day;
+          return (
+            <button key={iso} role="option" aria-selected={on} onClick={() => onRef(iso)} ref={on ? (el) => el?.scrollIntoView({ inline: "center", block: "nearest" }) : undefined}
+              className={cn("flex h-16 w-14 shrink-0 snap-center flex-col items-center justify-center rounded-2xl text-xs", on ? "bg-primary text-primary-foreground" : "bg-surface")}>
+              <span className="capitalize">{d.toLocaleDateString("pt-BR", { weekday: "short" }).replace(".", "")}</span>
+              <span className="text-lg font-semibold tabular-nums">{d.getDate()}</span>
+            </button>
+          );
+        })}
+      </div>
+      <p className="mt-3 text-sm text-muted-foreground"><span className="capitalize">{fromIsoDate(day).toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long" })}</span>{rows ? ` · ${rows.length} reservas · ${people} pessoas` : ""}</p>
+      <div className="mt-3 overflow-hidden rounded-3xl bg-card shadow-soft">
+        {err ? <ErrorState message={err} onRetry={() => setRetry((n) => n + 1)} /> : !rows ? <ListSkeleton rows={3} /> : rows.length === 0 ? (
+          <EmptyState icon={CalendarX} title="Sem reservas neste dia" />
+        ) : (
+          <div className="divide-y">{rows.map((r) => <ReservationCard key={r.id} r={r} queued={queued.has(r.id)} onOpen={() => onOpen(r.id)} onChanged={onChanged} />)}</div>
+        )}
+      </div>
     </div>
   );
 }

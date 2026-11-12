@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as EntrarRouteImport } from './routes/entrar'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
+import { Route as AdminAprovacoesRouteImport } from './routes/admin.aprovacoes'
 import { Route as AdminDeliveryRouteImport } from './routes/admin.delivery'
 import { Route as AdminEquipeRouteImport } from './routes/admin.equipe'
 import { Route as AdminIntegracoesRouteImport } from './routes/admin.integracoes'
@@ -57,6 +58,11 @@ const EntrarRoute = EntrarRouteImport.update({
 const AdminIndexRoute = AdminIndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminAprovacoesRoute = AdminAprovacoesRouteImport.update({
+  id: '/aprovacoes',
+  path: '/aprovacoes',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminDeliveryRoute = AdminDeliveryRouteImport.update({
@@ -196,6 +202,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
   '/entrar': typeof EntrarRoute
+  '/admin/aprovacoes': typeof AdminAprovacoesRoute
   '/admin/delivery': typeof AdminDeliveryRoute
   '/admin/equipe': typeof AdminEquipeRoute
   '/admin/integracoes': typeof AdminIntegracoesRoute
@@ -226,6 +233,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/entrar': typeof EntrarRoute
+  '/admin/aprovacoes': typeof AdminAprovacoesRoute
   '/admin/delivery': typeof AdminDeliveryRoute
   '/admin/equipe': typeof AdminEquipeRoute
   '/admin/integracoes': typeof AdminIntegracoesRoute
@@ -258,6 +266,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
   '/entrar': typeof EntrarRoute
+  '/admin/aprovacoes': typeof AdminAprovacoesRoute
   '/admin/delivery': typeof AdminDeliveryRoute
   '/admin/equipe': typeof AdminEquipeRoute
   '/admin/integracoes': typeof AdminIntegracoesRoute
@@ -291,6 +300,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/entrar'
+    | '/admin/aprovacoes'
     | '/admin/delivery'
     | '/admin/equipe'
     | '/admin/integracoes'
@@ -321,6 +331,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/entrar'
+    | '/admin/aprovacoes'
     | '/admin/delivery'
     | '/admin/equipe'
     | '/admin/integracoes'
@@ -352,6 +363,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/entrar'
+    | '/admin/aprovacoes'
     | '/admin/delivery'
     | '/admin/equipe'
     | '/admin/integracoes'
@@ -430,6 +442,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/admin/'
       preLoaderRoute: typeof AdminIndexRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/aprovacoes': {
+      id: '/admin/aprovacoes'
+      path: '/aprovacoes'
+      fullPath: '/admin/aprovacoes'
+      preLoaderRoute: typeof AdminAprovacoesRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/delivery': {
@@ -611,6 +630,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AdminRouteChildren {
+  AdminAprovacoesRoute: typeof AdminAprovacoesRoute
   AdminDeliveryRoute: typeof AdminDeliveryRoute
   AdminEquipeRoute: typeof AdminEquipeRoute
   AdminIntegracoesRoute: typeof AdminIntegracoesRoute
@@ -622,6 +642,7 @@ interface AdminRouteChildren {
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
+  AdminAprovacoesRoute: AdminAprovacoesRoute,
   AdminDeliveryRoute: AdminDeliveryRoute,
   AdminEquipeRoute: AdminEquipeRoute,
   AdminIntegracoesRoute: AdminIntegracoesRoute,

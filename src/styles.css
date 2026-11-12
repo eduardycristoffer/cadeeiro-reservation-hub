@@ -52,12 +52,29 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+  --color-success-foreground: var(--success-foreground);
+  --color-status-pending: var(--status-pending);
+  --color-status-pending-bg: var(--status-pending-bg);
+  --color-status-confirmed: var(--status-confirmed);
+  --color-status-confirmed-bg: var(--status-confirmed-bg);
+  --color-status-done: var(--status-done);
+  --color-status-done-bg: var(--status-done-bg);
+  --color-status-cancelled: var(--status-cancelled);
+  --color-status-cancelled-bg: var(--status-cancelled-bg);
+  --color-status-noshow: var(--status-noshow);
+  --color-status-noshow-bg: var(--status-noshow-bg);
   --shadow-soft: var(--shadow-soft-v);
   --shadow-lift: var(--shadow-lift-v);
 }
 
 :root {
   --radius: 1.25rem;
+  --success-foreground: #ffffff;
+  --status-pending: oklch(0.47 0.11 65); --status-pending-bg: oklch(0.95 0.06 85);
+  --status-confirmed: oklch(0.43 0.11 155); --status-confirmed-bg: oklch(0.95 0.05 155);
+  --status-done: oklch(0.45 0.13 255); --status-done-bg: oklch(0.95 0.03 255);
+  --status-cancelled: oklch(0.5 0.17 27); --status-cancelled-bg: oklch(0.96 0.03 27);
+  --status-noshow: oklch(0.45 0.006 286); --status-noshow-bg: oklch(0.94 0.003 286);
   --brand: #d9201f; /* vermelho da marca: preenchimentos (texto branco 5:1) */
   --brand-foreground: #ffffff;
   --brand-ink: #c4161c; /* vermelho para texto pequeno sobre fundo claro */
@@ -76,7 +93,7 @@
   --muted-foreground: oklch(0.52 0.006 286);
   --accent: oklch(0.95 0.002 286);
   --accent-foreground: oklch(0.21 0.003 286);
-  --success: oklch(0.62 0.13 155);
+  --success: oklch(0.5 0.13 155);
   --warning: oklch(0.72 0.13 75);
   --destructive: oklch(0.58 0.2 27);
   --destructive-foreground: oklch(1 0 0);
@@ -101,6 +118,11 @@
 }
 
 .dark {
+  --status-pending: oklch(0.85 0.12 85); --status-pending-bg: oklch(0.3 0.06 75);
+  --status-confirmed: oklch(0.82 0.13 155); --status-confirmed-bg: oklch(0.28 0.06 155);
+  --status-done: oklch(0.82 0.1 255); --status-done-bg: oklch(0.28 0.06 255);
+  --status-cancelled: oklch(0.8 0.12 27); --status-cancelled-bg: oklch(0.28 0.07 27);
+  --status-noshow: oklch(0.78 0.005 286); --status-noshow-bg: oklch(0.24 0.003 286);
   --brand-ink: #ff453a;
   --background: oklch(0 0 0);
   --surface: oklch(0.17 0.002 286);
@@ -132,6 +154,11 @@
 
 @media (prefers-color-scheme: dark) {
   :root:not(.light) {
+  --status-pending: oklch(0.85 0.12 85); --status-pending-bg: oklch(0.3 0.06 75);
+  --status-confirmed: oklch(0.82 0.13 155); --status-confirmed-bg: oklch(0.28 0.06 155);
+  --status-done: oklch(0.82 0.1 255); --status-done-bg: oklch(0.28 0.06 255);
+  --status-cancelled: oklch(0.8 0.12 27); --status-cancelled-bg: oklch(0.28 0.07 27);
+  --status-noshow: oklch(0.78 0.005 286); --status-noshow-bg: oklch(0.24 0.003 286);
     --brand-ink: #ff453a;
     --background: oklch(0 0 0);
     --surface: oklch(0.17 0.002 286);
@@ -236,7 +263,12 @@
   .admin-content h1 + p { font-size: 0.875rem; }
   .admin-content input, .admin-content select, [role="dialog"] input, [role="dialog"] select { min-width: 0; max-width: 100%; }
   .admin-content select { min-height: 44px; }
+  input, select, textarea { font-size: 16px !important; }
 }
+.safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
+.admin-main { padding-bottom: calc(5.5rem + env(safe-area-inset-bottom)); }
+@media (min-width: 768px) { .admin-main { padding-bottom: 2.5rem; } }
+:focus-visible { outline: 2px solid var(--color-ring); outline-offset: 2px; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
 }

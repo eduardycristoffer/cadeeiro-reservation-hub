@@ -71,11 +71,11 @@ function UnitDetail() {
           <L label="Nome"><Input value={unit.name} onChange={(e) => set("name", e.target.value)} className="rounded-xl" /></L>
           <L label="Cidade"><Input value={unit.city ?? ""} onChange={(e) => set("city", e.target.value || null)} className="rounded-xl" /></L>
           <L label="Endereço"><Input value={unit.address ?? ""} onChange={(e) => set("address", e.target.value || null)} className="rounded-xl" /></L>
-          <L label="Telefone"><Input value={unit.phone ?? ""} onChange={(e) => set("phone", e.target.value || null)} className="rounded-xl" /></L>
+          <L label="Telefone"><Input type="tel" inputMode="tel" value={unit.phone ?? ""} onChange={(e) => set("phone", e.target.value || null)} className="rounded-xl" /></L>
           <L label="URL da foto"><Input value={unit.photo_url ?? ""} placeholder="https://…" onChange={(e) => set("photo_url", e.target.value || null)} className="rounded-xl" /></L>
-          <L label="Antecedência mínima (min)"><Input type="number" value={unit.min_advance_minutes} onChange={(e) => set("min_advance_minutes", Number(e.target.value))} className="rounded-xl" /></L>
-          <L label="Reservas até quantos dias à frente"><Input type="number" value={unit.max_advance_days} onChange={(e) => set("max_advance_days", Number(e.target.value))} className="rounded-xl" /></L>
-          <L label="Grupo grande a partir de (pessoas)"><Input type="number" value={unit.large_group_threshold} onChange={(e) => set("large_group_threshold", Number(e.target.value))} className="rounded-xl" /></L>
+          <L label="Antecedência mínima (min)"><Input type="number" inputMode="numeric" value={unit.min_advance_minutes} onChange={(e) => set("min_advance_minutes", Number(e.target.value))} className="rounded-xl" /></L>
+          <L label="Reservas até quantos dias à frente"><Input type="number" inputMode="numeric" value={unit.max_advance_days} onChange={(e) => set("max_advance_days", Number(e.target.value))} className="rounded-xl" /></L>
+          <L label="Grupo grande acima de (pessoas)"><Input type="number" inputMode="numeric" value={unit.large_group_threshold} onChange={(e) => set("large_group_threshold", Number(e.target.value))} className="rounded-xl" /><span className="mt-1 block text-xs text-muted-foreground">Grupo grande acima de {unit.large_group_threshold} pessoas precisa de aprovação.</span></L>
         </div>
         <div className="mt-5 space-y-3">
           <Toggle label="Unidade ativa" checked={unit.is_active} onChange={(v) => set("is_active", v)} />
@@ -197,9 +197,9 @@ function RuleForm({ unitId, onSaved }: { unitId: string; onSaved: () => void }) 
       <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-5">
         <L label="Início"><Input type="time" value={start} onChange={(e) => setStart(e.target.value)} className="rounded-xl bg-background" /></L>
         <L label="Fim"><Input type="time" value={end} onChange={(e) => setEnd(e.target.value)} className="rounded-xl bg-background" /></L>
-        <L label="Intervalo (min)"><Input type="number" min={5} value={interval} onChange={(e) => setIntervalMin(Number(e.target.value))} className="rounded-xl bg-background" /></L>
-        <L label="Pessoas/horário"><Input type="number" min={1} value={cap} onChange={(e) => setCap(Number(e.target.value))} className="rounded-xl bg-background" /></L>
-        <L label="Máx. por grupo"><Input type="number" min={1} value={maxParty} onChange={(e) => setMaxParty(Number(e.target.value))} className="rounded-xl bg-background" /></L>
+        <L label="Intervalo (min)"><Input type="number" inputMode="numeric" min={5} value={interval} onChange={(e) => setIntervalMin(Number(e.target.value))} className="rounded-xl bg-background" /></L>
+        <L label="Pessoas/horário"><Input type="number" inputMode="numeric" min={1} value={cap} onChange={(e) => setCap(Number(e.target.value))} className="rounded-xl bg-background" /></L>
+        <L label="Máx. por grupo"><Input type="number" inputMode="numeric" min={1} value={maxParty} onChange={(e) => setMaxParty(Number(e.target.value))} className="rounded-xl bg-background" /></L>
       </div>
       {err && <p className="mt-3 text-sm text-destructive">{err}</p>}
       <Button className="mt-4" onClick={save}>Adicionar</Button>

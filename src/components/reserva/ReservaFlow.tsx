@@ -1,3 +1,4 @@
+import heroImg from "@/assets/hero.jpg";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import {
@@ -248,8 +249,9 @@ export function ReservaFlow({ initialService, campaign, city }: { initialService
             <>
               {loadError && <p role="alert" className="mb-3 text-sm text-destructive">{loadError}</p>}
               {service && units && offered.length === 0 && <p role="status" className="mb-3 text-sm text-muted-foreground">Sem unidades disponíveis para este rodízio.</p>}
-              <Button className="h-12 w-full text-base font-semibold" disabled={!service || !units || offered.length === 0} onClick={() => setStage("contatos")}>
-                Reservar agora
+              {!service && <p role="status" className="mb-2 text-center text-sm font-medium">Escolha um rodízio acima para continuar.</p>}
+              <Button className="h-12 w-full text-base font-semibold disabled:bg-secondary disabled:text-muted-foreground disabled:opacity-100" disabled={!service || !units || offered.length === 0} onClick={() => setStage("contatos")}>
+                {service && !units && !loadError ? <Loader2 className="h-5 w-5 animate-spin" /> : "Reservar agora"}
               </Button>
               <p className="mt-3 flex flex-wrap justify-center gap-x-4 gap-y-1 text-[11px] text-muted-foreground">
                 <span className="inline-flex items-center gap-1.5"><Clock3 className="h-3.5 w-3.5" /> Disponibilidade em tempo real</span>
@@ -562,11 +564,13 @@ export function ReservaFlow({ initialService, campaign, city }: { initialService
         {stage === "pessoas" && (
           <Button variant="brand" size="xl" className="h-14 w-full text-base font-bold" disabled={people < 1} onClick={next}>Continuar</Button>
         )}
+        {stage === "quando" && (!date || !time) && <p role="status" className="mb-2 text-center text-sm font-medium">{!date ? "Escolha o dia." : "Escolha o horário."}</p>}
         {stage === "quando" && (
           <Button variant="brand" size="xl" className="h-14 w-full text-base font-bold" disabled={!date || !time} onClick={next}>Continuar</Button>
         )}
         {stage === "ocasiao" && (
           <>
+            {!occasion && <p role="status" className="mb-2 text-center text-sm font-medium">Escolha a ocasião.</p>}
             <Button variant="brand" size="xl" className="h-14 w-full text-base font-bold" disabled={!occasion || submitting} onClick={submit}>
               {submitting ? <Loader2 className="h-5 w-5 animate-spin" /> : "Solicitar reserva"}
             </Button>
@@ -580,7 +584,14 @@ export function ReservaFlow({ initialService, campaign, city }: { initialService
 }
 
 function Shell({ children }: { children: ReactNode }) {
-  return <main className="mx-auto flex min-h-[100dvh] w-full min-w-0 max-w-md flex-col px-5">{children}</main>;
+  return (
+    <div className="lg:grid lg:min-h-[100dvh] lg:grid-cols-[minmax(0,1fr)_minmax(28rem,34rem)] lg:gap-10 lg:p-6">
+      <aside className="hidden lg:block">
+        <img src={heroImg} alt="Mesa posta em salão de restaurante" width={1600} height={1008} className="sticky top-6 h-[calc(100dvh-3rem)] w-full rounded-3xl object-cover" />
+      </aside>
+      <main className="mx-auto flex min-h-[100dvh] w-full min-w-0 max-w-md flex-col px-5 lg:min-h-0 lg:max-w-none lg:px-2">{children}</main>
+    </div>
+  );
 }
 
 function Footer({ children }: { children: ReactNode }) {
