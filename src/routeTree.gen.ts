@@ -37,6 +37,7 @@ import { Route as ReservarSucessoRouteImport } from './routes/reservar.sucesso'
 import { Route as AdminUnidadesIndexRouteImport } from './routes/admin.unidades.index'
 import { Route as AdminUnidadesUnitIdRouteImport } from './routes/admin.unidades.$unitId'
 import { Route as ApiPublicCrmWorkerRouteImport } from './routes/api.public.crm.worker'
+import { Route as ApiPublicHooksTokenRouteImport } from './routes/api.public.hooks.$token'
 import { Route as ApiPublicNotificationsEmailWorkerRouteImport } from './routes/api.public.notifications.email-worker'
 import { Route as ApiPublicSdrAvailabilityRouteImport } from './routes/api.public.sdr.availability'
 import { Route as ApiPublicSdrContextRouteImport } from './routes/api.public.sdr.context'
@@ -196,6 +197,11 @@ const ApiPublicCrmWorkerRoute = ApiPublicCrmWorkerRouteImport.update({
   path: '/api/public/crm/worker',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicHooksTokenRoute = ApiPublicHooksTokenRouteImport.update({
+  id: '/api/public/hooks/$token',
+  path: '/api/public/hooks/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicNotificationsEmailWorkerRoute =
   ApiPublicNotificationsEmailWorkerRouteImport.update({
     id: '/api/public/notifications/email-worker',
@@ -324,6 +330,7 @@ export interface FileRoutesByFullPath {
   '/admin/unidades/$unitId': typeof AdminUnidadesUnitIdRoute
   '/admin/unidades/': typeof AdminUnidadesIndexRoute
   '/api/public/crm/worker': typeof ApiPublicCrmWorkerRoute
+  '/api/public/hooks/$token': typeof ApiPublicHooksTokenRoute
   '/api/public/notifications/email-worker': typeof ApiPublicNotificationsEmailWorkerRoute
   '/api/public/sdr/availability': typeof ApiPublicSdrAvailabilityRoute
   '/api/public/sdr/context': typeof ApiPublicSdrContextRoute
@@ -371,6 +378,7 @@ export interface FileRoutesByTo {
   '/admin/unidades/$unitId': typeof AdminUnidadesUnitIdRoute
   '/admin/unidades': typeof AdminUnidadesIndexRoute
   '/api/public/crm/worker': typeof ApiPublicCrmWorkerRoute
+  '/api/public/hooks/$token': typeof ApiPublicHooksTokenRoute
   '/api/public/notifications/email-worker': typeof ApiPublicNotificationsEmailWorkerRoute
   '/api/public/sdr/availability': typeof ApiPublicSdrAvailabilityRoute
   '/api/public/sdr/context': typeof ApiPublicSdrContextRoute
@@ -420,6 +428,7 @@ export interface FileRoutesById {
   '/admin/unidades/$unitId': typeof AdminUnidadesUnitIdRoute
   '/admin/unidades/': typeof AdminUnidadesIndexRoute
   '/api/public/crm/worker': typeof ApiPublicCrmWorkerRoute
+  '/api/public/hooks/$token': typeof ApiPublicHooksTokenRoute
   '/api/public/notifications/email-worker': typeof ApiPublicNotificationsEmailWorkerRoute
   '/api/public/sdr/availability': typeof ApiPublicSdrAvailabilityRoute
   '/api/public/sdr/context': typeof ApiPublicSdrContextRoute
@@ -470,6 +479,7 @@ export interface FileRouteTypes {
     | '/admin/unidades/$unitId'
     | '/admin/unidades/'
     | '/api/public/crm/worker'
+    | '/api/public/hooks/$token'
     | '/api/public/notifications/email-worker'
     | '/api/public/sdr/availability'
     | '/api/public/sdr/context'
@@ -517,6 +527,7 @@ export interface FileRouteTypes {
     | '/admin/unidades/$unitId'
     | '/admin/unidades'
     | '/api/public/crm/worker'
+    | '/api/public/hooks/$token'
     | '/api/public/notifications/email-worker'
     | '/api/public/sdr/availability'
     | '/api/public/sdr/context'
@@ -565,6 +576,7 @@ export interface FileRouteTypes {
     | '/admin/unidades/$unitId'
     | '/admin/unidades/'
     | '/api/public/crm/worker'
+    | '/api/public/hooks/$token'
     | '/api/public/notifications/email-worker'
     | '/api/public/sdr/availability'
     | '/api/public/sdr/context'
@@ -595,6 +607,7 @@ export interface RootRouteChildren {
   ReservarSucessoRoute: typeof ReservarSucessoRoute
   ReservarIndexRoute: typeof ReservarIndexRoute
   ApiPublicCrmWorkerRoute: typeof ApiPublicCrmWorkerRoute
+  ApiPublicHooksTokenRoute: typeof ApiPublicHooksTokenRoute
   ApiPublicNotificationsEmailWorkerRoute: typeof ApiPublicNotificationsEmailWorkerRoute
   ApiPublicSdrAvailabilityRoute: typeof ApiPublicSdrAvailabilityRoute
   ApiPublicSdrContextRoute: typeof ApiPublicSdrContextRoute
@@ -808,6 +821,13 @@ declare module '@tanstack/react-router' {
       path: '/api/public/crm/worker'
       fullPath: '/api/public/crm/worker'
       preLoaderRoute: typeof ApiPublicCrmWorkerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/$token': {
+      id: '/api/public/hooks/$token'
+      path: '/api/public/hooks/$token'
+      fullPath: '/api/public/hooks/$token'
+      preLoaderRoute: typeof ApiPublicHooksTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/notifications/email-worker': {
@@ -1034,6 +1054,7 @@ const rootRouteChildren: RootRouteChildren = {
   ReservarSucessoRoute: ReservarSucessoRoute,
   ReservarIndexRoute: ReservarIndexRoute,
   ApiPublicCrmWorkerRoute: ApiPublicCrmWorkerRoute,
+  ApiPublicHooksTokenRoute: ApiPublicHooksTokenRoute,
   ApiPublicNotificationsEmailWorkerRoute:
     ApiPublicNotificationsEmailWorkerRoute,
   ApiPublicSdrAvailabilityRoute: ApiPublicSdrAvailabilityRoute,
