@@ -35,6 +35,7 @@ vi.mock("@/integrations/supabase/client.server", () => ({ supabaseAdmin: {
       sdr_get_delivery_orders: (state.rows['delivery_orders'] ?? []).filter((r) => !args['_protocol'] || r['protocol'] === args['_protocol']),
       sdr_followups_due: state.rows['reservations'],
       sdr_scoped_followups_due: (state.rows['reservations'] ?? []).filter((r) => ((args['_unit_ids'] ?? []) as string[]).includes(r['unit_id'] as string)),
+      sdr_crm_sends_due: (state.rows['crm_sends'] ?? []).filter((r) => !args['_unit_ids'] || (args['_unit_ids'] as string[]).includes(r['unit_id'] as string)),
       get_unit_slots: [{ slot_time: "19:00:00", remaining: 10, available: true }],
       get_unit_available_dates: [{ available_date: "2026-11-20" }],
       resolve_unit_prices: { unit: { name: "Unidade" }, date: "2026-11-20", weekday: 5, is_holiday: false, services: [] },
@@ -49,6 +50,9 @@ import { sha256Hex } from "@/lib/integration/crypto";
 const GO = "11111111-1111-4111-8111-111111111111";
 const AN = "22222222-2222-4222-8222-222222222222";
 const MISSING = "33333333-3333-4333-8333-333333333333";
+const SEND_GO = "44444444-4444-4444-8444-444444444444";
+const SEND_AN = "55555555-5555-4555-8555-555555555555";
+const SEND_NO_UNIT = "66666666-6666-4666-8666-666666666666";
 const phone = "62999999999";
 const reservation = (unit_id: string) => ({ unit_id, full_name: "Cliente Teste", phone, date: "2026-11-20", time: "19:00", party_size: 2 });
 const delivery = (unit_id: string) => ({ unit_id, full_name: "Cliente Teste", phone, items: "Pizza", address: "Rua de teste, 1" });
@@ -66,6 +70,7 @@ beforeEach(() => {
     delivery_orders: [{ protocol: "DEL-GOIANIA", unit_id: GO, organization_id: "org" }, { protocol: "DEL-ANAPOLIS", unit_id: AN, organization_id: "org" }],
     sac_tickets: [{ id: "s-an", protocol: "SAC-ANAPOLIS", unit_id: AN, organization_id: "org" }],
     crm_conversations: [{ external_id: "anapolis-conv", unit_id: AN, organization_id: "org" }],
+    crm_sends: [{ id: SEND_GO, unit_id: GO, organization_id: "org" }, { id: SEND_AN, unit_id: AN, organization_id: "org" }, { id: SEND_NO_UNIT, unit_id: null, organization_id: "org" }],
   };
   state.calls = []; state.queryError = false; state.replay = null;
 });
@@ -108,6 +113,19 @@ describe("chave Goiânia: todos os endpoints", () => {
     expect(r.data.map((x: { unit_id: string }) => x.unit_id)).toEqual([GO]);
     expect(state.calls).toContainEqual({ name: "sdr_scoped_followups_due", args: { _unit_ids: [GO], _limit: 1 } });
     expect(state.calls.some((c) => c.name === "sdr_followups_due")).toBe(false);
+  });
+  it("/crm/sends/due só libera envios da unidade da chave (escopo vai ao RPC antes do limite)", async () => {
+    const r = await (await h.crmSendsDue(request("/crm/sends/due?limit=5"))).json();
+    expect(r.data.map((x: { id: string }) => x.id)).toEqual([SEND_GO]);
+    expect(state.calls).toContainEqual({ name: "sdr_crm_sends_due", args: { _limit: 5, _unit_ids: [GO] } });
+  });
+  it.each([["unidade de Anápolis", SEND_AN], ["envio sem unidade", SEND_NO_UNIT], ["id inexistente", MISSING]])("POST /crm/sends bloqueia %s", async (_label, id) => {
+    const r = await h.markCrmSend(request("/crm/sends", { id, ok: true }));
+    expect(r.status).toBe(404); expect((await r.json()).error.code).toBe("NOT_FOUND"); expect(mutatingCalls()).toEqual([]);
+  });
+  it("POST /crm/sends exige id em formato de UUID", async () => {
+    expect((await h.markCrmSend(request("/crm/sends", { id: "abc", ok: true }))).status).toBe(422);
+    expect(mutatingCalls()).toEqual([]);
   });
   const blocked = [
     ["POST reservations", () => h.createReservation(request("/reservations", reservation(AN))), "UNIT_UNAVAILABLE"],
@@ -168,6 +186,7 @@ describe("chave Goiânia: todos os endpoints", () => {
     ["handoff", () => h.handoff(request("/handoff", { unit_id: GO, phone, conversation_external_id: "novo" }))],
     ["classificação", () => h.classify(request("/conversations/classify", { unit_id: GO, external_id: "novo", classification: "outros", reservation_protocol: "CAD-GOIANIA" }))],
     ["lembrete", () => h.markFollowup(request("/followups", { protocol: "CAD-GOIANIA", kind: "lembrete_dia", ok: true }))],
+    ["mensagem de CRM", () => h.markCrmSend(request("/crm/sends", { id: SEND_GO, ok: false, error: "sem WhatsApp" }))],
   ])("permite %s na própria unidade", async (_label, call) => {
     const r = await call(); expect(r.status).toBeLessThan(300); expect((await r.json()).ok).toBe(true);
     expect(mutatingCalls()).toHaveLength(1);
@@ -202,8 +221,15 @@ describe("chave sem restrição: compatibilidade em todos os endpoints", () => {
     ["classify", () => h.classify(request("/conversations/classify", { unit_id: AN, external_id: "anapolis-conv", classification: "outros" }))],
     ["followups due", () => h.followupsDue(request("/followups/due"))],
     ["followups mark", () => h.markFollowup(request("/followups", { protocol: "CAD-ANAPOLIS", kind: "lembrete_dia", ok: true }))],
+    ["crm sends due", () => h.crmSendsDue(request("/crm/sends/due"))],
+    ["crm sends mark", () => h.markCrmSend(request("/crm/sends", { id: SEND_AN, ok: true }))],
   ])("%s mantém acesso legado", async (_name, call) => {
     const r = await call(); expect(r.status).toBeLessThan(300); expect((await r.json()).ok).toBe(true);
+  });
+  it("/crm/sends/due sem restrição não filtra unidade", async () => {
+    const r = await (await h.crmSendsDue(request("/crm/sends/due"))).json();
+    expect(r.data).toHaveLength(3);
+    expect(state.calls).toContainEqual({ name: "sdr_crm_sends_due", args: { _limit: 10, _unit_ids: null } });
   });
   it("listas antigas continuam contendo ambas as unidades", async () => {
     expect((await (await h.listUnits(request("/units"))).json()).data).toHaveLength(2);

@@ -1,6 +1,6 @@
 import { ApiError } from "@/lib/integration/errors";
 import {
-  availabilityQuery, classifyBody, contextQuery, createReservationBody, deliveryBody, findDeliveryQuery, findReservationsQuery,
+  availabilityQuery, classifyBody, contextQuery, createReservationBody, crmSendMarkBody, crmSendsDueQuery, deliveryBody, findDeliveryQuery, findReservationsQuery,
   followupMarkBody, followupsDueQuery, handoffBody, patchReservationBody, pricesQuery, sacBody,
 } from "@/lib/integration/sdr-schemas";
 import { cancelMessage, deliveryMessage, handoffMessage, reservationMessage, reservationUpdateMessage, sacMessage } from "@/lib/integration/messages";
@@ -103,6 +103,24 @@ export const markFollowup = (request: Request) =>
     const b = parseWith(followupMarkBody, body);
     await rpc("sdr_mark_followup", { _protocol: b.protocol, _kind: b.kind, _ok: b.ok, _error: b.error ?? null });
     return { data: { protocol: b.protocol, kind: b.kind, ok: b.ok } };
+  });
+
+/**
+ * Mensagens de CRM prontas para enviar (follow-up pós-visita, reaver, remarketing). O banco só libera dentro da janela
+ * de horário e do teto diário, e nunca para quem pediu para sair. Quem envia é o fluxo do n8n.
+ */
+export const crmSendsDue = (request: Request) =>
+  handleSdr(request, { endpoint: "/crm/sends/due", scope: "read" }, async ({ url, key }) => {
+    const q = parseWith(crmSendsDueQuery, Object.fromEntries(url.searchParams));
+    const rows = await rpc<unknown[] | null>("sdr_crm_sends_due", { _limit: q.limit, _unit_ids: key.unit_ids.length ? key.unit_ids : null });
+    return { data: rows ?? [] };
+  });
+
+export const markCrmSend = (request: Request) =>
+  handleSdr(request, { endpoint: "/crm/sends", scope: "write" }, async ({ body }) => {
+    const b = parseWith(crmSendMarkBody, body);
+    await rpc("sdr_mark_crm_send", { _id: b.id, _ok: b.ok, _error: b.error ?? null });
+    return { data: { id: b.id, ok: b.ok } };
   });
 
 export const listUnits = (request: Request) =>

@@ -103,6 +103,17 @@ export function buildOpenApi(origin: string) {
         requestBody: jsonBody({ type: "object", required: ["protocol", "kind", "ok"], properties: {
           protocol: { type: "string" }, kind: { type: "string", enum: ["lembrete_vespera", "lembrete_dia"] }, ok: { type: "boolean" }, error: { type: "string" } } }),
         responses: { 200: resp("Registrado", { type: "object" }), 401: err, 404: err, 422: err } } },
+      "/crm/sends/due": { get: { operationId: "mensagensCrmPendentes",
+        summary: "Mensagens de CRM a enviar agora (follow-up pós-visita, reaver inativo/lead, remarketing). Já respeita janela de horário, teto diário e quem pediu para sair",
+        parameters: [q("limit", "integer", false, { minimum: 1, maximum: 20 })],
+        responses: { 200: resp("Mensagens", { type: "array", items: { type: "object", properties: {
+          id: { type: "string", format: "uuid" }, kind: { type: "string", enum: ["followup_pos", "reaver_inativo", "reaver_lead", "remarketing"] },
+          phone: { type: "string", description: "E.164, só dígitos" }, first_name: { type: "string" }, text: { type: "string", description: "Mensagem final, já personalizada" },
+          unit_id: { type: "string", format: "uuid" }, unit_slug: { type: "string" }, unit_name: { type: "string" }, attempts: { type: "integer" } } } }), 401: err } } },
+      "/crm/sends": { post: { operationId: "marcarMensagemCrm", summary: "Registra se a mensagem de CRM foi enviada (ok=false recoloca na fila por 10 min, até 3 tentativas)",
+        requestBody: jsonBody({ type: "object", required: ["id", "ok"], properties: {
+          id: { type: "string", format: "uuid" }, ok: { type: "boolean" }, error: { type: "string" } } }),
+        responses: { 200: resp("Registrado", { type: "object" }), 401: err, 404: err, 422: err } } },
       "/availability": { get: { operationId: "consultarDisponibilidade",
         summary: "Horários com vaga (date) ou datas com vaga (from+to)",
         parameters: [q("unit_id", "string", false, { format: "uuid" }), q("unit_slug", "string"), q("date", "string", false, { format: "date" }),

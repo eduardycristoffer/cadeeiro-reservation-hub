@@ -1,6 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { ApiError } from "@/lib/integration/errors";
-import { classifyBody, createReservationBody, deliveryBody, followupMarkBody, handoffBody, sacBody } from "@/lib/integration/sdr-schemas";
+import { classifyBody, createReservationBody, crmSendMarkBody, deliveryBody, followupMarkBody, handoffBody, sacBody } from "@/lib/integration/sdr-schemas";
 
 export type UnitScope = { organization_id: string; unit_ids: string[] };
 
@@ -65,6 +65,9 @@ export async function authorizeSdrScope(client: SupabaseClient, key: UnitScope, 
     const protocol = endpoint === "/followups" ? parse(followupMarkBody).protocol : (body as { protocol?: string } | null)?.protocol;
     if (!protocol) throw new ApiError("RESERVATION_NOT_FOUND");
     await record(client, key, "reservations", "protocol", protocol.trim().toUpperCase(), "RESERVATION_NOT_FOUND");
+  } else if (endpoint === "/crm/sends") {
+    // envio sem unidade só passa por chave sem restrição de unidade; falha fechado
+    await record(client, key, "crm_sends", "id", parse(crmSendMarkBody).id, "NOT_FOUND");
   } else if (endpoint === "/sac") {
     const b = parse(sacBody);
     await unit(b.unit_id);
