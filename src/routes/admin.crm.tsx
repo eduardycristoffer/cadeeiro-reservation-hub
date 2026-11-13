@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Loader2, Megaphone, RotateCcw, Send, X } from "lucide-react";
+import { ExternalLink, Loader2, Megaphone, RotateCcw, Send, Star, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,8 +9,8 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { EmptyState, ErrorState, ListSkeleton, NativeSelect, StatCard } from "@/components/admin/bits";
 import {
-  AUDIENCES, CAMPAIGN_BODY_MAX, CAMPAIGN_STATUS_LABEL, SEND_KIND_LABEL, SEND_STATUS_LABEL, TEMPLATE_INFO, TEMPLATE_MAX, TEMPLATE_MIN, VAR_LABEL,
-  parseAudience, parseOverview, parseSettings, parseTemplates, previewTemplate, settingsProblem, sinceLabel, unknownVars,
+  AUDIENCES, CAMPAIGN_BODY_MAX, CAMPAIGN_STATUS_LABEL, REVIEW_DAYS, SEND_KIND_LABEL, SEND_STATUS_LABEL, TEMPLATE_INFO, TEMPLATE_MAX, TEMPLATE_MIN, VAR_LABEL,
+  hasReviewLink, parseAudience, parseOverview, parseSettings, parseTemplates, previewTemplate, reviewHost, reviewUrlProblem, settingsProblem, sinceLabel, unknownVars,
   type AudienceId, type AudiencePreview, type CrmOverview, type CrmSettings, type TemplateKey, type TemplateRow, type VarName,
 } from "@/lib/crm";
 import { useAuth } from "@/lib/auth";
@@ -22,9 +22,9 @@ export const Route = createFileRoute("/admin/crm")({
   component: Crm,
 });
 
-type Tab = "resumo" | "modelos" | "remarketing" | "envios";
+type Tab = "resumo" | "modelos" | "remarketing" | "avaliacoes" | "envios";
 const TABS: { k: Tab; label: string }[] = [
-  { k: "resumo", label: "Resumo" }, { k: "modelos", label: "Modelos" }, { k: "remarketing", label: "Remarketing" }, { k: "envios", label: "Envios" },
+  { k: "resumo", label: "Resumo" }, { k: "modelos", label: "Modelos" }, { k: "remarketing", label: "Remarketing" }, { k: "avaliacoes", label: "Avaliações Google" }, { k: "envios", label: "Envios" },
 ];
 type Unit = { id: string; name: string };
 
@@ -52,6 +52,7 @@ function Crm() {
         {tab === "resumo" && <Resumo />}
         {tab === "modelos" && <Modelos />}
         {tab === "remarketing" && <Remarketing units={units} />}
+        {tab === "avaliacoes" && <Avaliacoes units={units} />}
         {tab === "envios" && <Envios units={units} />}
       </div>
     </div>
@@ -308,16 +309,11 @@ function Remarketing({ units }: { units: Unit[] }) {
   const loadList = useCallback(async () => {
     const sb = requireSupabase();
     const [c, s] = await Promise.all([
-      sb.from("crm_campaigns").select("id,name,audience,status,total,created_at,unit_id").order("created_at", { ascending: false }).limit(20),
-      sb.from("crm_sends").select("campaign_id,status").not("campaign_id", "is", null).order("created_at", { ascending: false }).limit(5000),
+      sb.from("crm_campaigns").select("id,name,audience,status,total,created_at,unit_id").eq("kind", "remarketing").order("created_at", { ascending: false }).limit(20),
+      sb.from("crm_sends").select("campaign_id,status").eq("kind", "remarketing").not("campaign_id", "is", null).order("created_at", { ascending: false }).limit(5000),
     ]);
     if (c.error || s.error) { setListErr(friendlyError(c.error ?? s.error)); return; }
-    const by: Record<string, Record<string, number>> = {};
-    for (const r of (s.data ?? []) as { campaign_id: string; status: string }[]) {
-      const m = (by[r.campaign_id] ??= {});
-      m[r.status] = (m[r.status] ?? 0) + 1;
-    }
-    setListErr(null); setCounts(by); setCampaigns((c.data ?? []) as CampaignRow[]);
+    setListErr(null); setCounts(countByCampaign(s.data)); setCampaigns((c.data ?? []) as CampaignRow[]);
   }, []);
   useEffect(() => { void loadList(); }, [loadList]);
 
@@ -424,6 +420,195 @@ function Remarketing({ units }: { units: Unit[] }) {
   );
 }
 
+/* ───────────────────────── Avaliações no Google ───────────────────────── */
+
+type ReviewCampaignRow = CampaignRow & { review_url: string | null; days: number | null };
+const DEFAULT_REVIEW = "Oi, {{nome}}! 😊 Foi um prazer receber você no {{unidade}}.\nSe puder, conta pra gente como foi sua experiência avaliando no Google? Leva menos de 1 minuto e ajuda muito:\n{{link_avaliacao}}\nMuito obrigado! 💛";
+const REVIEW_LINK_KEY = "crm.reviewUrl.";
+
+function countByCampaign(rows: unknown): Record<string, Record<string, number>> {
+  const by: Record<string, Record<string, number>> = {};
+  for (const r of (rows ?? []) as { campaign_id: string; status: string }[]) {
+    const m = (by[r.campaign_id] ??= {});
+    m[r.status] = (m[r.status] ?? 0) + 1;
+  }
+  return by;
+}
+
+// o último link usado em cada unidade fica lembrado só neste navegador (conveniência; o banco guarda o que foi enviado)
+function rememberedLink(unit: string): string {
+  try { return window.localStorage.getItem(REVIEW_LINK_KEY + unit) ?? ""; } catch { return ""; }
+}
+function rememberLink(unit: string, url: string) {
+  try { window.localStorage.setItem(REVIEW_LINK_KEY + unit, url); } catch { /* sem armazenamento: segue sem lembrar */ }
+}
+
+function Avaliacoes({ units }: { units: Unit[] }) {
+  const [name, setName] = useState("");
+  const [unit, setUnit] = useState("");
+  const [url, setUrl] = useState("");
+  const [days, setDays] = useState<number>(REVIEW_DAYS.default);
+  const [body, setBody] = useState(DEFAULT_REVIEW);
+  const [touchedBody, setTouchedBody] = useState(false);
+  const [aud, setAud] = useState<AudiencePreview | null>(null);
+  const [audErr, setAudErr] = useState<string | null>(null);
+  const [sending, setSending] = useState(false);
+  const [campaigns, setCampaigns] = useState<ReviewCampaignRow[] | null>(null);
+  const [counts, setCounts] = useState<Record<string, Record<string, number>>>({});
+  const [listErr, setListErr] = useState<string | null>(null);
+  const ref = useRef<HTMLTextAreaElement>(null);
+
+  // texto inicial = modelo da organização (aba Modelos), enquanto a pessoa não mexeu
+  useEffect(() => {
+    let off = false;
+    void requireSupabase().rpc("crm_templates_list").then(({ data }) => {
+      if (off) return;
+      const t = parseTemplates(data).find((x) => x.key === "avaliacao_google");
+      if (t?.body) setBody((cur) => (touchedBody ? cur : t.body));
+    });
+    return () => { off = true; };
+  }, [touchedBody]);
+
+  function pickUnit(id: string) {
+    setUnit(id);
+    if (id) setUrl((cur) => (cur.trim() ? cur : rememberedLink(id)));
+  }
+
+  // conta quantas pessoas vão receber, sempre que a unidade ou o período muda
+  useEffect(() => {
+    let off = false;
+    setAud(null); setAudErr(null);
+    if (!unit) return;
+    const t = setTimeout(() => {
+      void requireSupabase().rpc("crm_audience_preview", { _audience: "recentes", _unit: unit, _days: days }).then(({ data, error }) => {
+        if (off) return;
+        if (error) setAudErr(friendlyError(error)); else setAud(parseAudience(data));
+      });
+    }, 350);
+    return () => { off = true; clearTimeout(t); };
+  }, [unit, days]);
+
+  const loadList = useCallback(async () => {
+    const sb = requireSupabase();
+    const [c, s] = await Promise.all([
+      sb.from("crm_campaigns").select("id,name,audience,status,total,created_at,unit_id,review_url,days").eq("kind", "avaliacao_google").order("created_at", { ascending: false }).limit(20),
+      sb.from("crm_sends").select("campaign_id,status").eq("kind", "avaliacao_google").not("campaign_id", "is", null).order("created_at", { ascending: false }).limit(5000),
+    ]);
+    if (c.error || s.error) { setListErr(friendlyError(c.error ?? s.error)); return; }
+    setListErr(null); setCounts(countByCampaign(s.data)); setCampaigns((c.data ?? []) as ReviewCampaignRow[]);
+  }, []);
+  useEffect(() => { void loadList(); }, [loadList]);
+
+  const urlProblem = url.trim() ? reviewUrlProblem(url) : null;
+  const bad = unknownVars("avaliacao_google", body);
+  const len = body.trim().length;
+  const bodyOk = len >= TEMPLATE_MIN && len <= CAMPAIGN_BODY_MAX && bad.length === 0 && hasReviewLink(body);
+  const linkOk = !!url.trim() && !urlProblem;
+  const canSend = bodyOk && linkOk && !!unit && name.trim().length >= 2 && !!aud && aud.total > 0 && aud.total <= aud.max;
+  const unitName = units.find((u) => u.id === unit)?.name ?? "";
+
+  async function launch() {
+    if (!aud || !canSend) return;
+    if (!window.confirm(`Pedir avaliação no Google para ${aud.total} ${aud.total === 1 ? "pessoa" : "pessoas"} do ${unitName}? As mensagens saem aos poucos, dentro do horário configurado. Você pode cancelar o que ainda estiver na fila.`)) return;
+    setSending(true);
+    const { data, error } = await requireSupabase().rpc("crm_review_campaign_launch", { _name: name.trim(), _unit: unit, _review_url: url.trim(), _body: body, _days: days });
+    setSending(false);
+    if (error) { toast.error(friendlyError(error)); return; }
+    rememberLink(unit, url.trim());
+    const queued = typeof (data as { queued?: unknown } | null)?.queued === "number" ? (data as { queued: number }).queued : aud.total;
+    toast.success(`${queued} ${queued === 1 ? "pedido entrou" : "pedidos entraram"} na fila`);
+    setName(""); void loadList();
+  }
+  async function cancel(c: ReviewCampaignRow) {
+    if (!window.confirm(`Cancelar "${c.name}"? O que ainda não foi enviado será descartado.`)) return;
+    const { data, error } = await requireSupabase().rpc("crm_campaign_cancel", { _id: c.id });
+    if (error) { toast.error(friendlyError(error)); return; }
+    toast.success(`${typeof data === "number" ? data : 0} mensagens descartadas`); void loadList();
+  }
+
+  return (
+    <div className="space-y-5">
+      <section className="space-y-4 rounded-3xl bg-card p-5 shadow-soft">
+        <h2 className="flex items-center gap-2 text-lg font-semibold"><Star className="size-5" aria-hidden="true" /> Nova campanha de avaliação no Google</h2>
+        <p className="text-sm text-muted-foreground">Convida quem foi atendido há pouco a avaliar a unidade no Google. O link é escolhido aqui, em cada campanha: Goiânia e Anápolis têm páginas diferentes.</p>
+        <div>
+          <Label htmlFor="av-name">Nome da campanha (só para você)</Label>
+          <Input id="av-name" value={name} onChange={(e) => setName(e.target.value)} maxLength={80} placeholder="Ex.: Avaliação Anápolis — novembro" className="mt-1.5 h-12 rounded-xl" />
+        </div>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div><Label htmlFor="av-unit">Unidade</Label>
+            <NativeSelect id="av-unit" value={unit} onChange={(e) => pickUnit(e.target.value)} className="mt-1.5 h-12 w-full"><option value="">Escolha a unidade</option>{units.map((u) => <option key={u.id} value={u.id}>{u.name}</option>)}</NativeSelect></div>
+          <div><Label htmlFor="av-days">Atendidos nos últimos (dias)</Label>
+            <Input id="av-days" inputMode="numeric" value={days} onChange={(e) => setDays(Math.min(REVIEW_DAYS.max, Number(e.target.value.replace(/\D/g, "").slice(0, 2)) || REVIEW_DAYS.min))} className="mt-1.5 h-12 rounded-xl tabular-nums" /></div>
+        </div>
+        <div>
+          <Label htmlFor="av-url">Link de avaliação do Google desta unidade</Label>
+          <Input id="av-url" value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://g.page/r/…/review" inputMode="url" autoCapitalize="none" autoCorrect="off" spellCheck={false} aria-invalid={!!urlProblem} className="mt-1.5 h-12 rounded-xl" />
+          {urlProblem ? <p role="alert" className="mt-1 text-sm text-destructive">{urlProblem}</p> : <p className="mt-1 text-xs text-muted-foreground">No Google Meu Negócio da unidade, use “Pedir avaliações” e copie o link. Aceita g.page, search.google.com, maps.app.goo.gl e share.google.</p>}
+          {linkOk && <a href={url.trim()} target="_blank" rel="noopener noreferrer" className="mt-1 inline-flex min-h-9 items-center gap-1 text-sm underline underline-offset-2"><ExternalLink className="size-3.5" aria-hidden="true" /> Abrir o link para conferir</a>}
+        </div>
+        <div className="rounded-2xl bg-surface p-4 text-sm" aria-live="polite">
+          {!unit ? <span className="text-muted-foreground">Escolha a unidade para ver quantas pessoas vão receber.</span> : audErr ? <span className="text-destructive">{audErr}</span> : !aud ? <span className="text-muted-foreground">Contando…</span> : aud.total === 0 ? (
+            <span>Ninguém se encaixa agora. Entram clientes atendidos nesse período, que autorizaram WhatsApp e ainda não receberam pedido de avaliação nos últimos 90 dias.</span>
+          ) : (
+            <>
+              <strong className="text-base">{aud.total} {aud.total === 1 ? "pessoa vai receber" : "pessoas vão receber"}</strong>
+              {aud.total > aud.max && <span className="ml-2 text-destructive">máximo de {aud.max} por campanha — reduza o período</span>}
+              <span className="mt-1 block text-muted-foreground">Ex.: {aud.sample.map((s) => `${s.nome} (…${s.final})`).join(", ")}</span>
+            </>
+          )}
+        </div>
+        <div className="grid gap-4 lg:grid-cols-2">
+          <div>
+            <Label htmlFor="av-body">Mensagem</Label>
+            <Textarea id="av-body" ref={ref} value={body} onChange={(e) => { setTouchedBody(true); setBody(e.target.value); }} rows={7} maxLength={CAMPAIGN_BODY_MAX} className="mt-1.5 rounded-xl text-base" />
+            <VarChips vars={TEMPLATE_INFO.avaliacao_google.vars} onPick={(v) => { setTouchedBody(true); insertAtCursor(ref.current, body, `{{${v}}}`, setBody); }} />
+            {bad.length > 0 && <p role="alert" className="mt-2 text-sm text-destructive">Variável desconhecida: {bad.map((b) => `{{${b}}}`).join(", ")}</p>}
+            {!hasReviewLink(body) && <p role="alert" className="mt-2 text-sm text-destructive">Inclua {"{{link_avaliacao}}"} no texto: é ali que o link vai.</p>}
+            <p className="mt-1 text-xs text-muted-foreground">{len}/{CAMPAIGN_BODY_MAX} · o texto “responda SAIR” é adicionado sozinho.</p>
+          </div>
+          <Preview text={bodyOk ? previewTemplate("avaliacao_google", body, { ...(linkOk ? { link_avaliacao: url.trim() } : {}), ...(unitName ? { unidade: unitName } : {}) }) : ""} />
+        </div>
+        <ul className="list-disc space-y-1 pl-5 text-xs text-muted-foreground">
+          <li>Só recebe quem foi atendido na unidade, autorizou WhatsApp e nunca respondeu SAIR.</li>
+          <li>Ninguém recebe mais de um pedido de avaliação a cada 90 dias. Quem tem atendimento do SAC aberto fica de fora até a equipe responder.</li>
+          <li>O pedido vai para todos do público, sem separar por satisfação: o Google não permite pedir avaliação só a quem gostou.</li>
+        </ul>
+        <Button onClick={() => void launch()} disabled={sending || !canSend} className="h-12 rounded-2xl px-6">
+          {sending ? <Loader2 className="size-4 animate-spin" /> : <><Send className="size-4" /> Pedir avaliação a {aud?.total ?? "…"} {aud?.total === 1 ? "pessoa" : "pessoas"}</>}
+        </Button>
+      </section>
+
+      <section>
+        <h2 className="mb-3 text-lg font-semibold">Campanhas de avaliação</h2>
+        {listErr ? <ErrorState message={listErr} onRetry={() => void loadList()} /> : !campaigns ? <ListSkeleton rows={2} /> : campaigns.length === 0 ? (
+          <EmptyState title="Nenhuma campanha ainda" text="Escolha a unidade, cole o link de avaliação do Google e envie. O andamento aparece aqui." />
+        ) : (
+          <ul className="space-y-3">
+            {campaigns.map((c) => {
+              const k = counts[c.id] ?? {};
+              return (
+                <li key={c.id} className="rounded-3xl bg-card p-4 shadow-soft">
+                  <div className="flex items-start gap-3">
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate font-semibold">{c.name}</p>
+                      <p className="text-sm text-muted-foreground">{units.find((u) => u.id === c.unit_id)?.name ?? "—"} · atendidos nos últimos {c.days ?? "—"} dias · {sinceLabel(c.created_at)}</p>
+                      {c.review_url && <a href={c.review_url} target="_blank" rel="noopener noreferrer" className="mt-0.5 inline-flex min-h-9 max-w-full items-center gap-1 text-sm underline underline-offset-2"><ExternalLink className="size-3.5 shrink-0" aria-hidden="true" /><span className="truncate">{reviewHost(c.review_url)}</span></a>}
+                    </div>
+                    <span className="shrink-0 rounded-full bg-surface px-2.5 py-1 text-xs font-medium">{CAMPAIGN_STATUS_LABEL[c.status] ?? c.status}</span>
+                  </div>
+                  <p className="mt-2 text-sm tabular-nums">{c.total} no total · {k["enviado"] ?? 0} enviadas · {(k["pendente"] ?? 0) + (k["enviando"] ?? 0)} na fila · {k["falhou"] ?? 0} falharam · {k["cancelado"] ?? 0} canceladas</p>
+                  {c.status === "enviando" && <Button variant="outline" onClick={() => void cancel(c)} className="mt-3 h-11 rounded-xl"><X className="size-4" /> Cancelar o que falta</Button>}
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </section>
+    </div>
+  );
+}
+
 /* ───────────────────────── Envios ───────────────────────── */
 
 type SendRow = { id: string; kind: string; status: string; first_name: string | null; phone_e164: string; unit_id: string | null; text: string; attempts: number; last_error: string | null; scheduled_for: string; sent_at: string | null; created_at: string };
@@ -464,7 +649,7 @@ function Envios({ units }: { units: Unit[] }) {
       </div>
       <div className="mt-4">
         {err ? <ErrorState message={err} onRetry={() => void load()} /> : !rows ? <ListSkeleton /> : rows.length === 0 ? (
-          <EmptyState title="Nada por aqui" text="Quando houver follow-up, reaver ou remarketing, cada mensagem aparece nesta lista." />
+          <EmptyState title="Nada por aqui" text="Quando houver follow-up, reaver, remarketing ou pedido de avaliação, cada mensagem aparece nesta lista." />
         ) : (
           <ul className="space-y-3">
             {rows.map((r) => (

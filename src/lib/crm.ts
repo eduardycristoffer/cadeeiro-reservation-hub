@@ -1,15 +1,15 @@
 // CRM do painel: modelos de mensagem, prévia ao vivo e leitura segura do que vem do banco.
 // A renderização aqui repete a regra do banco (_crm_render) só para MOSTRAR a prévia; quem monta o texto enviado é o banco.
 
-export const TEMPLATE_KEYS = ["confirmacao", "cancelamento", "followup_pos", "reaver_inativo", "reaver_lead", "remarketing"] as const;
+export const TEMPLATE_KEYS = ["confirmacao", "cancelamento", "followup_pos", "reaver_inativo", "reaver_lead", "remarketing", "avaliacao_google"] as const;
 export type TemplateKey = (typeof TEMPLATE_KEYS)[number];
 
-export const VAR_NAMES = ["nome", "unidade", "cidade", "link", "dia", "data", "hora", "pessoas", "protocolo", "motivo"] as const;
+export const VAR_NAMES = ["nome", "unidade", "cidade", "link", "link_avaliacao", "dia", "data", "hora", "pessoas", "protocolo", "motivo"] as const;
 export type VarName = (typeof VAR_NAMES)[number];
 
 export const VAR_LABEL: Record<VarName, string> = {
   nome: "Primeiro nome", unidade: "Unidade", cidade: "Cidade", link: "Link para reservar", dia: "Dia (ex.: sábado, 14/11)",
-  data: "Data (14/11)", hora: "Horário", pessoas: "Nº de pessoas", protocolo: "Protocolo", motivo: "Motivo do cancelamento",
+  link_avaliacao: "Link da avaliação no Google", data: "Data (14/11)", hora: "Horário", pessoas: "Nº de pessoas", protocolo: "Protocolo", motivo: "Motivo do cancelamento",
 };
 
 const RESERVATION_VARS: VarName[] = ["dia", "data", "hora", "pessoas", "protocolo"];
@@ -21,10 +21,11 @@ export const TEMPLATE_INFO: Record<TemplateKey, { label: string; when: string; m
   reaver_inativo: { label: "Reaver cliente sumido", when: "Para quem já veio e não volta há tempo.", marketing: true, vars: ["nome", "unidade", "cidade", "link"] },
   reaver_lead: { label: "Reaver lead do WhatsApp", when: "Para quem chamou no WhatsApp e não reservou.", marketing: true, vars: ["nome", "unidade", "cidade", "link"] },
   remarketing: { label: "Remarketing (campanha)", when: "Modelo inicial das campanhas de remarketing.", marketing: true, vars: ["nome", "unidade", "cidade", "link"] },
+  avaliacao_google: { label: "Pedido de avaliação no Google", when: "Modelo inicial das campanhas de avaliação: convida quem foi atendido a avaliar a unidade no Google.", marketing: true, vars: ["nome", "unidade", "cidade", "link_avaliacao"] },
 };
 
 export const SAMPLE_VARS: Record<VarName, string> = {
-  nome: "Maria", unidade: "Candeeiro Goiânia", cidade: "Goiânia", link: "https://seusite.com.br/reservar?cidade=goiania",
+  nome: "Maria", unidade: "Candeeiro Goiânia", cidade: "Goiânia", link: "https://seusite.com.br/reservar?cidade=goiania", link_avaliacao: "https://g.page/r/SEU-LINK/review",
   dia: "sábado, 14/11", data: "14/11", hora: "20:00", pessoas: "4", protocolo: "CAD-ABC123", motivo: "Casa lotada nesse horário",
 };
 
@@ -68,6 +69,30 @@ export const TEMPLATE_MIN = 10;
 export const TEMPLATE_MAX = 800;
 export const CAMPAIGN_BODY_MAX = 600;
 
+/** Campanha de avaliação no Google: quem foi atendido nos últimos N dias (mesma faixa do banco). */
+export const REVIEW_DAYS = { min: 1, default: 14, max: 90 } as const;
+/** Mesma regra do banco (_crm_review_url_ok): https e só endereços do Google. */
+const REVIEW_URL_RE = /^https:\/\/(g\.page|search\.google\.com|maps\.app\.goo\.gl|goo\.gl|share\.google|g\.co|(www\.|maps\.|business\.)?google\.com(\.br)?)(\/[^\s{}]*)?$/i;
+
+/** Confere o link de avaliação antes de enviar ao banco. Devolve null quando está certo. */
+export function reviewUrlProblem(url: string): string | null {
+  const u = url.trim();
+  if (!u) return "Cole o link de avaliação do Google desta unidade.";
+  if (u.length > 500) return "O link está longo demais.";
+  if (!/^https:\/\//i.test(u)) return "O link precisa começar com https://";
+  if (!REVIEW_URL_RE.test(u)) return "Use o link de avaliação do Google (g.page, search.google.com, maps.app.goo.gl ou share.google).";
+  return null;
+}
+
+/** O texto de uma campanha de avaliação precisa levar o link; sem ele a mensagem não serve para nada. */
+export const hasReviewLink = (body: string) => body.includes("{{link_avaliacao}}");
+
+/** Endereço curto para mostrar na lista (ex.: g.page). */
+export function reviewHost(url: string | null | undefined): string {
+  if (!url) return "—";
+  try { return new URL(url).host; } catch { return "—"; }
+}
+
 export const AUDIENCES = [
   { id: "inativos", label: "Clientes sumidos", hint: "Já vieram, mas não voltam há alguns dias." },
   { id: "visitaram", label: "Quem já visitou", hint: "Todos que já compareceram alguma vez." },
@@ -76,7 +101,7 @@ export const AUDIENCES = [
 export type AudienceId = (typeof AUDIENCES)[number]["id"];
 
 export const SEND_KIND_LABEL: Record<string, string> = {
-  followup_pos: "Pós-visita", reaver_inativo: "Reaver cliente", reaver_lead: "Reaver lead", remarketing: "Remarketing",
+  followup_pos: "Pós-visita", reaver_inativo: "Reaver cliente", reaver_lead: "Reaver lead", remarketing: "Remarketing", avaliacao_google: "Avaliação Google",
 };
 export const SEND_STATUS_LABEL: Record<string, string> = {
   pendente: "Na fila", enviando: "Enviando", enviado: "Enviado", falhou: "Falhou", cancelado: "Cancelado",

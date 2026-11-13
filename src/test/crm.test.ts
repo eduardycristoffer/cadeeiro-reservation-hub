@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
-  parseAudience, parseOverview, parseSettings, parseTemplates, previewTemplate, renderTemplate, settingsProblem, sinceLabel, unknownVars, OPT_OUT_FOOTER,
+  hasReviewLink, parseAudience, parseOverview, parseSettings, parseTemplates, previewTemplate, renderTemplate, reviewHost, reviewUrlProblem, settingsProblem, sinceLabel, unknownVars,
+  OPT_OUT_FOOTER, REVIEW_DAYS, SEND_KIND_LABEL, TEMPLATE_INFO,
 } from "@/lib/crm";
 
 describe("renderTemplate (mesma regra do banco)", () => {
@@ -90,4 +91,48 @@ describe("sinceLabel", () => {
     ["2026-11-12T11:59:40Z", "agora"], ["2026-11-12T11:30:00Z", "há 30 min"], ["2026-11-12T08:00:00Z", "há 4 h"], ["2026-11-09T12:00:00Z", "há 3 d"],
   ])("%s", (iso, out) => expect(sinceLabel(iso, now)).toBe(out));
   it("vazio ou inválido", () => { expect(sinceLabel(null)).toBe("—"); expect(sinceLabel("x")).toBe("—"); });
+});
+
+describe("campanha de avaliação no Google", () => {
+  it.each([
+    "https://g.page/r/CabC123/review", "https://search.google.com/local/writereview?placeid=ChIJ123", "https://maps.app.goo.gl/AbC", "https://share.google/H50r74dqSvM6YCwXu",
+    "https://www.google.com/maps/place/x", "https://www.google.com.br/maps", "https://g.co/kgs/abc", "  https://g.page/r/abc/review  ",
+  ])("aceita %s", (u) => expect(reviewUrlProblem(u)).toBeNull());
+  it.each([
+    ["", "Cole"], ["http://g.page/r/abc", "https"], ["g.page/r/abc", "https"], ["https://g.page.evil.com/r/abc", "Google"], ["https://evil.com/g.page/r/abc", "Google"],
+    ["https://g.page@evil.com/r", "Google"], ["https://google.com.evil.com/x", "Google"], ["https://facebook.com/x", "Google"], ["https://g.page/r/a b", "Google"],
+    ["https://g.page/{{nome}}", "Google"], [`https://g.page/${"a".repeat(500)}`, "longo"],
+  ])("recusa %j", (u, word) => expect(reviewUrlProblem(u)).toContain(word));
+
+  it("o modelo conhece o link e mais nada de reserva", () => {
+    expect(unknownVars("avaliacao_google", "Oi {{nome}} {{unidade}} {{cidade}} {{link_avaliacao}}")).toEqual([]);
+    expect(unknownVars("avaliacao_google", "Oi {{nome}} {{protocolo}} {{link}}")).toEqual(["protocolo", "link"]);
+    expect(unknownVars("remarketing", "Oi {{nome}} {{link_avaliacao}}")).toEqual(["link_avaliacao"]);
+  });
+  it("prévia leva o link escolhido e o rodapé de saída", () => {
+    const t = previewTemplate("avaliacao_google", "Oi, {{nome}}! Avalie o {{unidade}}:\n{{link_avaliacao}}", { link_avaliacao: "https://g.page/r/xyz/review", unidade: "Candeeiro Anápolis" });
+    expect(t).toContain("Avalie o Candeeiro Anápolis:\nhttps://g.page/r/xyz/review");
+    expect(t).toContain(OPT_OUT_FOOTER);
+    expect(t.match(/SAIR/g)).toHaveLength(1);
+  });
+  it("sem link a linha dele some, nunca sobra {{...}}", () => {
+    expect(renderTemplate("Oi {{nome}}\nAvalie: {{link_avaliacao}}\nObrigado", { nome: "Ana" })).toBe("Oi Ana\nObrigado");
+  });
+  it("hasReviewLink exige a variável no texto", () => {
+    expect(hasReviewLink("Avalie: {{link_avaliacao}}")).toBe(true);
+    expect(hasReviewLink("Avalie pelo nosso link")).toBe(false);
+    expect(hasReviewLink("Avalie: {{link}}")).toBe(false);
+  });
+  it("reviewHost mostra só o endereço curto", () => {
+    expect(reviewHost("https://g.page/r/abc/review")).toBe("g.page");
+    expect(reviewHost(null)).toBe("—");
+    expect(reviewHost("lixo")).toBe("—");
+  });
+  it("tipo de envio e modelo existem na tela", () => {
+    expect(SEND_KIND_LABEL["avaliacao_google"]).toBe("Avaliação Google");
+    expect(TEMPLATE_INFO.avaliacao_google.marketing).toBe(true);
+    expect(REVIEW_DAYS).toEqual({ min: 1, default: 14, max: 90 });
+    const t = parseTemplates([{ key: "avaliacao_google", body: "Oi {{nome}} {{link_avaliacao}}", default_body: "x", is_custom: false }]);
+    expect(t).toHaveLength(1);
+  });
 });
