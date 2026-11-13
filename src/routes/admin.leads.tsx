@@ -167,9 +167,9 @@ function Leads() {
         className="mt-5 h-12 bg-card"
       />
       <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <label className="text-xs font-medium">
+        <label className="block text-xs font-medium text-muted-foreground">
           Cidade
-          <NativeSelect value={city} onChange={(e) => setCity(e.target.value)}>
+          <NativeSelect className="mt-1 block w-full" value={city} onChange={(e) => setCity(e.target.value)}>
             <option value="">Todas</option>
             {CIDADES.map((c) => (
               <option key={c} value={c}>
@@ -178,9 +178,9 @@ function Leads() {
             ))}
           </NativeSelect>
         </label>
-        <label className="text-xs font-medium">
+        <label className="block text-xs font-medium text-muted-foreground">
           Status
-          <NativeSelect value={status} onChange={(e) => setStatus(e.target.value)}>
+          <NativeSelect className="mt-1 block w-full" value={status} onChange={(e) => setStatus(e.target.value)}>
             <option value="">Todos</option>
             {Object.entries(STATUS).map(([k, v]) => (
               <option key={k} value={k}>
@@ -189,22 +189,22 @@ function Leads() {
             ))}
           </NativeSelect>
         </label>
-        <label className="text-xs font-medium">
+        <label className="block text-xs font-medium text-muted-foreground">
           De
           <Input
             type="date"
             value={from}
             onChange={(e) => setFrom(e.target.value)}
-            className="h-11 bg-card"
+            className="mt-1 h-11 bg-card"
           />
         </label>
-        <label className="text-xs font-medium">
+        <label className="block text-xs font-medium text-muted-foreground">
           Até
           <Input
             type="date"
             value={to}
             onChange={(e) => setTo(e.target.value)}
-            className="h-11 bg-card"
+            className="mt-1 h-11 bg-card"
           />
         </label>
       </div>

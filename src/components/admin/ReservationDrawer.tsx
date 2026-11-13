@@ -108,7 +108,7 @@ export function ReservationDrawer({ id, tick, onClose, onChanged }: { id: string
             <dl className="mt-4 divide-y rounded-2xl bg-surface px-4 text-sm">
               <Item k="Unidade" v={r.units?.name ?? "—"} />
               {r.service && <Item k="Serviço" v={SERVICE_LABEL[r.service]} />}
-              <Item k="Data" v={<span className="capitalize">{formatDateLong(r.reservation_date)}</span>} />
+              <Item k="Data" v={<span className="cap1">{formatDateLong(r.reservation_date)}</span>} />
               <Item k="Horário" v={hhmm(r.reservation_time)} />
               <Item k="Pessoas" v={String(r.party_size)} />
               {r.occasion && r.occasion !== "nenhuma" && (

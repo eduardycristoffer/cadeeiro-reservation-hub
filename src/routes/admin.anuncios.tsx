@@ -76,7 +76,7 @@ function Anuncios() {
       <p className="mt-1 text-sm text-muted-foreground">Quanto você gastou, o que voltou em reservas e quanto custa cada cliente novo.</p>
 
       <div className="mt-5 flex flex-wrap items-center gap-2">
-        <div className="flex gap-1 overflow-x-auto rounded-full bg-surface p-1" role="tablist" aria-label="Período">
+        <div className="seg-scroll flex gap-1 overflow-x-auto rounded-full bg-surface p-1" role="tablist" aria-label="Período">
           {(Object.keys(PERIODS) as Period[]).map((k) => (
             <button key={k} role="tab" aria-selected={p === k} onClick={() => setP(k)}
               className={cn("min-h-10 shrink-0 rounded-full px-4 text-sm transition", p === k ? "bg-card font-medium shadow-soft" : "text-muted-foreground")}>{PERIODS[k]}</button>
@@ -108,7 +108,7 @@ function Anuncios() {
             <ProjectionCard r={report} />
           </div>
 
-          <div className="mt-6 flex gap-1 overflow-x-auto rounded-full bg-surface p-1" role="tablist" aria-label="Detalhes">
+          <div className="seg-scroll mt-6 flex gap-1 overflow-x-auto rounded-full bg-surface p-1" role="tablist" aria-label="Detalhes">
             {TABS.map((t) => (
               <button key={t.k} role="tab" aria-selected={tab === t.k} onClick={() => setTab(t.k)}
                 className={cn("min-h-10 shrink-0 rounded-full px-4 text-sm transition", tab === t.k ? "bg-card font-medium shadow-soft" : "text-muted-foreground")}>{t.label}</button>
@@ -172,7 +172,7 @@ function BudgetCard({ r, unit, campaign, month, onSaved }: { r: AdsReport; unit:
       <h2 className="text-lg font-semibold">Orçamento do mês</h2>
       {r.budget && r.budget.planned > 0 ? (
         <>
-          <p className="mt-2 text-3xl font-semibold tabular-nums">{brl(r.budget.spent)} <span className="text-base font-normal text-muted-foreground">de {brl(r.budget.planned)}</span></p>
+          <p className="mt-2 text-2xl font-semibold tabular-nums sm:text-3xl">{brl(r.budget.spent)} <span className="text-sm font-normal text-muted-foreground sm:text-base">de {brl(r.budget.planned)}</span></p>
           <Progress value={used} className={cn("mt-3 h-2.5", st.tone === "bad" && "[&>div]:bg-destructive", st.tone === "warn" && "[&>div]:bg-status-pending")} aria-label="Orçamento usado" />
           <p className={cn("mt-2 text-sm", st.tone === "bad" ? "text-destructive" : "text-muted-foreground")}>{st.text}</p>
           {pace && (
@@ -225,8 +225,22 @@ function ProjectionCard({ r }: { r: AdsReport }) {
 }
 
 // ------------------------------------------------------------------ tabelas
-function Scroll({ children }: { children: React.ReactNode }) {
-  return <div className="overflow-x-auto rounded-3xl bg-card shadow-soft"><table className="w-full min-w-[640px] text-sm">{children}</table></div>;
+/** Tabela no computador; no celular cada linha vira um card (tabela larga com rolagem lateral é ruim de ler no dedo). */
+function Scroll({ children, cards }: { children: React.ReactNode; cards?: React.ReactNode }) {
+  return (
+    <>
+      {cards && <ul className="space-y-2.5 md:hidden">{cards}</ul>}
+      <div className={cn("overflow-x-auto rounded-3xl bg-card shadow-soft", cards && "hidden md:block")}><table className="w-full min-w-[640px] text-sm">{children}</table></div>
+    </>
+  );
+}
+function CardMetric({ k, v, big }: { k: string; v: React.ReactNode; big?: boolean }) {
+  return (
+    <div className="min-w-0">
+      <dt className="text-[11px] text-muted-foreground">{k}</dt>
+      <dd className={cn("tabular-nums", big ? "mt-0.5 text-[15px] font-semibold" : "text-sm font-medium")}>{v}</dd>
+    </div>
+  );
 }
 const th = "px-4 py-3 text-left text-xs font-medium text-muted-foreground";
 const td = "px-4 py-3 tabular-nums";
@@ -240,7 +254,13 @@ function Campanhas({ r }: { r: AdsReport }) {
   }
   return (
     <div className="space-y-3">
-      <Scroll>
+      <Scroll cards={r.by_campaign.map((c) => (
+        <li key={c.campaign} className="rounded-2xl bg-card p-4 shadow-soft">
+          <p className="break-words font-semibold">{c.campaign}</p>
+          <dl className="mt-3 grid grid-cols-3 gap-2"><CardMetric big k="Gasto" v={brl(c.spend)} /><CardMetric big k="Reservas" v={int(c.reservations)} /><CardMetric big k="Custo/reserva" v={brl(c.cost_per_reservation)} /></dl>
+          <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 border-t pt-3"><CardMetric k="Leads" v={int(c.leads)} /><CardMetric k="Clientes novos" v={int(c.new_customers)} /><CardMetric k="CAC" v={brl(c.cac)} /><CardMetric k="Receita estimada" v={brl(c.est_revenue)} /></dl>
+        </li>
+      ))}>
         <thead><tr><th className={th}>Campanha</th><th className={th}>Gasto</th><th className={th}>Leads</th><th className={th}>Reservas</th><th className={th}>Novos</th><th className={th}>CAC</th><th className={th}>Custo/reserva</th><th className={th}>Receita est.</th></tr></thead>
         <tbody className="divide-y divide-border">
           {r.by_campaign.map((c) => (
@@ -259,7 +279,12 @@ function Campanhas({ r }: { r: AdsReport }) {
 function Cidades({ r }: { r: AdsReport }) {
   if (r.by_unit.length === 0) return <EmptyState title="Sem dados por cidade" text="Lance o gasto escolhendo a cidade para comparar Goiânia e Anápolis." />;
   return (
-    <Scroll>
+    <Scroll cards={r.by_unit.map((u) => (
+      <li key={u.unit} className="rounded-2xl bg-card p-4 shadow-soft">
+        <p className="font-semibold">{u.unit}</p>
+        <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2"><CardMetric big k="Gasto" v={brl(u.spend)} /><CardMetric big k="Custo/reserva" v={u.reservations > 0 ? brl(u.spend / u.reservations) : "—"} /><CardMetric k="Leads" v={int(u.leads)} /><CardMetric k="Reservas" v={int(u.reservations)} /></dl>
+      </li>
+    ))}>
       <thead><tr><th className={th}>Cidade</th><th className={th}>Gasto</th><th className={th}>Leads</th><th className={th}>Reservas</th><th className={th}>Custo/reserva</th></tr></thead>
       <tbody className="divide-y divide-border">
         {r.by_unit.map((u) => (

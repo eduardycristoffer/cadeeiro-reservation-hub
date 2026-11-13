@@ -121,10 +121,10 @@ function Relatorios() {
       </div>
       {(tab === "sdr" || tab === "sac" || tab === "equipe") && (service || origin) && <p className="no-print mt-2 text-xs text-muted-foreground">Serviço e origem não se aplicam a esta aba.</p>}
 
-      <div role="tablist" aria-label="Abas do relatório" className="no-print mt-4 grid grid-cols-3 gap-1 rounded-2xl bg-surface p-1 sm:grid-cols-7">
+      <div role="tablist" aria-label="Abas do relatório" className="seg-scroll no-print mt-4 grid grid-cols-3 gap-1 rounded-2xl bg-surface p-1 sm:grid-cols-7">
         {TABS.map((t) => (
           <button key={t.k} role="tab" type="button" aria-selected={tab === t.k} onClick={() => setTab(t.k)}
-            className={`min-h-11 rounded-xl px-2 text-xs font-medium sm:text-sm ${tab === t.k ? "bg-background shadow-soft" : "text-muted-foreground"}`}>{t.label}</button>
+            className={`min-h-11 rounded-xl px-3 text-xs font-medium sm:px-2 sm:text-sm ${tab === t.k ? "bg-background shadow-soft" : "text-muted-foreground"}`}>{t.label}</button>
         ))}
       </div>
 

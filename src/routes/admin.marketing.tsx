@@ -28,7 +28,7 @@ function Marketing() {
     <div className="fade-up">
       <h1 className="text-2xl font-semibold sm:text-4xl">Marketing</h1>
       <p className="mt-1 text-sm text-muted-foreground">Pixels da Meta e o ticket médio usado nos relatórios de anúncios.</p>
-      <div className="mt-5 inline-flex gap-1 rounded-full bg-surface p-1" role="tablist">
+      <div className="mt-5 inline-flex max-w-full gap-1 rounded-full bg-surface p-1" role="tablist">
         {([["pixels", "Pixels da Meta"], ["ticket", "Ticket médio"]] as const).map(([k, label]) => (
           <button key={k} role="tab" aria-selected={tab === k} onClick={() => setTab(k)}
             className={cn("min-h-10 rounded-full px-4 text-sm transition", tab === k ? "bg-card font-medium shadow-soft" : "text-muted-foreground")}>{label}</button>

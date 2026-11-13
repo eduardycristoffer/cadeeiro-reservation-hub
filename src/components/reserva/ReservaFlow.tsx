@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import {
   ArrowLeft, Beef, Briefcase, Cake, CalendarDays, Clock3, Heart, Loader2, MapPin, Minus, PartyPopper, Pizza, Plus, ShieldCheck,
-  Users, Utensils, type LucideIcon,
+  MessageCircle, Users, Utensils, type LucideIcon,
 } from "lucide-react";
 import { BrandLogo } from "@/components/BrandLogo";
 import { Button } from "@/components/ui/button";
@@ -22,7 +22,7 @@ import {
 import { OCCASIONS, SERVICES, SERVICE_LABEL, type OccasionId, type ServiceId } from "@/lib/reservations";
 import { track } from "@/lib/pixel";
 import { cn } from "@/lib/utils";
-import { CIDADES, OFERTA, LGPD_TEXT, cidadeValida, ofertaAceita, type Cidade } from "@/lib/oferta";
+import { CIDADES, OFERTA, LGPD_TEXT, WHATSAPP_OPEN_EVENT, cidadeValida, ofertaAceita, type Cidade } from "@/lib/oferta";
 
 type Stage = "capa" | "contatos" | "unidade" | "pessoas" | "quando" | "ocasiao";
 type Unit = {
@@ -46,6 +46,12 @@ export function ReservaFlow({ initialService, campaign, city, copy, pageSlug }: 
   const selectedCity = cidadeValida(city) ?? pickedCity;
   const [pickedService, setPickedService] = useState<ServiceId | null>(null);
   const service: ServiceId | null = initialService ?? pickedService;
+
+  // o CSS esconde o botão flutuante de WhatsApp dentro dos passos do formulário (ele cobria os campos)
+  useEffect(() => {
+    document.documentElement.setAttribute("data-reserva-stage", stage);
+    return () => document.documentElement.removeAttribute("data-reserva-stage");
+  }, [stage]);
 
   const [units, setUnits] = useState<Unit[] | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -214,8 +220,15 @@ export function ReservaFlow({ initialService, campaign, city, copy, pageSlug }: 
   if (stage === "capa") {
     return (
       <Shell>
-        <div className="flex items-center justify-end pt-3">
-          <a href="/entrar" className="text-sm text-muted-foreground hover:text-foreground">Área da equipe</a>
+        <div className="flex items-center justify-between pt-3">
+          <button
+            type="button"
+            onClick={() => window.dispatchEvent(new CustomEvent(WHATSAPP_OPEN_EVENT, { detail: { city: selectedCity ?? null, campaign: campaign ?? null } }))}
+            className="inline-flex h-11 items-center gap-2 rounded-full bg-surface px-4 text-sm font-medium"
+          >
+            <MessageCircle className="h-4 w-4 text-brand-ink" aria-hidden="true" /> Falar no WhatsApp
+          </button>
+          <a href="/entrar" className="rounded-full px-3 py-2 text-sm text-muted-foreground hover:text-foreground">Área da equipe</a>
         </div>
         <div className="flex flex-1 flex-col justify-center py-4">
           <div className="fade-up">
@@ -290,7 +303,14 @@ export function ReservaFlow({ initialService, campaign, city, copy, pageSlug }: 
           <ArrowLeft className="h-5 w-5" />
         </button>
         <BrandLogo className="h-10" />
-        <span className="w-11" aria-hidden="true" />
+        <button
+          type="button"
+          aria-label="Prefiro falar no WhatsApp"
+          onClick={() => window.dispatchEvent(new CustomEvent(WHATSAPP_OPEN_EVENT, { detail: { city: selectedCity ?? null, campaign: campaign ?? null } }))}
+          className="flex h-11 w-11 items-center justify-center rounded-full text-brand-ink hover:bg-surface"
+        >
+          <MessageCircle className="h-5 w-5" />
+        </button>
       </header>
 
       <div className="mt-3" role="progressbar" aria-valuemin={1} aria-valuemax={flow.length} aria-valuenow={idx + 1} aria-label="Progresso da reserva">
@@ -384,6 +404,7 @@ export function ReservaFlow({ initialService, campaign, city, copy, pageSlug }: 
                   inputMode="numeric"
                   maxLength={3}
                   aria-label="Quantidade de pessoas"
+                  data-keep-size
                   placeholder="0"
                   autoComplete="off"
                   onChange={(e) => {

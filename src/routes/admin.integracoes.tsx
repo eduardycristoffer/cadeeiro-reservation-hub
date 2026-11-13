@@ -41,12 +41,12 @@ function Integracoes() {
       <h1 className="text-4xl font-semibold">Integrações</h1>
       <p className="mt-1 text-muted-foreground">Tryade CRM (canal de WhatsApp) e o SDR que atende pelo n8n.</p>
       <Tabs defaultValue="crm" className="mt-6">
-        <TabsList className="grid h-auto w-full grid-cols-2 gap-1 rounded-2xl sm:grid-cols-4">
-          <TabsTrigger value="crm" className="h-11 rounded-xl">Tryade CRM</TabsTrigger>
-          <TabsTrigger value="sdr" className="h-11 rounded-xl">SDR (n8n)</TabsTrigger>
-          <TabsTrigger value="fila" className="h-11 rounded-xl">Fila de eventos</TabsTrigger>
-          <TabsTrigger value="conversas" className="h-11 rounded-xl">Conversas</TabsTrigger>
-          <TabsTrigger value="whatsapp" className="h-11 rounded-xl">WhatsApp por cidade</TabsTrigger>
+        <TabsList className="seg-scroll grid h-auto w-full grid-cols-2 gap-1 rounded-2xl sm:grid-cols-4">
+          <TabsTrigger value="crm" className="h-11 rounded-xl px-4">Tryade CRM</TabsTrigger>
+          <TabsTrigger value="sdr" className="h-11 rounded-xl px-4">SDR (n8n)</TabsTrigger>
+          <TabsTrigger value="fila" className="h-11 rounded-xl px-4">Fila de eventos</TabsTrigger>
+          <TabsTrigger value="conversas" className="h-11 rounded-xl px-4">Conversas</TabsTrigger>
+          <TabsTrigger value="whatsapp" className="h-11 rounded-xl px-4">WhatsApp por cidade</TabsTrigger>
         </TabsList>
         <TabsContent value="crm"><CrmTab /></TabsContent>
         <TabsContent value="sdr"><SdrTab /></TabsContent>

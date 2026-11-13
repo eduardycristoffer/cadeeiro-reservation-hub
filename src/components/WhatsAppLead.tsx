@@ -102,7 +102,7 @@ export function WhatsAppLead() {
   }
   return (
     <>
-      <Button
+      {!path.startsWith("/c/") && <Button
         variant="brand"
         size="icon"
         className={`whatsapp-float fixed right-4 z-30 h-14 w-14 shadow-lift ${path.startsWith("/reservar") || path === "/goiania/pizza" ? "whatsapp-reserva" : "whatsapp-public"}`}
@@ -110,7 +110,7 @@ export function WhatsAppLead() {
         onClick={show}
       >
         <MessageCircle className="size-6" />
-      </Button>
+      </Button>}
       <Sheet open={open} onOpenChange={(v) => !busy && setOpen(v)}>
         <SheetContent
           side="bottom"

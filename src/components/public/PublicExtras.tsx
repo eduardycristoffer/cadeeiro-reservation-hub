@@ -54,13 +54,13 @@ export function PublicExtras({ city, campaign }: { city?: string | undefined; ca
 
 function ConsentBanner() {
   return (
-    <div role="region" aria-label="Aviso de cookies" className="fixed inset-x-3 bottom-3 z-40 mx-auto max-w-lg rounded-2xl bg-card/95 p-4 shadow-lift ring-1 ring-black/5 backdrop-blur">
-      <p className="text-sm leading-snug text-muted-foreground">
-        Usamos cookies de marketing para medir nossos anúncios. Nenhum dado pessoal é enviado. Você pode recusar.
+    <div role="region" aria-label="Aviso de cookies" className="fixed inset-x-3 bottom-[max(0.75rem,env(safe-area-inset-bottom))] z-40 mx-auto max-w-lg rounded-3xl bg-card/95 p-3.5 shadow-lift ring-1 ring-black/5 backdrop-blur-xl">
+      <p className="px-1 text-[13px] leading-snug text-muted-foreground">
+        Usamos cookies de marketing só para medir anúncios. Nenhum dado pessoal vai junto.
       </p>
-      <div className="mt-3 flex gap-2">
-        <Button className="h-11 flex-1 rounded-xl" onClick={() => setConsent("granted")}>Aceitar</Button>
-        <Button variant="outline" className="h-11 flex-1 rounded-xl" onClick={() => setConsent("denied")}>Recusar</Button>
+      <div className="mt-2.5 flex gap-2">
+        <Button className="h-11 flex-1 rounded-2xl" onClick={() => setConsent("granted")}>Aceitar</Button>
+        <Button variant="outline" className="h-11 flex-1 rounded-2xl" onClick={() => setConsent("denied")}>Recusar</Button>
       </div>
     </div>
   );

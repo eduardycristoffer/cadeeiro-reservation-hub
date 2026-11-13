@@ -48,7 +48,7 @@ function WifiPage() {
     <div className="fade-up">
       <h1 className="text-2xl font-semibold sm:text-4xl">Wi-Fi</h1>
       <p className="mt-1 text-sm text-muted-foreground">Quem conecta no Wi-Fi do salão. Os dados chegam do sistema de Wi-Fi por webhook e se cruzam com as reservas.</p>
-      <div className="mt-5 flex gap-1 overflow-x-auto rounded-full bg-surface p-1" role="tablist">
+      <div className="seg-scroll mt-5 flex gap-1 overflow-x-auto rounded-full bg-surface p-1" role="tablist">
         {TABS.map(({ k, label }) => (
           <button key={k} role="tab" aria-selected={tab === k} onClick={() => setTab(k)}
             className={cn("min-h-10 shrink-0 rounded-full px-4 text-sm transition", tab === k ? "bg-card font-medium shadow-soft" : "text-muted-foreground")}>{label}</button>

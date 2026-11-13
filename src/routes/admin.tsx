@@ -37,18 +37,17 @@ const NAV = [
   { to: "/admin/aprovacoes", label: "Aprovações", icon: CheckCircle2, exact: false },
   { to: "/admin/alertas", label: "Alertas", icon: Bell, exact: false },
   { to: "/admin/sac", label: "SAC", icon: Headset, exact: false },
-  { to: "/admin/leads", label: "Leads WhatsApp", icon: MessageCircle, exact: false },
+  { to: "/admin/leads", label: "Contatos WhatsApp", icon: MessageCircle, exact: false },
   { to: "/admin/delivery", label: "Delivery", icon: Truck, exact: false },
-  { to: "/admin/leads", label: "Contatos", icon: Users, exact: false },
+  { to: "/admin/anuncios", label: "Anúncios", icon: LineChart, exact: false, managerOnly: true },
+  { to: "/admin/campanhas", label: "Campanhas", icon: Target, exact: false, managerOnly: true },
+  { to: "/admin/crm", label: "CRM", icon: HeartHandshake, exact: false, managerOnly: true },
+  { to: "/admin/wifi", label: "Wi-Fi", icon: Wifi, exact: false, managerOnly: true },
+  { to: "/admin/marketing", label: "Marketing", icon: Megaphone, exact: false, managerOnly: true },
+  { to: "/admin/relatorios", label: "Relatórios", icon: BarChart3, exact: false, managerOnly: true },
   { to: "/admin/valores", label: "Valores", icon: Tag, exact: false, managerOnly: true },
   { to: "/admin/unidades", label: "Unidades", icon: Building2, exact: false },
   { to: "/admin/equipe", label: "Equipe", icon: Users, exact: false, managerOnly: true },
-  { to: "/admin/relatorios", label: "Relatórios", icon: BarChart3, exact: false, managerOnly: true },
-  { to: "/admin/anuncios", label: "Anúncios", icon: LineChart, exact: false, managerOnly: true },
-  { to: "/admin/crm", label: "CRM", icon: HeartHandshake, exact: false, managerOnly: true },
-  { to: "/admin/wifi", label: "Wi-Fi", icon: Wifi, exact: false, managerOnly: true },
-  { to: "/admin/campanhas", label: "Campanhas", icon: Target, exact: false, managerOnly: true },
-  { to: "/admin/marketing", label: "Marketing", icon: Megaphone, exact: false, managerOnly: true },
   { to: "/admin/historico", label: "Histórico", icon: History, exact: false, managerOnly: true },
   { to: "/admin/integracoes", label: "Integrações", icon: Plug, exact: false, superOnly: true },
   { to: "/admin/perfil", label: "Meu perfil", icon: UserCircle, exact: false },
@@ -87,6 +86,13 @@ function AdminShell() {
 
 type NavItem = (typeof NAV)[number];
 const PRIMARY: string[] = ["/admin", "/admin/reservas", "/admin/aprovacoes", "/admin/sac"];
+/** Como o menu "Mais" agrupa o resto, para achar cada coisa sem rolar uma lista comprida. */
+const MORE_GROUPS: { title: string; items: string[] }[] = [
+  { title: "Atendimento", items: ["/admin/alertas", "/admin/leads", "/admin/delivery"] },
+  { title: "Marketing", items: ["/admin/anuncios", "/admin/campanhas", "/admin/crm", "/admin/wifi", "/admin/marketing"] },
+  { title: "Gestão", items: ["/admin/relatorios", "/admin/valores", "/admin/unidades", "/admin/equipe", "/admin/historico", "/admin/integracoes"] },
+  { title: "Minha conta", items: ["/admin/perfil"] },
+];
 
 /** Chamados de SAC abertos (só das unidades do usuário), atualizado em tempo real. */
 function useSacOpenCount() {
@@ -132,7 +138,8 @@ function Shell({ nav: allNav, email }: { nav: readonly NavItem[]; email: string 
             <div key={n.to}>
             {n.to === "/admin" && <p className="px-3 pb-2 pt-2 text-xs font-medium text-muted-foreground">Operação</p>}
             {n.to === "/admin/sac" && <p className="px-3 pb-2 pt-4 text-xs font-medium text-muted-foreground">Atendimento</p>}
-            {n.to === "/admin/valores" && <p className="px-3 pb-2 pt-4 text-xs font-medium text-muted-foreground">Gestão</p>}
+            {n.to === "/admin/anuncios" && <p className="px-3 pb-2 pt-4 text-xs font-medium text-muted-foreground">Marketing</p>}
+            {n.to === "/admin/relatorios" && <p className="px-3 pb-2 pt-4 text-xs font-medium text-muted-foreground">Gestão</p>}
             <Link
               key={n.to}
               to={n.to}
@@ -184,22 +191,36 @@ function Shell({ nav: allNav, email }: { nav: readonly NavItem[]; email: string 
         </div>
       </nav>
       <Sheet open={more} onOpenChange={setMore}>
-        <SheetContent side="bottom" className="rounded-t-3xl px-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-5">
+        <SheetContent side="bottom" className="px-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-7">
           <SheetHeader className="text-left"><SheetTitle>Mais opções</SheetTitle></SheetHeader>
-          <div className="mt-4 grid grid-cols-2 gap-2">
-            {rest.map((n) => (
-              <Link key={n.to} to={n.to} onClick={() => setMore(false)} className="flex min-h-14 items-center gap-3 rounded-2xl bg-surface px-4 text-sm font-medium data-[status=active]:bg-primary data-[status=active]:text-primary-foreground">
-                <n.icon className="h-5 w-5 shrink-0" aria-hidden="true" /> {n.label}
-              </Link>
-            ))}
+          <div className="mt-3 space-y-4">
+            {MORE_GROUPS.map((g) => {
+              const items = rest.filter((n) => g.items.includes(n.to));
+              if (items.length === 0) return null;
+              return (
+                <section key={g.title} aria-label={g.title}>
+                  <h3 className="px-1 pb-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">{g.title}</h3>
+                  <div className="grid grid-cols-2 gap-2">
+                    {items.map((n) => (
+                      <Link key={n.to} to={n.to} onClick={() => setMore(false)} className="flex min-h-12 items-center gap-2.5 rounded-2xl bg-surface px-3.5 text-[15px] font-medium transition active:scale-[0.98] data-[status=active]:bg-primary data-[status=active]:text-primary-foreground">
+                        <n.icon className="h-[18px] w-[18px] shrink-0" aria-hidden="true" /> <span className="min-w-0 leading-tight">{n.label}</span>
+                        <Badge n={badge(n.to)} />
+                      </Link>
+                    ))}
+                  </div>
+                </section>
+              );
+            })}
           </div>
-          <p className="mt-4 truncate text-xs text-muted-foreground">{email}</p>
-          <Button variant="ghost" className="mt-2 h-11" onClick={signOut}><LogOut />Sair</Button>
+          <div className="mt-4 flex items-center justify-between gap-3 border-t pt-3">
+            <p className="min-w-0 truncate text-xs text-muted-foreground">{email}</p>
+            <Button variant="ghost" className="h-11 shrink-0" onClick={signOut}><LogOut />Sair</Button>
+          </div>
         </SheetContent>
       </Sheet>
       <Sheet open={searchOpen} onOpenChange={setSearchOpen}>
-        <SheetContent side="bottom" className="mx-auto max-w-lg rounded-t-3xl p-5 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
-          <SheetHeader><SheetTitle>Buscar</SheetTitle></SheetHeader>
+        <SheetContent side="bottom" className="mx-auto max-w-lg px-5 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-7">
+          <SheetHeader className="text-left"><SheetTitle>Buscar</SheetTitle></SheetHeader>
           <form className="mt-5 space-y-3" onSubmit={(e) => { e.preventDefault(); setSearchOpen(false); navigate({ to: "/admin/reservas", search: { view: "lista", cal: "mes", periodo: "todas", pagina: 1, q: query.trim() || undefined } }); }}>
             <Input aria-label="Nome, telefone ou protocolo" placeholder="Nome, telefone ou protocolo" autoFocus className="h-12" value={query} onChange={(e) => setQuery(e.target.value)} />
             <Button className="h-12 w-full" type="submit"><Search />Buscar reservas</Button>

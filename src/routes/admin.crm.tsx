@@ -42,7 +42,7 @@ function Crm() {
     <div className="fade-up">
       <h1 className="text-2xl font-semibold sm:text-4xl">CRM</h1>
       <p className="mt-1 text-sm text-muted-foreground">Mensagens de WhatsApp para trazer o cliente de volta. Só vai para quem autorizou e nunca para quem pediu para sair.</p>
-      <div className="mt-5 flex gap-1 overflow-x-auto rounded-full bg-surface p-1" role="tablist">
+      <div className="seg-scroll mt-5 flex gap-1 overflow-x-auto rounded-full bg-surface p-1" role="tablist">
         {TABS.map(({ k, label }) => (
           <button key={k} role="tab" aria-selected={tab === k} onClick={() => setTab(k)}
             className={cn("min-h-10 shrink-0 rounded-full px-4 text-sm transition", tab === k ? "bg-card font-medium shadow-soft" : "text-muted-foreground")}>{label}</button>

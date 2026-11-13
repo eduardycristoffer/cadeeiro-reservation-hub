@@ -86,7 +86,7 @@ function CampaignPage() {
   }
 
   return (
-    <main className="flex min-h-screen flex-col bg-surface px-5 py-8">
+    <main className="public-pad flex min-h-dvh flex-col bg-surface px-5 pt-8">
       <div className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center">
         <div className="fade-up text-center">
           <BrandLogo className="mx-auto h-20" />
