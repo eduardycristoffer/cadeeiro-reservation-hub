@@ -43,6 +43,7 @@ const ERRORS: Record<string, string> = {
   NOTE_REQUIRED: "Escreva a observação antes de salvar.",
   INVALID_CITY: "Escolha Goiânia ou Anápolis.",
   INVALID_MESSAGE: "A mensagem precisa ter entre 10 e 300 caracteres.",
+  INVALID_TICKET: "O ticket médio deve estar entre 0 e 1000.",
   INVALID_STATUS: "Status inválido.",
   NOT_FOUND: "Registro não encontrado.",
   DUPLICATE_PIXEL: "Esse pixel já está cadastrado com o mesmo escopo.",

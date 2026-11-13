@@ -130,6 +130,7 @@ function SiteWhatsApp() {
   const [go, setGo] = useState("");
   const [an, setAn] = useState("");
   const [msg, setMsg] = useState("Olá! Meu nome é {{nome}}. Quero fazer uma reserva no Candeeiro {{unidade}}.");
+  const [ticket, setTicket] = useState("");
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -139,6 +140,7 @@ function SiteWhatsApp() {
         setGo(data.whatsapp_goiania ? formatPhoneE164(data.whatsapp_goiania) : "");
         setAn(data.whatsapp_anapolis ? formatPhoneE164(data.whatsapp_anapolis) : "");
         setMsg(data.wa_message);
+        setTicket(data.quilo_avg_ticket != null ? String(data.quilo_avg_ticket).replace(".", ",") : "");
       }
       setLoaded(true);
     });
@@ -147,7 +149,7 @@ function SiteWhatsApp() {
   async function save(e: React.FormEvent) {
     e.preventDefault();
     setSaving(true);
-    const { error } = await requireSupabase().rpc("site_settings_save", { _whatsapp_goiania: go, _whatsapp_anapolis: an, _wa_message: msg });
+    const { error } = await requireSupabase().rpc("site_settings_save", { _whatsapp_goiania: go, _whatsapp_anapolis: an, _wa_message: msg, _quilo_avg_ticket: ticket.trim() ? Number(ticket.replace(",", ".")) : null });
     setSaving(false);
     if (error) { toast.error(friendlyError(error)); return; }
     toast.success("WhatsApp do site salvo");
@@ -167,7 +169,12 @@ function SiteWhatsApp() {
         <Input id="wa-msg" value={msg} maxLength={300} onChange={(e) => setMsg(e.target.value)} className="mt-1.5 h-12 rounded-xl" />
         <p className="mt-1 text-xs text-muted-foreground">Use {"{{nome}}"} e {"{{unidade}}"} para encaixar o nome da pessoa e a unidade.</p>
       </div>
-      <Button type="submit" disabled={saving} className="h-11 rounded-xl">{saving ? <Loader2 className="size-4 animate-spin" /> : "Salvar"}</Button>
+      <div>
+        <Label htmlFor="wa-ticket">Ticket médio por pessoa no almoço por quilo (R$)</Label>
+        <Input id="wa-ticket" value={ticket} inputMode="decimal" onChange={(e) => setTicket(e.target.value.replace(/[^\d,.]/g, "").slice(0, 7))} placeholder="Ex.: 45,00" className="mt-1.5 h-12 max-w-48 rounded-xl tabular-nums" />
+        <p className="mt-1 text-xs text-muted-foreground">O quilo é vendido por peso, então o relatório de anúncios usa este valor para estimar o faturamento. Rodízios usam a tabela de Valores.</p>
+      </div>
+      <Button type="submit" disabled={saving || (ticket.trim() !== "" && !Number.isFinite(Number(ticket.replace(",", "."))))} className="h-11 rounded-xl">{saving ? <Loader2 className="size-4 animate-spin" /> : "Salvar"}</Button>
     </form>
   );
 }

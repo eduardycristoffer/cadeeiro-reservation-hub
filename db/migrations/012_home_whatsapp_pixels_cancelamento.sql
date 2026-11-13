@@ -9,6 +9,8 @@ create table if not exists public.site_settings (
   whatsapp_goiania text check (whatsapp_goiania is null or whatsapp_goiania ~ '^55[0-9]{10,11}$'),
   whatsapp_anapolis text check (whatsapp_anapolis is null or whatsapp_anapolis ~ '^55[0-9]{10,11}$'),
   wa_message text not null default 'Olá! Meu nome é {{nome}}. Quero fazer uma reserva no Candeeiro {{unidade}}.',
+  -- ticket médio por pessoa do almoço por quilo (o preço é por kg, então não dá para estimar pela tabela de preços)
+  quilo_avg_ticket numeric(8,2) check (quilo_avg_ticket is null or (quilo_avg_ticket >= 0 and quilo_avg_ticket <= 1000)),
   updated_by uuid,
   updated_at timestamptz not null default now()
 );
@@ -20,7 +22,7 @@ drop policy if exists "gestor lê configuração do site" on public.site_setting
 create policy "gestor lê configuração do site" on public.site_settings for select to authenticated
   using (public.has_role(auth.uid(), 'super_admin') or public.has_role(auth.uid(), 'gestor'));
 
-create or replace function public.site_settings_save(_whatsapp_goiania text, _whatsapp_anapolis text, _wa_message text default null)
+create or replace function public.site_settings_save(_whatsapp_goiania text, _whatsapp_anapolis text, _wa_message text default null, _quilo_avg_ticket numeric default null)
 returns void language plpgsql security definer set search_path = public as $$
 declare v_org uuid; v_go text; v_an text;
 begin
@@ -31,17 +33,19 @@ begin
   if v_go is not null then v_go := public.normalize_br_phone(v_go); if v_go is null then raise exception 'INVALID_PHONE'; end if; end if;
   if v_an is not null then v_an := public.normalize_br_phone(v_an); if v_an is null then raise exception 'INVALID_PHONE'; end if; end if;
   if _wa_message is not null and (length(btrim(_wa_message)) < 10 or length(_wa_message) > 300) then raise exception 'INVALID_MESSAGE'; end if;
-  insert into public.site_settings (organization_id, whatsapp_goiania, whatsapp_anapolis, wa_message, updated_by)
-  values (v_org, v_go, v_an, coalesce(nullif(btrim(_wa_message),''), 'Olá! Meu nome é {{nome}}. Quero fazer uma reserva no Candeeiro {{unidade}}.'), auth.uid())
+  if _quilo_avg_ticket is not null and (_quilo_avg_ticket < 0 or _quilo_avg_ticket > 1000) then raise exception 'INVALID_TICKET'; end if;
+  insert into public.site_settings (organization_id, whatsapp_goiania, whatsapp_anapolis, wa_message, quilo_avg_ticket, updated_by)
+  values (v_org, v_go, v_an, coalesce(nullif(btrim(_wa_message),''), 'Olá! Meu nome é {{nome}}. Quero fazer uma reserva no Candeeiro {{unidade}}.'), _quilo_avg_ticket, auth.uid())
   on conflict (organization_id) do update
     set whatsapp_goiania = excluded.whatsapp_goiania, whatsapp_anapolis = excluded.whatsapp_anapolis,
         wa_message = case when _wa_message is null then public.site_settings.wa_message else excluded.wa_message end,
+        quilo_avg_ticket = excluded.quilo_avg_ticket,
         updated_by = auth.uid(), updated_at = now();
   perform public.write_audit('painel', 'config.alterada', 'config', null, null, null,
-    jsonb_build_object('whatsapp_goiania', v_go, 'whatsapp_anapolis', v_an), 'Configurações do site');
+    jsonb_build_object('whatsapp_goiania', v_go, 'whatsapp_anapolis', v_an, 'ticket_quilo', _quilo_avg_ticket), 'Configurações do site');
 end $$;
-revoke all on function public.site_settings_save(text,text,text) from public, anon;
-grant execute on function public.site_settings_save(text,text,text) to authenticated;
+revoke all on function public.site_settings_save(text,text,text,numeric) from public, anon;
+grant execute on function public.site_settings_save(text,text,text,numeric) to authenticated;
 
 -- Público: só diz se o WhatsApp de cada cidade está configurado (o número só sai depois da captura do lead).
 create or replace function public.public_site_config()
@@ -120,7 +124,8 @@ begin
   select case v_city when 'goiania' then s.whatsapp_goiania else s.whatsapp_anapolis end, s.wa_message
     into v_wa, v_msg from public.site_settings s where s.organization_id = v_org;
   v_msg := replace(replace(coalesce(v_msg, 'Olá! Meu nome é {{nome}}. Quero fazer uma reserva no Candeeiro {{unidade}}.'),
-             '{{nome}}', v_name), '{{unidade}}', coalesce(v_unit.name, initcap(v_city)));
+             '{{nome}}', v_name), '{{unidade}}',
+             coalesce(nullif(btrim(regexp_replace(coalesce(v_unit.name,''), '^\s*(rede\s+)?cand[ae]+iro\s+', '', 'i')), ''), initcap(v_city)));
 
   insert into public.customers (organization_id, full_name, phone_e164, whatsapp_opt_in)
   values (v_org, v_name, v_phone, true)
@@ -275,6 +280,11 @@ begin
   end if;
   return null;
 end $$;
+
+-- O gatilho já existe no banco (criado fora das migrations); recriado aqui, idêntico, para o arquivo refletir o banco.
+drop trigger if exists reservations_confirmed_message on public.reservations;
+create trigger reservations_confirmed_message after update of status on public.reservations
+  for each row execute function public.enqueue_reservation_confirmed_message();
 
 -- Dispatcher: igual ao anterior + 'reason' (motivo digitado no painel) e 'previous_status' no payload do n8n.
 create or replace function public.dispatch_reservation_confirmations()
