@@ -1,13 +1,14 @@
 import { BrandLogo } from "@/components/BrandLogo";
 import { createFileRoute, Link, Outlet, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { BarChart3, Building2, CalendarDays, Headset, CheckCircle2, HeartHandshake, History, LayoutGrid, LineChart, LogOut, Loader2, Megaphone, Menu, MessageCircle, Plug, Tag, Target, Truck, UserCircle, Users } from "lucide-react";
+import { BarChart3, Bell, Building2, CalendarDays, Headset, CheckCircle2, HeartHandshake, History, LayoutGrid, LineChart, LogOut, Loader2, Megaphone, Menu, MessageCircle, Plug, Tag, Target, Truck, UserCircle, Users } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { usePendingCount } from "@/lib/approvals";
 import { AuthProvider, signOutLogged, useAuth } from "@/lib/auth";
 import { isSupabaseConfigured, supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Toaster } from "@/components/ui/sonner";
+import { AlertBell, useUnreadAlerts } from "@/components/admin/AlertBell";
 
 export const Route = createFileRoute("/admin")({
   ssr: false,
@@ -32,6 +33,7 @@ const NAV = [
   { to: "/admin", label: "Início", icon: LayoutGrid, exact: true },
   { to: "/admin/reservas", label: "Reservas", icon: CalendarDays, exact: false },
   { to: "/admin/aprovacoes", label: "Aprovações", icon: CheckCircle2, exact: false },
+  { to: "/admin/alertas", label: "Alertas", icon: Bell, exact: false },
   { to: "/admin/sac", label: "SAC", icon: Headset, exact: false },
   { to: "/admin/leads", label: "Leads WhatsApp", icon: MessageCircle, exact: false },
   { to: "/admin/delivery", label: "Delivery", icon: Truck, exact: false },
@@ -102,10 +104,13 @@ function Badge({ n }: { n: number | null }) {
   return <span className="ml-auto inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-brand px-1.5 text-[11px] font-bold text-brand-foreground">{n > 99 ? "99+" : n}<span className="sr-only"> pendentes</span></span>;
 }
 
-function Shell({ nav, email }: { nav: readonly NavItem[]; email: string }) {
+function Shell({ nav: allNav, email }: { nav: readonly NavItem[]; email: string }) {
   const pending = usePendingCount();
   const sacOpen = useSacOpenCount();
-  const badge = (to: string) => (to === "/admin/aprovacoes" ? pending : to === "/admin/sac" ? sacOpen : null);
+  const alerts = useUnreadAlerts();
+  // sem a migração de alertas no banco o contador não existe: esconde o item em vez de abrir uma tela quebrada
+  const nav = allNav.filter((n) => n.to !== "/admin/alertas" || alerts !== null);
+  const badge = (to: string) => (to === "/admin/aprovacoes" ? pending : to === "/admin/sac" ? sacOpen : to === "/admin/alertas" ? alerts : null);
   const [more, setMore] = useState(false);
   const primary = nav.filter((n) => PRIMARY.includes(n.to));
   const rest = nav.filter((n) => !PRIMARY.includes(n.to));
@@ -137,7 +142,10 @@ function Shell({ nav, email }: { nav: readonly NavItem[]; email: string }) {
       <div className="min-w-0 flex-1">
         <header className="sticky top-0 z-30 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 border-b bg-background/90 px-4 py-2 backdrop-blur md:hidden">
           <BrandLogo className="h-9" />
-          <Button variant="ghost" size="icon" className="h-11 w-11" aria-label="Sair" onClick={signOut}><LogOut /></Button>
+          <div className="flex items-center">
+            <AlertBell count={alerts} />
+            <Button variant="ghost" size="icon" className="h-11 w-11" aria-label="Sair" onClick={signOut}><LogOut /></Button>
+          </div>
         </header>
         <main className="admin-content admin-main mx-auto min-w-0 max-w-6xl px-4 pt-5 md:px-10 md:pt-10">
           <Outlet />

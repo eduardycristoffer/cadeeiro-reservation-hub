@@ -26,6 +26,7 @@ const ERRORS: Record<string, string> = {
   SLOT_UNAVAILABLE: "Esse horário acabou de ser preenchido. Escolha outro, por favor.",
   UNIT_UNAVAILABLE: "Esta unidade não está aceitando reservas online no momento.",
   INVALID_PHONE: "Confira o número de WhatsApp (DDD + número).",
+  INVALID_EMAIL: "Esse e-mail não parece válido. Confira e tente de novo.",
   INVALID_NAME: "Informe seu nome completo.",
   INVALID_PARTY_SIZE: "Quantidade de pessoas inválida.",
   PRIVACY_REQUIRED: "É preciso aceitar o aviso de privacidade.",

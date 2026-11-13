@@ -14,6 +14,7 @@ import { Route as AdminRouteImport } from './routes/admin'
 import { Route as EntrarRouteImport } from './routes/entrar'
 import { Route as PrimeiroAcessoRouteImport } from './routes/primeiro-acesso'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
+import { Route as AdminAlertasRouteImport } from './routes/admin.alertas'
 import { Route as AdminAnunciosRouteImport } from './routes/admin.anuncios'
 import { Route as AdminAprovacoesRouteImport } from './routes/admin.aprovacoes'
 import { Route as AdminCampanhasRouteImport } from './routes/admin.campanhas'
@@ -78,6 +79,11 @@ const PrimeiroAcessoRoute = PrimeiroAcessoRouteImport.update({
 const AdminIndexRoute = AdminIndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminAlertasRoute = AdminAlertasRouteImport.update({
+  id: '/alertas',
+  path: '/alertas',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminAnunciosRoute = AdminAnunciosRouteImport.update({
@@ -294,6 +300,7 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AdminRouteWithChildren
   '/entrar': typeof EntrarRoute
   '/primeiro-acesso': typeof PrimeiroAcessoRoute
+  '/admin/alertas': typeof AdminAlertasRoute
   '/admin/anuncios': typeof AdminAnunciosRoute
   '/admin/aprovacoes': typeof AdminAprovacoesRoute
   '/admin/campanhas': typeof AdminCampanhasRoute
@@ -340,6 +347,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/entrar': typeof EntrarRoute
   '/primeiro-acesso': typeof PrimeiroAcessoRoute
+  '/admin/alertas': typeof AdminAlertasRoute
   '/admin/anuncios': typeof AdminAnunciosRoute
   '/admin/aprovacoes': typeof AdminAprovacoesRoute
   '/admin/campanhas': typeof AdminCampanhasRoute
@@ -388,6 +396,7 @@ export interface FileRoutesById {
   '/admin': typeof AdminRouteWithChildren
   '/entrar': typeof EntrarRoute
   '/primeiro-acesso': typeof PrimeiroAcessoRoute
+  '/admin/alertas': typeof AdminAlertasRoute
   '/admin/anuncios': typeof AdminAnunciosRoute
   '/admin/aprovacoes': typeof AdminAprovacoesRoute
   '/admin/campanhas': typeof AdminCampanhasRoute
@@ -437,6 +446,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/entrar'
     | '/primeiro-acesso'
+    | '/admin/alertas'
     | '/admin/anuncios'
     | '/admin/aprovacoes'
     | '/admin/campanhas'
@@ -483,6 +493,7 @@ export interface FileRouteTypes {
     | '/'
     | '/entrar'
     | '/primeiro-acesso'
+    | '/admin/alertas'
     | '/admin/anuncios'
     | '/admin/aprovacoes'
     | '/admin/campanhas'
@@ -530,6 +541,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/entrar'
     | '/primeiro-acesso'
+    | '/admin/alertas'
     | '/admin/anuncios'
     | '/admin/aprovacoes'
     | '/admin/campanhas'
@@ -635,6 +647,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/admin/'
       preLoaderRoute: typeof AdminIndexRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/alertas': {
+      id: '/admin/alertas'
+      path: '/alertas'
+      fullPath: '/admin/alertas'
+      preLoaderRoute: typeof AdminAlertasRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/anuncios': {
@@ -921,6 +940,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AdminRouteChildren {
+  AdminAlertasRoute: typeof AdminAlertasRoute
   AdminAnunciosRoute: typeof AdminAnunciosRoute
   AdminAprovacoesRoute: typeof AdminAprovacoesRoute
   AdminCampanhasRoute: typeof AdminCampanhasRoute
@@ -942,6 +962,7 @@ interface AdminRouteChildren {
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
+  AdminAlertasRoute: AdminAlertasRoute,
   AdminAnunciosRoute: AdminAnunciosRoute,
   AdminAprovacoesRoute: AdminAprovacoesRoute,
   AdminCampanhasRoute: AdminCampanhasRoute,
