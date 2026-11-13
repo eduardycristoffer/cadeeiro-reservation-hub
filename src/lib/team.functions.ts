@@ -10,7 +10,23 @@ function code(e: unknown): string {
   return known.find((k) => m.includes(k)) ?? m;
 }
 
-/** Convida uma pessoa: valida permissão no banco (como quem chama), cria a conta e envia o e-mail de convite. */
+/** Endereço público do painel para montar o link do convite: segredo PUBLIC_APP_URL ou o endereço desta requisição. */
+async function appBase(): Promise<string> {
+  const fixed = process.env["PUBLIC_APP_URL"]?.trim();
+  if (fixed) return new URL(fixed).origin;
+  const { getRequest } = await import("@tanstack/react-start/server");
+  return new URL(getRequest().url).origin;
+}
+
+async function inviterName(sb: { from: (t: "user_profiles") => { select: (c: string) => { eq: (c: string, v: string) => { maybeSingle: () => PromiseLike<{ data: { full_name?: string | null } | null }> } } } }, uid: string) {
+  const { data } = await sb.from("user_profiles").select("full_name").eq("id", uid).maybeSingle();
+  return data?.full_name ?? null;
+}
+
+/**
+ * Convida uma pessoa: valida permissão no banco (como quem chama), cria a conta e manda o convite por e-mail (Resend).
+ * Sem provedor de e-mail (ou se o envio falhar) devolve o link para o gestor copiar e mandar pelo WhatsApp.
+ */
 export const inviteTeamMember = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) =>
@@ -19,7 +35,6 @@ export const inviteTeamMember = createServerFn({ method: "POST" })
       fullName: z.string().trim().min(2).max(120),
       role: ROLE,
       unitIds: z.array(z.string().uuid()).max(50),
-      redirectTo: z.string().url().max(300),
     }).parse(d),
   )
   .handler(async ({ data, context }) => {
@@ -27,20 +42,41 @@ export const inviteTeamMember = createServerFn({ method: "POST" })
     const check = await sb.rpc("admin_check_invite", { _role: data.role, _unit_ids: data.unitIds });
     if (check.error) return { ok: false as const, error: code(check.error) };
 
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const inv = await supabaseAdmin.auth.admin.inviteUserByEmail(data.email, {
-      redirectTo: data.redirectTo,
-      data: { full_name: data.fullName },
-    });
-    if (inv.error || !inv.data.user) {
-      const msg = inv.error?.message ?? "";
-      return { ok: false as const, error: /already|registered|exists/i.test(msg) ? "ALREADY_EXISTS" : msg || "Falha ao enviar convite" };
-    }
+    const { createAccessLink, emailInvite } = await import("@/server/invite.server");
+    const made = await createAccessLink({ email: data.email, fullName: data.fullName, base: await appBase(), mode: "new" });
+    if (!made.ok) return { ok: false as const, error: made.error };
+
     const set = await sb.rpc("admin_set_user_access", {
-      _user_id: inv.data.user.id, _role: data.role, _unit_ids: data.unitIds, _full_name: data.fullName, _invited: true,
+      _user_id: made.userId!, _role: data.role, _unit_ids: data.unitIds, _full_name: data.fullName, _invited: true,
     });
-    if (set.error) return { ok: false as const, error: code(set.error) };
-    return { ok: true as const, error: null };
+    if (set.error) {
+      // não deixa uma conta sem papel para trás
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      await supabaseAdmin.auth.admin.deleteUser(made.userId!).catch(() => undefined);
+      return { ok: false as const, error: code(set.error) };
+    }
+    const sent = await emailInvite(data.email, data.fullName, made.link, await inviterName(sb as never, context.userId));
+    return { ok: true as const, error: null, emailed: sent.emailed, reason: sent.reason, link: sent.emailed ? null : made.link };
+  });
+
+/** Reenvia o convite de quem ainda não criou a senha. Só vale para pessoas que o chamador pode gerenciar (a lista vem do banco). */
+export const resendTeamInvite = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ userId: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    const sb = context.supabase;
+    const list = await sb.rpc("admin_list_team");
+    if (list.error) return { ok: false as const, error: code(list.error) };
+    const person = (list.data as { id: string; email: string; full_name: string | null; is_active: boolean; needs_onboarding: boolean }[] | null)?.find((p) => p.id === data.userId);
+    if (!person) return { ok: false as const, error: "FORBIDDEN" };
+    if (!person.is_active) return { ok: false as const, error: "Esta pessoa está desativada. Reative antes de reenviar." };
+    if (!person.needs_onboarding) return { ok: false as const, error: "Esta pessoa já criou a senha." };
+
+    const { createAccessLink, emailInvite } = await import("@/server/invite.server");
+    const made = await createAccessLink({ email: person.email, fullName: person.full_name ?? "", base: await appBase(), mode: "again" });
+    if (!made.ok) return { ok: false as const, error: made.error };
+    const sent = await emailInvite(person.email, person.full_name ?? "", made.link, await inviterName(sb as never, context.userId));
+    return { ok: true as const, error: null, emailed: sent.emailed, reason: sent.reason, link: sent.emailed ? null : made.link };
   });
 
 /** Desativa/reativa: a regra de quem pode vale no banco; a conta também é bloqueada no login. */

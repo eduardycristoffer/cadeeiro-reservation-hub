@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { friendlyError, supabase } from "@/lib/supabase";
 import { setFirstAccessPassword } from "@/lib/team.functions";
+import { parseInviteParams } from "@/lib/invite-link";
 
 export const Route = createFileRoute("/primeiro-acesso")({
   ssr: false,
@@ -44,7 +45,12 @@ function PrimeiroAcesso() {
       return true;
     };
     const { data: sub } = sb.auth.onAuthStateChange((ev) => { if (ev === "SIGNED_IN" || ev === "INITIAL_SESSION") apply(); });
-    apply();
+    // Link novo do e-mail: o token só é gasto aqui, quando a pessoa abre a página (leitores de e-mail não gastam o link).
+    const tok = parseInviteParams(window.location.search);
+    if (tok) {
+      window.history.replaceState(null, "", window.location.pathname);
+      sb.auth.verifyOtp({ token_hash: tok.tokenHash, type: tok.type }).then(({ error }) => { if (error) setReady("none"); else apply(); });
+    } else apply();
     const t = setTimeout(() => { if (!done) setReady("none"); }, 4000);
     return () => { clearTimeout(t); sub.subscription.unsubscribe(); };
   }, []);
