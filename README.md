@@ -3,17 +3,21 @@
 Sistema de reservas, SAC e integração com o Tryade CRM (Chatwoot) e com o SDR (n8n) da Rede Candeeiro.
 Desenvolvido pela Tryade. Idioma: pt-BR. Fuso: `America/Sao_Paulo`.
 
-- Landing pública de reservas: `/reservar`
+- Home por cidade: `/` (Goiânia / Anápolis)
+- Reserva pública: `/reservar?cidade=goiania&servico=almoco_quilo`
+- Contatos WhatsApp: `/admin/leads`; números em Integrações → WhatsApp por cidade
 - Painel interno: `/admin` (login em `/entrar`)
 - API do SDR: `/api/public/sdr/*` (contrato em `/api/public/sdr/openapi.json`)
 - Webhook e worker do CRM: `/api/public/crm/*`
 
 ## Fluxo de reserva (`/reservar`)
 
-Capa (escolha do rodízio) → contatos (nome, WhatsApp, aceite LGPD) → unidade (só se houver mais de uma) → pessoas
+Home (cidade → serviço) → contatos (nome, WhatsApp, aceite LGPD) → pessoas
 → quando (hoje e próximos dias + calendário) → ocasião e pedido → "Solicitar reserva".
 
-- O contato é gravado já no passo 2 (`capture_reservation_lead`), mesmo que a pessoa desista; vira `convertida` ao reservar.
+- `src/lib/oferta.ts` centraliza a oferta pública: Goiânia (quilo/pizza), Anápolis (carnes/pizza). O cadastro operacional `units.services` não foi alterado.
+- A unidade é selecionada por slug exato. Cidade e serviço escolhidos na home não são perguntados novamente.
+- O contato é gravado no início (`capture_reservation_lead`), mesmo que a pessoa desista; vira `convertida` ao reservar.
 - Rodízio, ocasião, aniversariante e campanha ficam em `reservations` (`service`, `occasion`, `celebrant_name`, `campaign`)
   e aparecem na lista e na gaveta do painel.
 - **Links de campanha:** cada campanha tem seu link. O link geral `/reservar` mostra a escolha do rodízio; links como
@@ -26,9 +30,10 @@ Capa (escolha do rodízio) → contatos (nome, WhatsApp, aceite LGPD) → unidad
 | --- | --- | --- |
 | 1–3 | Banco, RLS, auth, unidades, capacidade, reserva pública com trava transacional | Pronta |
 | 4 | Painel `/admin` (lista, calendário, filtros, gaveta, reserva manual, equipe, unidades, realtime) | Pronta |
-| 5 | SAC (tabelas existem; tela e fluxo pendentes) | Pendente |
+| 5 | SAC mobile/kanban, histórico, responsáveis, SLA e resolução | Pronta |
 | 6 | API do SDR, webhook/fila do CRM, aba de integrações | Pronta, sem teste ponta a ponta com Chatwoot real |
-| 7–9 | Mensagens WhatsApp, dashboard/relatórios/CSV, testes finais e publicação | Pendentes |
+| 7–9 | Mensagens, histórico, equipe por convite, relatórios/CSV e painel mobile | Implementados; integração real e publicação pendentes |
+| 4A | Home por cidade, WhatsApp com captura, motivos de cancelamento, refinamento Apple | Implementada; números de WhatsApp vazios |
 
 ## Stack
 
@@ -69,7 +74,8 @@ Sem variáveis, `src/lib/supabase.ts` devolve `null` e as telas mostram "não co
 2. Aplique pela ferramenta de migração do Lovable. O Lovable grava o espelho em `drizzle/migrations/`.
 3. Arquivo em `db/` e schema no banco devem sempre coincidir.
 
-Última: `005_rodizio_ocasiao_campanha_leads.sql`. A `004_hardening.sql` é da auditoria de segurança de 26/10/2026; o que a ferramenta de migração não aceita (UPDATE de dados, pg_cron) está em `db/maintenance/`.
+Última: `012_cidades_whatsapp.sql`, aplicada com espelho byte-idêntico em `drizzle/migrations/0012_cidades_whatsapp.sql`.
+As migrations 010 e 011 entregam equipe/histórico e SAC/relatórios. A 012 acrescenta `whatsapp_leads`, `city_whatsapp_settings` e RPCs de captura, configuração e status auditados, além dos números do botão no funil. O serviço `almoco_quilo` já era aceito pelos CHECKs; a 012 amplia a validação dos dois RPCs públicos de reserva, sem alterar gatilhos ou unidades.
 
 ## Regras de segurança (resumo; detalhes em `AGENTS.md`)
 
@@ -89,8 +95,19 @@ Sem variáveis, `src/lib/supabase.ts` devolve `null` e as telas mostram "não co
 
 ## Pendências conhecidas
 
-- Cadastro aberto em `/entrar` (sem papel a conta não acessa nada, mas gera lixo): decidir entre convite ou desligar
-  o auto-cadastro nas configurações de autenticação.
+- Acesso à equipe já é por convite, sem cadastro aberto.
+- Números de WhatsApp das duas cidades começam vazios. O super admin deve configurar os números reais em Integrações → WhatsApp por cidade. Sem número, o contato é capturado e a página informa recebimento, sem redirecionar nem simular mensagem.
+- Não existe sistema de notifications neste repositório; avisos de novos leads, Pixel e e-mail ficam para a 4B.
+- Captura → redirecionamento real, alteração de status do lead e cancelamento de reserva real não foram executados com dados reais nesta revisão; nenhum contato fictício foi criado.
+- Lint global aponta formatação preexistente; testes e compilação automáticos são registrados no roadmap.
 - Instância do Tryade CRM ainda não criada; sem credenciais o worker responde "CRM não configurado" e não simula envio.
 - Dados reais das unidades (horários, capacidade, endereço, foto) e a logo (hero da landing é placeholder).
 - Limpeza dos dados de teste: `db/maintenance/2026-10-26_limpar_dados_teste.sql` (aguarda aprovação).
+
+## WhatsApp e cancelamentos (4A)
+
+O botão aparece nas páginas públicas, nunca no painel. `capture_whatsapp_lead` valida consentimento, nome/telefone, honeypot e limites por IP/telefone; guarda cidade, página e UTM/fbclid. Números públicos são lidos por `public_city_whatsapp`, sem acesso anônimo a tabelas. Edição dos números é exclusiva de super admin. Leads têm RLS por unidade, paginação, CSV e status novo/chamado/convertido/perdido. Conversão é marcada pela equipe; não é inferida de um clique no WhatsApp.
+
+Recusa/cancelamento usam o mesmo seletor de motivo; Outro exige detalhe. O RPC existente recebe exatamente `Recusada: <motivo>` ou `Cancelada: <motivo>`, com ` — <detalhe>` quando preenchido. Nenhum RPC SDR, gatilho de reserva ou agendamento foi alterado. O envio do motivo ao cliente continua responsabilidade das automações externas.
+
+Visual: fonte de sistema, neutros, vermelho discreto, áreas de toque amplas, barras de vidro, seleção por períodos e ações do dia. Busca do menu leva a reservas por nome/telefone/protocolo, com atalhos para SAC e contatos. Fotos reais das unidades não foram fornecidas; a home usa ícones e a reserva mantém a imagem ilustrativa anterior.

@@ -14,6 +14,7 @@ import { getCrmRuntimeStatus, testCrmConnection } from "@/lib/integrations.funct
 import { maskPhone } from "@/lib/integration/phone";
 import { OUTBOUND_TYPES } from "@/lib/integration/crm-mapping";
 import { cn } from "@/lib/utils";
+import { CityWhatsAppSettings } from "@/components/admin/CityWhatsAppSettings";
 
 export const Route = createFileRoute("/admin/integracoes")({
   head: () => ({ meta: [{ name: "description", content: "Configuração de integrações da Rede Candeeiro." }, { property: "og:title", content: "Integrações — Candeeiro Gestão" }, { property: "og:description", content: "Configuração de integrações da Rede Candeeiro." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }, { title: "Integrações — Candeeiro Gestão" }, { name: "robots", content: "noindex" }] }),
@@ -45,11 +46,13 @@ function Integracoes() {
           <TabsTrigger value="sdr" className="h-11 rounded-xl">SDR (n8n)</TabsTrigger>
           <TabsTrigger value="fila" className="h-11 rounded-xl">Fila de eventos</TabsTrigger>
           <TabsTrigger value="conversas" className="h-11 rounded-xl">Conversas</TabsTrigger>
+          <TabsTrigger value="whatsapp" className="h-11 rounded-xl">WhatsApp por cidade</TabsTrigger>
         </TabsList>
         <TabsContent value="crm"><CrmTab /></TabsContent>
         <TabsContent value="sdr"><SdrTab /></TabsContent>
         <TabsContent value="fila"><QueueTab /></TabsContent>
         <TabsContent value="conversas"><ConversationsTab /></TabsContent>
+        <TabsContent value="whatsapp"><CityWhatsAppSettings /></TabsContent>
       </Tabs>
     </div>
   );

@@ -85,6 +85,13 @@
       "when": 1794522071017,
       "tag": "0011_sac_relatorios",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1794531262303,
+      "tag": "0012_cidades_whatsapp",
+      "breakpoints": true
     }
   ]
 }

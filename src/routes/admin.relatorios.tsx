@@ -26,7 +26,7 @@ type Tab = (typeof TABS)[number]["k"];
 const PERIODS = { hoje: "Hoje", "7d": "7 dias", "30d": "30 dias", mes: "Este mês", custom: "Personalizado" } as const;
 type P = keyof typeof PERIODS;
 const STATUS: Record<string, string> = { pendente: "Pendentes", confirmada: "Confirmadas", cancelada: "Canceladas/recusadas", concluida: "Concluídas", nao_compareceu: "Não compareceu" };
-const ORIGINS: Record<string, string> = { landing_page: "Site", sdr_whatsapp: "WhatsApp (SDR)", painel: "Painel", telefone: "Telefone", outro: "Outro" };
+const ORIGINS: Record<string, string> = { landing_page: "Site", whatsapp_botao: "WhatsApp do site", sdr_whatsapp: "WhatsApp (SDR)", painel: "Painel", telefone: "Telefone", outro: "Outro" };
 const WEEK = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 const OCC: Record<string, string> = { sem: "Sem ocasião", aniversario: "Aniversário", confraternizacao: "Confraternização", casal: "Casal", familia: "Família", negocios: "Negócios", outro: "Outro" };
 const MSG: Record<string, string> = { reservation_confirmed: "Confirmação", reservation_cancelled: "Cancelamento" };
@@ -112,7 +112,7 @@ function Relatorios() {
       <div className="no-print mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
         <Fld id="r-p" label="Período"><NativeSelect id="r-p" value={p} onChange={(e) => setP(e.target.value as P)}>{Object.entries(PERIODS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</NativeSelect></Fld>
         <Fld id="r-u" label="Unidade"><NativeSelect id="r-u" value={unit} onChange={(e) => setUnit(e.target.value)}><option value="">Todas</option>{units.map((u) => <option key={u.id} value={u.id}>{u.name}</option>)}</NativeSelect></Fld>
-        <Fld id="r-s" label="Serviço"><NativeSelect id="r-s" value={service} onChange={(e) => setService(e.target.value)}><option value="">Todos</option><option value="rodizio_carnes">Rodízio de carnes</option><option value="rodizio_pizza">Rodízio de pizza</option></NativeSelect></Fld>
+        <Fld id="r-s" label="Serviço"><NativeSelect id="r-s" value={service} onChange={(e) => setService(e.target.value)}><option value="">Todos</option><option value="almoco_quilo">Almoço por quilo</option><option value="rodizio_carnes">Rodízio de carnes</option><option value="rodizio_pizza">Rodízio de pizza</option></NativeSelect></Fld>
         <Fld id="r-o" label="Origem"><NativeSelect id="r-o" value={origin} onChange={(e) => setOrigin(e.target.value)}><option value="">Todas</option>{Object.entries(ORIGINS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</NativeSelect></Fld>
         {p === "custom" && <>
           <Fld id="r-de" label="De"><Input id="r-de" type="date" value={de} onChange={(e) => setDe(e.target.value)} className="h-11 rounded-xl" /></Fld>
@@ -231,7 +231,7 @@ function Reservas({ d }: { d: J }) {
   );
 }
 function Funil({ d }: { d: J }) {
-  if (n0(d["created"]) === 0 && n0(d["leads"]) === 0) return <EmptyState icon={BarChart3} title="Sem movimento no período" />;
+  if (n0(d["created"]) === 0 && n0(d["leads"]) === 0 && n0(d["whatsapp_button"]?.total) === 0) return <EmptyState icon={BarChart3} title="Sem movimento no período" />;
   return (
     <>
       <Box title="Funil do site e de todas as origens">
@@ -240,6 +240,7 @@ function Funil({ d }: { d: J }) {
       </Box>
       <Box title="Reservas por origem"><Table head={["Origem", "Criadas", "Confirmadas", "Conversão"]} rows={(d["by_origin"] as KN[]).map((r) => [ORIGINS[String(r.k)] ?? r.k, r.n, n0(r["c"]), `${Math.round((n0(r["c"]) / Math.max(r.n, 1)) * 100)}%`])} /></Box>
       <Box title="Campanhas"><Bars rows={d["by_campaign"]} /></Box>
+      <Box title="WhatsApp do site · whatsapp_botao"><Grid><Kpi label="Contatos" v={d["whatsapp_button"]?.total ?? 0} /><Kpi label="Convertidos" v={d["whatsapp_button"]?.converted ?? 0} /></Grid></Box>
     </>
   );
 }
@@ -365,7 +366,7 @@ function buildCsv(tab: Tab, d: J): { h: string[]; rows: unknown[][] } {
       return { h: ["indicador", "periodo_atual", "periodo_anterior", "variacao_pct"], rows };
     }
     case "reservas": return { h: ["indicador", "valor"], rows: [...kv(d), ...entries(d["by_status"], STATUS).map((r) => [`status: ${r.k}`, r.n]), ...list("dia da semana", d["by_weekday"], (k) => WEEK[Number(k)] ?? String(k)), ...list("horário", d["by_hour"], (k) => `${k}h`), ...list("ocasião", d["by_occasion"], (k) => OCC[String(k)] ?? String(k)), ...((d["by_day"] ?? []) as KN[]).map((r) => [r.k, r.n])] };
-    case "funil": return { h: ["indicador", "valor", "confirmadas"], rows: [...kv(d), ...((d["by_origin"] ?? []) as KN[]).map((r) => [`origem: ${ORIGINS[String(r.k)] ?? r.k}`, r.n, r["c"]]), ...list("campanha", d["by_campaign"])] };
+    case "funil": return { h: ["indicador", "valor", "confirmadas"], rows: [...kv(d), ["whatsapp_botao: contatos", d["whatsapp_button"]?.total ?? 0], ["whatsapp_botao: convertidos", d["whatsapp_button"]?.converted ?? 0], ...((d["by_origin"] ?? []) as KN[]).map((r) => [`origem: ${ORIGINS[String(r.k)] ?? r.k}`, r.n, r["c"]]), ...list("campanha", d["by_campaign"])] };
     case "sdr": return { h: ["indicador", "valor", "status"], rows: [...kv(d), ...list("assunto", d["by_classification"], (k) => CLS[String(k)] ?? String(k)), ...list("motivo humano", d["handoff_reasons"]), ...((d["messages"] ?? []) as J[]).map((m) => [`mensagem: ${MSG[m["k"]] ?? m["k"]}`, m["n"], m["status"]])] };
     case "sac": return { h: ["indicador", "valor", "resolvidos"], rows: [...kv(d), ...list("tipo", d["by_type"], (k) => typeLabel(String(k))), ...list("unidade", d["by_unit"]), ...list("origem", d["by_origin"]), ...((d["by_assignee"] ?? []) as KN[]).map((r) => [`responsável: ${r.k}`, r.n, r["resolved"]])] };
     case "clientes": return { h: ["lista", "cliente", "telefone", "quantidade", "pessoas/data"], rows: [...kv(d).map(([k, v]) => [k, "", "", v, ""]), ...((d["top_customers"] ?? []) as KN[]).map((r) => ["mais reservas", r.k, r["phone"], r.n, r["p"]]), ...((d["largest_groups"] ?? []) as KN[]).map((r) => ["maiores grupos", r.k, "", r.n, r["date"]]), ...((d["recurrent_cancellations"] ?? []) as KN[]).map((r) => ["cancelamentos", r.k, r["phone"], r.n, ""])] };

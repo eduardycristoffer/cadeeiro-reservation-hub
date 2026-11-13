@@ -19,6 +19,7 @@ import { Route as AdminDeliveryRouteImport } from './routes/admin.delivery'
 import { Route as AdminEquipeRouteImport } from './routes/admin.equipe'
 import { Route as AdminHistoricoRouteImport } from './routes/admin.historico'
 import { Route as AdminIntegracoesRouteImport } from './routes/admin.integracoes'
+import { Route as AdminLeadsRouteImport } from './routes/admin.leads'
 import { Route as AdminPerfilRouteImport } from './routes/admin.perfil'
 import { Route as AdminRelatoriosRouteImport } from './routes/admin.relatorios'
 import { Route as AdminReservasRouteImport } from './routes/admin.reservas'
@@ -93,6 +94,11 @@ const AdminHistoricoRoute = AdminHistoricoRouteImport.update({
 const AdminIntegracoesRoute = AdminIntegracoesRouteImport.update({
   id: '/integracoes',
   path: '/integracoes',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminLeadsRoute = AdminLeadsRouteImport.update({
+  id: '/leads',
+  path: '/leads',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminPerfilRoute = AdminPerfilRouteImport.update({
@@ -238,6 +244,7 @@ export interface FileRoutesByFullPath {
   '/admin/equipe': typeof AdminEquipeRoute
   '/admin/historico': typeof AdminHistoricoRoute
   '/admin/integracoes': typeof AdminIntegracoesRoute
+  '/admin/leads': typeof AdminLeadsRoute
   '/admin/perfil': typeof AdminPerfilRoute
   '/admin/relatorios': typeof AdminRelatoriosRoute
   '/admin/reservas': typeof AdminReservasRoute
@@ -274,6 +281,7 @@ export interface FileRoutesByTo {
   '/admin/equipe': typeof AdminEquipeRoute
   '/admin/historico': typeof AdminHistoricoRoute
   '/admin/integracoes': typeof AdminIntegracoesRoute
+  '/admin/leads': typeof AdminLeadsRoute
   '/admin/perfil': typeof AdminPerfilRoute
   '/admin/relatorios': typeof AdminRelatoriosRoute
   '/admin/reservas': typeof AdminReservasRoute
@@ -312,6 +320,7 @@ export interface FileRoutesById {
   '/admin/equipe': typeof AdminEquipeRoute
   '/admin/historico': typeof AdminHistoricoRoute
   '/admin/integracoes': typeof AdminIntegracoesRoute
+  '/admin/leads': typeof AdminLeadsRoute
   '/admin/perfil': typeof AdminPerfilRoute
   '/admin/relatorios': typeof AdminRelatoriosRoute
   '/admin/reservas': typeof AdminReservasRoute
@@ -351,6 +360,7 @@ export interface FileRouteTypes {
     | '/admin/equipe'
     | '/admin/historico'
     | '/admin/integracoes'
+    | '/admin/leads'
     | '/admin/perfil'
     | '/admin/relatorios'
     | '/admin/reservas'
@@ -387,6 +397,7 @@ export interface FileRouteTypes {
     | '/admin/equipe'
     | '/admin/historico'
     | '/admin/integracoes'
+    | '/admin/leads'
     | '/admin/perfil'
     | '/admin/relatorios'
     | '/admin/reservas'
@@ -424,6 +435,7 @@ export interface FileRouteTypes {
     | '/admin/equipe'
     | '/admin/historico'
     | '/admin/integracoes'
+    | '/admin/leads'
     | '/admin/perfil'
     | '/admin/relatorios'
     | '/admin/reservas'
@@ -545,6 +557,13 @@ declare module '@tanstack/react-router' {
       path: '/integracoes'
       fullPath: '/admin/integracoes'
       preLoaderRoute: typeof AdminIntegracoesRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/leads': {
+      id: '/admin/leads'
+      path: '/leads'
+      fullPath: '/admin/leads'
+      preLoaderRoute: typeof AdminLeadsRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/perfil': {
@@ -731,6 +750,7 @@ interface AdminRouteChildren {
   AdminEquipeRoute: typeof AdminEquipeRoute
   AdminHistoricoRoute: typeof AdminHistoricoRoute
   AdminIntegracoesRoute: typeof AdminIntegracoesRoute
+  AdminLeadsRoute: typeof AdminLeadsRoute
   AdminPerfilRoute: typeof AdminPerfilRoute
   AdminRelatoriosRoute: typeof AdminRelatoriosRoute
   AdminReservasRoute: typeof AdminReservasRoute
@@ -747,6 +767,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminEquipeRoute: AdminEquipeRoute,
   AdminHistoricoRoute: AdminHistoricoRoute,
   AdminIntegracoesRoute: AdminIntegracoesRoute,
+  AdminLeadsRoute: AdminLeadsRoute,
   AdminPerfilRoute: AdminPerfilRoute,
   AdminRelatoriosRoute: AdminRelatoriosRoute,
   AdminReservasRoute: AdminReservasRoute,

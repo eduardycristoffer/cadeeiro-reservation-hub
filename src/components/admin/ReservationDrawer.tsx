@@ -2,7 +2,7 @@ import { ReservationTimeline } from "@/components/admin/ReservationTimeline";
 import { useEffect, useState } from "react";
 import { Loader2, MessageCircle, MoreHorizontal, Phone, Users } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { PendingActions } from "@/components/admin/approvals";
+import { PendingActions, RejectSheet } from "@/components/admin/approvals";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { toast } from "sonner";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
@@ -32,7 +32,6 @@ export function ReservationDrawer({ id, tick, onClose, onChanged }: { id: string
   const [hist, setHist] = useState<Hist[]>([]);
   const [busy, setBusy] = useState<string | null>(null);
   const [cancelMode, setCancelMode] = useState(false);
-  const [reason, setReason] = useState("");
   const [note, setNote] = useState("");
   const [loadError, setLoadError] = useState<string | null>(null);
   const [historyError, setHistoryError] = useState<string | null>(null);
@@ -61,7 +60,7 @@ export function ReservationDrawer({ id, tick, onClose, onChanged }: { id: string
     return () => { cancelled = true; };
   }, [id, tick, retry]);
 
-  useEffect(() => { setCancelMode(false); setReason(""); setNote(""); setNoteOpen(false); }, [id]);
+  useEffect(() => { setCancelMode(false); setNote(""); setNoteOpen(false); }, [id]);
 
   async function run(key: string, fn: () => PromiseLike<{ error: unknown }>, ok: string) {
     setBusy(key);
@@ -108,7 +107,7 @@ export function ReservationDrawer({ id, tick, onClose, onChanged }: { id: string
             <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-6 sm:px-6">
             <dl className="mt-4 divide-y rounded-2xl bg-surface px-4 text-sm">
               <Item k="Unidade" v={r.units?.name ?? "—"} />
-              {r.service && <Item k="Rodízio" v={SERVICE_LABEL[r.service]} />}
+              {r.service && <Item k="Serviço" v={SERVICE_LABEL[r.service]} />}
               <Item k="Data" v={<span className="capitalize">{formatDateLong(r.reservation_date)}</span>} />
               <Item k="Horário" v={hhmm(r.reservation_time)} />
               <Item k="Pessoas" v={String(r.party_size)} />
@@ -131,20 +130,6 @@ export function ReservationDrawer({ id, tick, onClose, onChanged }: { id: string
               <section className="mt-6">
                 <h3 className="text-sm font-medium">Observação do cliente</h3>
                 <p className="mt-1 whitespace-pre-wrap rounded-2xl bg-surface p-3 text-sm">{r.notes}</p>
-              </section>
-            )}
-
-            {cancelMode && (
-              <section className="mt-6 space-y-2 rounded-2xl bg-status-cancelled-bg p-3">
-                <p className="text-sm font-semibold text-status-cancelled">O cliente será avisado por WhatsApp.</p>
-                <label htmlFor="cancel-reason" className="block text-sm font-medium">Motivo do cancelamento</label>
-                <Textarea id="cancel-reason" value={reason} onChange={(e) => setReason(e.target.value)} maxLength={500} placeholder="Obrigatório" className="rounded-xl bg-background" />
-                <div className="grid grid-cols-2 gap-2">
-                  <Button variant="ghost" className="h-11" onClick={() => setCancelMode(false)}>Voltar</Button>
-                  <Button variant="destructive" className="h-11" disabled={!reason.trim() || !!busy} onClick={async () => { if (await changeStatus("cancelada", reason.trim())) setCancelMode(false); }}>
-                    {busy === "cancelada" ? <Loader2 className="h-4 w-4 animate-spin" /> : "Cancelar reserva"}
-                  </Button>
-                </div>
               </section>
             )}
 
@@ -218,6 +203,7 @@ export function ReservationDrawer({ id, tick, onClose, onChanged }: { id: string
           </>
         )}
       </SheetContent>
+      <RejectSheet ids={cancelMode && r ? [r.id] : []} refused={false} onClose={() => setCancelMode(false)} onDone={() => { onChanged(); onClose(); }} />
     </Sheet>
   );
 }

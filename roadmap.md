@@ -38,3 +38,13 @@ Limites da verificação: nenhuma reserva ou pedido fictício foi gravado; confi
 - [x] /admin/relatorios (abas, consolidado imprimível, CSV)
 - [x] Navegação com SAC (badge) e Relatórios
 - [x] Lint/build/testes e lista do que faltou por falta de dado
+
+# Etapa 4A — Cidades, WhatsApp e operação
+- [x] Migration 012: almoço por quilo, contatos WhatsApp, configurações públicas e relatórios isolados; espelho idêntico e RLS conferidos.
+- [x] Home por cidade, oferta central e links de reserva compatíveis; Goiânia/quilo e /goiania/pizza conferidos na prévia.
+- [x] Botão WhatsApp público, configurações e /admin/leads com CSV; números vazios e bloqueio sem consentimento conferidos.
+- [x] Motivo compartilhado obrigatório para cancelamento e recusa; testes de prefixos e detalhe obrigatório em Outro.
+- [x] Refinamento Apple e operação do dia, navegação e busca; datas do Hoje em São Paulo.
+- [x] README, 150 testes e compilação automática aprovados; páginas conferidas no celular/desktop sem overflow nem erros de página; sem publicação. Lint global tem erros de formatação preexistente; arquivos novos sem erros.
+- [ ] Números reais de WhatsApp: aguardando configuração pelo super admin; Pixel e e-mail na 4B.
+- [ ] Verificação real de captura → WhatsApp → retorno ao painel e cancelamento: aguardando contato/reserva autorizado; não criar dados fictícios nem avisar clientes reais em testes. Testes públicos de bloqueio e leituras autenticadas realizados; nenhum status real alterado.

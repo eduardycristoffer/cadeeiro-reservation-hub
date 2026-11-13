@@ -21,16 +21,16 @@ import {
 } from "@/lib/reserva";
 import { OCCASIONS, SERVICES, SERVICE_LABEL, type OccasionId, type ServiceId } from "@/lib/reservations";
 import { cn } from "@/lib/utils";
+import { CIDADES, OFERTA, LGPD_TEXT, cidadeValida, ofertaAceita, type Cidade } from "@/lib/oferta";
 
 type Stage = "capa" | "contatos" | "unidade" | "pessoas" | "quando" | "ocasiao";
 type Unit = {
-  id: string; name: string; address: string | null; city: string | null; description: string | null;
+  id: string; slug: string; name: string; address: string | null; city: string | null; description: string | null;
   photo_url: string | null; large_group_threshold: number; max_advance_days: number; services: string[] | null;
 };
-const norm = (v: string) => v.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
 type Slot = { slot_time: string; remaining: number; available: boolean };
 
-const SERVICE_ICON: Record<ServiceId, LucideIcon> = { rodizio_carnes: Beef, rodizio_pizza: Pizza };
+const SERVICE_ICON: Record<ServiceId, LucideIcon> = { almoco_quilo: Utensils, rodizio_carnes: Beef, rodizio_pizza: Pizza };
 const OCCASION_ICON: Record<OccasionId, LucideIcon> = {
   aniversario: Cake, romantico: Heart, comemoracao: PartyPopper, negocios: Briefcase, familia: Users, nenhuma: Utensils,
 };
@@ -38,7 +38,9 @@ const STRIP_DAYS = 14;
 
 export function ReservaFlow({ initialService, campaign, city }: { initialService?: ServiceId | undefined; campaign?: string | undefined; city?: string | undefined }) {
   const navigate = useNavigate();
-  const [stage, setStage] = useState<Stage>("capa");
+  const [stage, setStage] = useState<Stage>(city && initialService ? "contatos" : "capa");
+  const [pickedCity, setPickedCity] = useState<Cidade | undefined>(cidadeValida(city));
+  const selectedCity = cidadeValida(city) ?? pickedCity;
   const [pickedService, setPickedService] = useState<ServiceId | null>(null);
   const service: ServiceId | null = initialService ?? pickedService;
 
@@ -72,7 +74,10 @@ export function ReservaFlow({ initialService, campaign, city }: { initialService
 
   const days = useMemo(() => upcomingDays(new Date(), STRIP_DAYS), []);
   // só as unidades que oferecem o rodízio escolhido (cada unidade tem seus serviços)
-  const offered = useMemo(() => unitsForService(units ?? [], service).filter((u) => !city || norm(`${u.city ?? ""} ${u.name}`).includes(norm(city))), [units, service, city]);
+  const offered = useMemo(() => unitsForService(units ?? [], service).filter((u) => {
+    const c = cidadeValida(u.slug);
+    return c && (!selectedCity || c === selectedCity) && (!service || ofertaAceita(c, service));
+  }), [units, service, selectedCity]);
   const multiUnit = !units || offered.length !== 1;
   const flow: Stage[] = multiUnit ? ["contatos", "unidade", "pessoas", "quando", "ocasiao"] : ["contatos", "pessoas", "quando", "ocasiao"];
 
@@ -211,12 +216,13 @@ export function ReservaFlow({ initialService, campaign, city }: { initialService
             <BrandLogo className="h-20 sm:h-24" />
             <h1 className="mt-4 text-3xl font-bold leading-tight sm:text-4xl">Reservar mesa</h1>
             <p className="mt-2 text-sm text-muted-foreground">
-              {initialService ? "Sua mesa em poucos toques." : "Qual rodízio você quer?"}
+              {initialService ? "Sua mesa em poucos toques." : "Escolha sua cidade e serviço."}
             </p>
           </div>
 
           <div className="fade-up mt-5 flex flex-col gap-3">
-            {(initialService ? SERVICES.filter((s) => s.id === initialService) : SERVICES).map((s) => {
+            {!city && <div className="grid grid-cols-2 gap-2">{CIDADES.map((c) => <Button key={c} variant={selectedCity === c ? "brand" : "outline"} className="h-12" aria-pressed={selectedCity === c} onClick={() => { setPickedCity(c); if (service && !ofertaAceita(c, service)) setPickedService(null); }}>{OFERTA[c].nome}</Button>)}</div>}
+            {(initialService ? SERVICES.filter((s) => s.id === initialService) : SERVICES.filter((s) => selectedCity && ofertaAceita(selectedCity, s.id))).map((s) => {
               const Icon = SERVICE_ICON[s.id];
               const on = service === s.id;
               return (
@@ -248,8 +254,8 @@ export function ReservaFlow({ initialService, campaign, city }: { initialService
           ) : (
             <>
               {loadError && <p role="alert" className="mb-3 text-sm text-destructive">{loadError}</p>}
-              {service && units && offered.length === 0 && <p role="status" className="mb-3 text-sm text-muted-foreground">Sem unidades disponíveis para este rodízio.</p>}
-              {!service && <p role="status" className="mb-2 text-center text-sm font-medium">Escolha um rodízio acima para continuar.</p>}
+              {service && units && offered.length === 0 && <p role="status" className="mb-3 text-sm text-muted-foreground">Sem unidade disponível para este serviço.</p>}
+              {!service && <p role="status" className="mb-2 text-center text-sm font-medium">{selectedCity ? "Escolha um serviço para continuar." : "Escolha sua cidade."}</p>}
               <Button className="h-12 w-full text-base font-semibold disabled:bg-secondary disabled:text-muted-foreground disabled:opacity-100" disabled={!service || !units || offered.length === 0} onClick={() => setStage("contatos")}>
                 {service && !units && !loadError ? <Loader2 className="h-5 w-5 animate-spin" /> : "Reservar agora"}
               </Button>
@@ -290,12 +296,12 @@ export function ReservaFlow({ initialService, campaign, city }: { initialService
         <p className="mt-2.5 text-sm font-medium text-muted-foreground">Passo {idx + 1} de {flow.length}</p>
       </div>
 
-      <div className="reserva-content min-w-0 flex-1 pb-4 pt-4">
+      <div key={stage} className="reserva-content step-slide min-w-0 flex-1 pb-4 pt-4">
         {/* contatos primeiro: o lead fica guardado mesmo que a pessoa desista */}
         {stage === "contatos" && (
           <div>
             <StepTitle title="Seus contatos" sub="Para acompanhar sua reserva." />
-            {service && <Chip className="mt-3">{SERVICE_LABEL[service]}</Chip>}
+            {service && <Chip className="mt-3">{selectedCity ? `${OFERTA[selectedCity].nome} · ` : ""}{SERVICE_LABEL[service]}</Chip>}
             <div className="mt-4 space-y-3">
               <Field label="Nome e sobrenome" error={touched && !nameOk ? "Informe nome e sobrenome." : null}>
                 <Input value={name} maxLength={120} autoComplete="name" onChange={(e) => setName(e.target.value)} className="h-12 rounded-2xl border-0 bg-surface text-base" placeholder="Como você se chama?" />
@@ -309,7 +315,7 @@ export function ReservaFlow({ initialService, campaign, city }: { initialService
                 <label className="flex items-start gap-3">
                   <Checkbox checked={privacy} onCheckedChange={(v) => setPrivacy(v === true)} className="mt-0.5 h-5 w-5" />
                   <span>
-                    Aceito o uso de nome e WhatsApp para esta reserva e atendimento (LGPD).
+                    {LGPD_TEXT}
                   </span>
                 </label>
                 {touched && !privacy && <p className="text-destructive">É preciso aceitar o aviso de privacidade.</p>}

@@ -243,6 +243,24 @@ export type Database = {
         }
         Relationships: []
       }
+      city_whatsapp_settings: {
+        Row: {
+          city: string
+          phone_e164: string | null
+          updated_at: string
+        }
+        Insert: {
+          city: string
+          phone_e164?: string | null
+          updated_at?: string
+        }
+        Update: {
+          city?: string
+          phone_e164?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       crm_contacts: {
         Row: {
           created_at: string
@@ -1852,6 +1870,81 @@ export type Database = {
           },
         ]
       }
+      whatsapp_leads: {
+        Row: {
+          city: string
+          created_at: string
+          fbclid: string | null
+          full_name: string
+          id: string
+          organization_id: string
+          origin: string
+          page_path: string
+          phone_e164: string
+          privacy_accepted: boolean
+          status: string
+          unit_id: string
+          updated_at: string
+          utm_campaign: string | null
+          utm_content: string | null
+          utm_medium: string | null
+          utm_source: string | null
+        }
+        Insert: {
+          city: string
+          created_at?: string
+          fbclid?: string | null
+          full_name: string
+          id?: string
+          organization_id: string
+          origin?: string
+          page_path: string
+          phone_e164: string
+          privacy_accepted?: boolean
+          status?: string
+          unit_id: string
+          updated_at?: string
+          utm_campaign?: string | null
+          utm_content?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+        }
+        Update: {
+          city?: string
+          created_at?: string
+          fbclid?: string | null
+          full_name?: string
+          id?: string
+          organization_id?: string
+          origin?: string
+          page_path?: string
+          phone_e164?: string
+          privacy_accepted?: boolean
+          status?: string
+          unit_id?: string
+          updated_at?: string
+          utm_campaign?: string | null
+          utm_content?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_leads_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "whatsapp_leads_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -1924,6 +2017,10 @@ export type Database = {
       }
       admin_revoke_api_key: { Args: { _id: string }; Returns: undefined }
       admin_rotate_crm_webhook_token: { Args: never; Returns: string }
+      admin_save_city_whatsapp: {
+        Args: { _city: string; _phone?: string }
+        Returns: undefined
+      }
       admin_save_crm_settings: {
         Args: { _account_id: string; _base_url: string; _enabled: boolean }
         Returns: undefined
@@ -1976,6 +2073,22 @@ export type Database = {
           _whatsapp_opt_in?: boolean
         }
         Returns: undefined
+      }
+      capture_whatsapp_lead: {
+        Args: {
+          _city: string
+          _fbclid?: string
+          _full_name: string
+          _page_path: string
+          _phone: string
+          _privacy_accepted?: boolean
+          _utm_campaign?: string
+          _utm_content?: string
+          _utm_medium?: string
+          _utm_source?: string
+          _website?: string
+        }
+        Returns: Json
       }
       complete_first_access: {
         Args: { _full_name: string }
@@ -2122,11 +2235,22 @@ export type Database = {
         Args: { _from: string; _tab: string; _to: string; _unit?: string }
         Returns: undefined
       }
+      log_whatsapp_leads_export: {
+        Args: { _city?: string }
+        Returns: undefined
+      }
       mark_reservation_arrived: {
         Args: { _reservation_id: string }
         Returns: string
       }
       normalize_br_phone: { Args: { _raw: string }; Returns: string }
+      public_city_whatsapp: {
+        Args: never
+        Returns: {
+          city: string
+          phone_e164: string
+        }[]
+      }
       public_list_units: {
         Args: never
         Returns: {
@@ -2441,6 +2565,10 @@ export type Database = {
           _status: Database["public"]["Enums"]["reservation_status"]
         }
         Returns: Database["public"]["Enums"]["reservation_status"]
+      }
+      set_whatsapp_lead_status: {
+        Args: { _id: string; _status: string }
+        Returns: undefined
       }
       staff_unit_slots: {
         Args: { _date: string; _party_size?: number; _unit_id: string }

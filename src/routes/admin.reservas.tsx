@@ -26,6 +26,7 @@ type Search = {
   unidade?: string | undefined;
   status?: string | undefined;
   origem?: string | undefined;
+  servico?: string | undefined;
   q?: string | undefined;
   pagina: number;
   ref?: string | undefined;
@@ -44,6 +45,7 @@ export const Route = createFileRoute("/admin/reservas")({
     unidade: str(s["unidade"]),
     status: str(s["status"]),
     origem: str(s["origem"]),
+    servico: str(s["servico"]),
     q: str(s["q"]),
     pagina: Math.max(1, Number(s["pagina"]) || 1),
     ref: str(s["ref"]),
@@ -143,6 +145,7 @@ function Reservas() {
     if (search.unidade) query = query.eq("unit_id", search.unidade);
     if (search.status) query = query.eq("status", search.status);
     if (search.origem) query = query.eq("origin", search.origem);
+    if (search.servico) query = query.eq("service", search.servico);
     if (term) {
       if (byProtocol) query = query.ilike("protocol", `%${term}%`);
       else if (byPhone) query = query.ilike("customers.phone_e164", `%${digits}%`);
@@ -163,7 +166,7 @@ function Reservas() {
   }, [search, range, tick]);
 
   const pages = Math.max(1, Math.ceil(count / PAGE));
-  const hasFilters = Boolean(search.unidade || search.status || search.origem || search.q || search.periodo !== "hoje");
+  const hasFilters = Boolean(search.unidade || search.status || search.origem || search.servico || search.q || search.periodo !== "hoje");
 
   return (
     <div className="fade-up">
@@ -183,6 +186,8 @@ function Reservas() {
         </div>
       </div>
 
+      {search.view === "lista" && <div className="mt-4 grid grid-cols-4 gap-1 rounded-2xl bg-secondary p-1">{(["hoje", "amanha", "semana", "todas"] as const).map((p) => <Button key={p} variant="ghost" aria-pressed={search.periodo === p} className={cn("h-11 rounded-xl px-2", search.periodo === p && "bg-card text-brand-ink shadow-soft")} onClick={() => set({ periodo: p })}>{PERIOD_LABEL[p]}</Button>)}</div>}
+
       {(() => {
         const filters = (
           <>
@@ -190,6 +195,7 @@ function Reservas() {
               <option value="">Todas as unidades</option>
               {units.map((u) => <option key={u.id} value={u.id}>{u.name}</option>)}
             </NativeSelect>
+            <NativeSelect aria-label="Serviço" value={search.servico ?? ""} onChange={(e) => set({ servico: e.target.value || undefined })}><option value="">Todos os serviços</option>{Object.entries(SERVICE_LABEL).map(([k,v]) => <option key={k} value={k}>{v}</option>)}</NativeSelect>
             {search.view === "lista" && (
               <>
                 <NativeSelect aria-label="Período" value={search.periodo} onChange={(e) => set({ periodo: e.target.value as Period })}>
@@ -213,7 +219,7 @@ function Reservas() {
             )}
           </>
         );
-        const active = [search.unidade, search.status, search.origem, search.periodo !== "hoje" ? "p" : undefined].filter(Boolean).length;
+        const active = [search.unidade, search.status, search.origem, search.servico, search.periodo !== "hoje" ? "p" : undefined].filter(Boolean).length;
         return (
           <>
             <div className="mt-4 grid grid-cols-[minmax(0,1fr)_auto] gap-2 md:hidden">
@@ -232,7 +238,7 @@ function Reservas() {
                 <SheetHeader className="text-left"><SheetTitle>Filtros</SheetTitle></SheetHeader>
                 <div className="mt-4 grid gap-3 [&_select]:w-full">{filters}</div>
                 <div className="mt-5 grid grid-cols-2 gap-2">
-                  <Button variant="ghost" className="h-12" onClick={() => { set({ unidade: undefined, status: undefined, origem: undefined, periodo: "hoje", de: undefined, ate: undefined }); }}>Limpar</Button>
+                  <Button variant="ghost" className="h-12" onClick={() => { set({ unidade: undefined, status: undefined, origem: undefined, servico: undefined, periodo: "hoje", de: undefined, ate: undefined }); }}>Limpar</Button>
                   <Button className="h-12" onClick={() => setFiltersOpen(false)}>Ver resultados</Button>
                 </div>
               </SheetContent>
@@ -284,7 +290,7 @@ function Reservas() {
               <table className="w-full text-sm">
                 <thead className="text-left text-xs uppercase tracking-wide text-muted-foreground">
                   <tr className="border-b">
-                    {["Protocolo", "Cliente", "WhatsApp", "Unidade", "Rodízio", "Data", "Horário", "Pessoas", "Ocasião", "Origem", "Status", "Criada em"].map((h) => (
+                    {["Protocolo", "Cliente", "WhatsApp", "Unidade", "Serviço", "Data", "Horário", "Pessoas", "Ocasião", "Origem", "Status", "Criada em"].map((h) => (
                       <th key={h} className="whitespace-nowrap px-4 py-3 font-medium">{h}</th>
                     ))}
                   </tr>
