@@ -12,7 +12,7 @@ export const quickLabel = (n: number): string => (n >= 30 ? `+${n}` : String(n))
 export type ServiceSlug = (typeof SERVICES)[number]["slug"];
 
 /**
- * Valida o parâmetro ?rodizio= (carnes | pizza) do link de campanha.
+ * Valida o parâmetro ?rodizio= (carnes | pizza | quilo) do link de campanha.
  * Devolve o próprio slug: o roteador revalida a URL já normalizada, então a função precisa ser idempotente.
  */
 export function serviceSlug(v: unknown): ServiceSlug | undefined {
@@ -21,7 +21,27 @@ export function serviceSlug(v: unknown): ServiceSlug | undefined {
   return SERVICES.find((s) => s.slug === slug)?.slug;
 }
 
-/** Slug do link (carnes | pizza) -> id gravado no banco (rodizio_carnes | rodizio_pizza). */
+/** Cidades atendidas e o que cada uma oferece na página inicial (regra do negócio). */
+export const CITIES = [
+  { slug: "goiania", label: "Goiânia", services: ["almoco_quilo", "rodizio_pizza"] },
+  { slug: "anapolis", label: "Anápolis", services: ["rodizio_carnes", "rodizio_pizza"] },
+] as const satisfies readonly { slug: string; label: string; services: readonly ServiceId[] }[];
+export type CitySlug = (typeof CITIES)[number]["slug"];
+
+/** Valida ?cidade= (aceita acento e maiúscula). Devolve o próprio slug: precisa ser idempotente. */
+export function citySlug(v: unknown): CitySlug | undefined {
+  if (typeof v !== "string") return undefined;
+  const slug = v.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  return CITIES.find((c) => c.slug === slug)?.slug;
+}
+
+/** Serviços oferecidos numa cidade (todos, se a cidade não foi informada ou não é conhecida). */
+export function servicesForCity(city: unknown): readonly ServiceId[] {
+  const slug = citySlug(city);
+  return slug ? (CITIES.find((c) => c.slug === slug)?.services ?? SERVICES.map((s) => s.id)) : SERVICES.map((s) => s.id);
+}
+
+/** Slug do link (carnes | pizza | quilo) -> id gravado no banco (rodizio_carnes | rodizio_pizza | almoco_quilo). */
 export function serviceFromSlug(v: unknown): ServiceId | undefined {
   const slug = serviceSlug(v);
   return SERVICES.find((s) => s.slug === slug)?.id;

@@ -17,9 +17,10 @@ import { friendlyError, isSupabaseConfigured, supabase } from "@/lib/supabase";
 import { formatDateLong, fromIsoDate, hhmm, isValidBrPhone, maskBrPhone, toIsoDate } from "@/lib/format";
 import {
   DEFAULT_WHATSAPP_OPT_IN, MAX_PEOPLE, NOTE_MAX, QUICK_PEOPLE, WHO_MAX, isValidFullName, parsePeople, pessoas, quickLabel, upcomingDays,
-  unitsForService,
+  servicesForCity, unitsForService,
 } from "@/lib/reserva";
 import { OCCASIONS, SERVICES, SERVICE_LABEL, type OccasionId, type ServiceId } from "@/lib/reservations";
+import { track } from "@/lib/pixel";
 import { cn } from "@/lib/utils";
 
 type Stage = "capa" | "contatos" | "unidade" | "pessoas" | "quando" | "ocasiao";
@@ -30,7 +31,7 @@ type Unit = {
 const norm = (v: string) => v.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
 type Slot = { slot_time: string; remaining: number; available: boolean };
 
-const SERVICE_ICON: Record<ServiceId, LucideIcon> = { rodizio_carnes: Beef, rodizio_pizza: Pizza };
+const SERVICE_ICON: Record<ServiceId, LucideIcon> = { rodizio_carnes: Beef, rodizio_pizza: Pizza, almoco_quilo: Utensils };
 const OCCASION_ICON: Record<OccasionId, LucideIcon> = {
   aniversario: Cake, romantico: Heart, comemoracao: PartyPopper, negocios: Briefcase, familia: Users, nenhuma: Utensils,
 };
@@ -71,6 +72,8 @@ export function ReservaFlow({ initialService, campaign, city }: { initialService
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   const days = useMemo(() => upcomingDays(new Date(), STRIP_DAYS), []);
+  // da página inicial a cidade já foi escolhida: só mostra o que ela oferece
+  const cityServices = useMemo(() => servicesForCity(city), [city]);
   // só as unidades que oferecem o rodízio escolhido (cada unidade tem seus serviços)
   const offered = useMemo(() => unitsForService(units ?? [], service).filter((u) => !city || norm(`${u.city ?? ""} ${u.name}`).includes(norm(city))), [units, service, city]);
   const multiUnit = !units || offered.length !== 1;
@@ -132,9 +135,12 @@ export function ReservaFlow({ initialService, campaign, city }: { initialService
   const next = () => { const n = flow[idx + 1]; if (n) setStage(n); };
   const back = () => { const p = flow[idx - 1]; setStage(p ?? "capa"); };
 
+  useEffect(() => { if (service) track("ViewContent", { content_name: service, content_category: city ?? "geral" }, `view:${service}`); }, [service, city]);
+
   function continueFromContacts() {
     setTouched(true);
     if (!nameOk || !phoneOk || !privacy) return;
+    track("InitiateCheckout", { content_name: service ?? "reserva" }, `checkout:${service ?? "x"}`);
     // guarda o contato já no início (melhor esforço: não bloqueia o fluxo)
     // (o builder do supabase-js só dispara a requisição quando recebe .then)
     supabase
@@ -216,7 +222,7 @@ export function ReservaFlow({ initialService, campaign, city }: { initialService
           </div>
 
           <div className="fade-up mt-5 flex flex-col gap-3">
-            {(initialService ? SERVICES.filter((s) => s.id === initialService) : SERVICES).map((s) => {
+            {(initialService ? SERVICES.filter((s) => s.id === initialService) : SERVICES.filter((s) => cityServices.includes(s.id))).map((s) => {
               const Icon = SERVICE_ICON[s.id];
               const on = service === s.id;
               return (

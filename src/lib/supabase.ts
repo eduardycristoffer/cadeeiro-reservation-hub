@@ -41,6 +41,12 @@ const ERRORS: Record<string, string> = {
   REASON_REQUIRED: "Informe o motivo do cancelamento.",
   LARGE_GROUP_NEEDS_MANAGER: "Grupos grandes só podem ser confirmados por gestor ou super admin.",
   NOTE_REQUIRED: "Escreva a observação antes de salvar.",
+  INVALID_CITY: "Escolha Goiânia ou Anápolis.",
+  INVALID_MESSAGE: "A mensagem precisa ter entre 10 e 300 caracteres.",
+  INVALID_STATUS: "Status inválido.",
+  NOT_FOUND: "Registro não encontrado.",
+  DUPLICATE_PIXEL: "Esse pixel já está cadastrado com o mesmo escopo.",
+  CAMPAIGN_REQUIRED: "Informe a campanha para um pixel de campanha.",
   SUPABASE_NOT_CONFIGURED: "O sistema ainda está sendo configurado. Tente novamente em breve.",
 };
 

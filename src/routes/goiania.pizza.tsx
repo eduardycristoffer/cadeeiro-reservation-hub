@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { ReservaFlow } from "@/components/reserva/ReservaFlow";
+import { PublicExtras } from "@/components/public/PublicExtras";
 import { sanitizeCampaign } from "@/lib/reserva";
 
 export const Route = createFileRoute("/goiania/pizza")({
@@ -19,5 +20,10 @@ export const Route = createFileRoute("/goiania/pizza")({
 
 function GoianiaPizza() {
   const { campanha } = Route.useSearch();
-  return <ReservaFlow initialService="rodizio_pizza" city="goiania" campaign={campanha} />;
+  return (
+    <>
+      <ReservaFlow initialService="rodizio_pizza" city="goiania" campaign={campanha} />
+      <PublicExtras city="goiania" campaign={campanha} />
+    </>
+  );
 }

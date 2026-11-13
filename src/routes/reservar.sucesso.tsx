@@ -1,8 +1,11 @@
+import { useEffect } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { z } from "zod";
 import { Check, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { PublicExtras } from "@/components/public/PublicExtras";
 import { formatDateLong, hhmm } from "@/lib/format";
+import { track } from "@/lib/pixel";
 import { OCCASION_LABEL, SERVICE_LABEL, type OccasionId, type ServiceId } from "@/lib/reservations";
 
 const search = z.object({
@@ -36,8 +39,11 @@ function Success() {
   const confirmed = s === "confirmada";
   const rodizio = SERVICE_LABEL[r as ServiceId];
   const ocasiao = OCCASION_LABEL[o as OccasionId];
+  // conversão da reserva: uma vez por protocolo, sem dados pessoais
+  useEffect(() => { if (p) track("Schedule", { content_name: r || "reserva", value: n, currency: "BRL" }, `reserva:${p}`); }, [p, r, n]);
   return (
     <main className="min-h-screen bg-surface px-4 py-6 sm:py-12">
+      <PublicExtras />
       <div className="fade-up mx-auto max-w-md text-center sm:rounded-3xl sm:bg-card sm:p-8 sm:shadow-soft">
         <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-brand text-brand-foreground">
           {confirmed ? <Check className="h-7 w-7" /> : <Clock className="h-7 w-7" />}

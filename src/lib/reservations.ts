@@ -14,11 +14,13 @@ export const ORIGIN_LABEL: Record<ReservationOrigin, string> = {
 export const SERVICES = [
   { id: "rodizio_carnes", slug: "carnes", label: "Rodízio de Carnes" },
   { id: "rodizio_pizza", slug: "pizza", label: "Rodízio de Pizza" },
+  { id: "almoco_quilo", slug: "quilo", label: "Almoço por quilo" },
 ] as const;
 export type ServiceId = (typeof SERVICES)[number]["id"];
 export const SERVICE_LABEL: Record<ServiceId, string> = {
   rodizio_carnes: "Rodízio de Carnes",
   rodizio_pizza: "Rodízio de Pizza",
+  almoco_quilo: "Almoço por quilo",
 };
 
 export const OCCASIONS = [
