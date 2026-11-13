@@ -8,6 +8,7 @@ import { PRICE_DISCLAIMER, WEEKDAY_NAMES, formatServices, priceText, type RawPri
 import { db, handleSdr, parseWith, rpc } from "./sdr.server";
 import type { ApiKeyCtx } from "./sdr.server";
 import { scopedResults, scopedUnits } from "./sdr-scope.server";
+import { runEmailWorker } from "./email-worker.server";
 
 type Unit = { id: string; slug: string; name: string; city?: string | null; services?: string[]; has_delivery?: boolean };
 type ResOut = { protocol: string; status: string; previous_status: string; unit_name: string; date: string; time: string; party_size: number; is_large_group: boolean };
@@ -121,6 +122,13 @@ export const markCrmSend = (request: Request) =>
     const b = parseWith(crmSendMarkBody, body);
     await rpc("sdr_mark_crm_send", { _id: b.id, _ok: b.ok, _error: b.error ?? null });
     return { data: { id: b.id, ok: b.ok } };
+  });
+
+/** Dispara a fila de e-mails de alerta. Chave sem restrição de unidade, porque a fila é da rede toda. */
+export const runEmails = (request: Request) =>
+  handleSdr(request, { endpoint: "/emails/run", scope: "write" }, async ({ key, url }) => {
+    if (key.unit_ids.length) throw new ApiError("FORBIDDEN_SCOPE");
+    return { data: await runEmailWorker(url.origin) };
   });
 
 export const listUnits = (request: Request) =>

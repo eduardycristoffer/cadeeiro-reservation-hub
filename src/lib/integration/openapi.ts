@@ -114,6 +114,8 @@ export function buildOpenApi(origin: string) {
         requestBody: jsonBody({ type: "object", required: ["id", "ok"], properties: {
           id: { type: "string", format: "uuid" }, ok: { type: "boolean" }, error: { type: "string" } } }),
         responses: { 200: resp("Registrado", { type: "object" }), 401: err, 404: err, 422: err } } },
+      "/emails/run": { post: { operationId: "dispararEmails", summary: "Envia os e-mails de alerta que estão na fila (chamar a cada minuto; corpo {})",
+        responses: { 200: resp("Resultado", { type: "object", properties: { claimed: { type: "integer" }, sent: { type: "integer" }, failed: { type: "integer" }, skipped: { type: "string" } } }), 401: err, 403: err } } },
       "/availability": { get: { operationId: "consultarDisponibilidade",
         summary: "Horários com vaga (date) ou datas com vaga (from+to)",
         parameters: [q("unit_id", "string", false, { format: "uuid" }), q("unit_slug", "string"), q("date", "string", false, { format: "date" }),

@@ -44,6 +44,7 @@ vi.mock("@/integrations/supabase/client.server", () => ({ supabaseAdmin: {
   },
 } }));
 
+vi.mock("@/server/email-worker.server", () => ({ runEmailWorker: vi.fn(async () => ({ ok: true, skipped: "sem_provedor" })) }));
 import * as h from "@/server/sdr-handlers.server";
 import { sha256Hex } from "@/lib/integration/crypto";
 
@@ -235,5 +236,22 @@ describe("chave sem restrição: compatibilidade em todos os endpoints", () => {
     expect((await (await h.listUnits(request("/units"))).json()).data).toHaveLength(2);
     expect((await (await h.findDelivery(request(`/delivery?phone=${phone}`))).json()).data).toHaveLength(2);
     expect((await (await h.findReservations(request(`/reservations?phone=${phone}`))).json()).data).toHaveLength(2);
+  });
+});
+describe("/emails/run (fila de e-mails de alerta)", () => {
+  const call = () => h.runEmails(request("/emails/run", {}));
+  it("chave de uma unidade só não dispara a fila da rede", async () => {
+    state.key.unit_ids = [GO];
+    expect((await call()).status).toBe(403);
+  });
+  it("chave só de leitura não dispara", async () => {
+    state.key.unit_ids = []; state.key.scopes = ["read"];
+    expect((await call()).status).toBe(403);
+  });
+  it("chave da rede dispara e recebe o resultado", async () => {
+    state.key.unit_ids = [];
+    const r = await call();
+    expect(r.status).toBe(200);
+    expect((await r.json()).data).toEqual({ ok: true, skipped: "sem_provedor" });
   });
 });

@@ -36,6 +36,7 @@ import { Route as ReservarSucessoRouteImport } from './routes/reservar.sucesso'
 import { Route as AdminUnidadesIndexRouteImport } from './routes/admin.unidades.index'
 import { Route as AdminUnidadesUnitIdRouteImport } from './routes/admin.unidades.$unitId'
 import { Route as ApiPublicCrmWorkerRouteImport } from './routes/api.public.crm.worker'
+import { Route as ApiPublicNotificationsEmailWorkerRouteImport } from './routes/api.public.notifications.email-worker'
 import { Route as ApiPublicSdrAvailabilityRouteImport } from './routes/api.public.sdr.availability'
 import { Route as ApiPublicSdrContextRouteImport } from './routes/api.public.sdr.context'
 import { Route as ApiPublicSdrDeliveryRouteImport } from './routes/api.public.sdr.delivery'
@@ -49,6 +50,7 @@ import { Route as ApiPublicSdrUnitsRouteImport } from './routes/api.public.sdr.u
 import { Route as ApiPublicCrmWebhookTokenRouteImport } from './routes/api.public.crm.webhook.$token'
 import { Route as ApiPublicSdrConversationsClassifyRouteImport } from './routes/api.public.sdr.conversations.classify'
 import { Route as ApiPublicSdrCrmSendsRouteImport } from './routes/api.public.sdr.crm.sends'
+import { Route as ApiPublicSdrEmailsRunRouteImport } from './routes/api.public.sdr.emails.run'
 import { Route as ApiPublicSdrFollowupsDueRouteImport } from './routes/api.public.sdr.followups.due'
 import { Route as ApiPublicSdrReservationsProtocolRouteImport } from './routes/api.public.sdr.reservations.$protocol'
 import { Route as ApiPublicSdrCrmSendsDueRouteImport } from './routes/api.public.sdr.crm.sends.due'
@@ -188,6 +190,12 @@ const ApiPublicCrmWorkerRoute = ApiPublicCrmWorkerRouteImport.update({
   path: '/api/public/crm/worker',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicNotificationsEmailWorkerRoute =
+  ApiPublicNotificationsEmailWorkerRouteImport.update({
+    id: '/api/public/notifications/email-worker',
+    path: '/api/public/notifications/email-worker',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicSdrAvailabilityRoute =
   ApiPublicSdrAvailabilityRouteImport.update({
     id: '/api/public/sdr/availability',
@@ -258,6 +266,11 @@ const ApiPublicSdrCrmSendsRoute = ApiPublicSdrCrmSendsRouteImport.update({
   path: '/api/public/sdr/crm/sends',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicSdrEmailsRunRoute = ApiPublicSdrEmailsRunRouteImport.update({
+  id: '/api/public/sdr/emails/run',
+  path: '/api/public/sdr/emails/run',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicSdrFollowupsDueRoute =
   ApiPublicSdrFollowupsDueRouteImport.update({
     id: '/due',
@@ -304,6 +317,7 @@ export interface FileRoutesByFullPath {
   '/admin/unidades/$unitId': typeof AdminUnidadesUnitIdRoute
   '/admin/unidades/': typeof AdminUnidadesIndexRoute
   '/api/public/crm/worker': typeof ApiPublicCrmWorkerRoute
+  '/api/public/notifications/email-worker': typeof ApiPublicNotificationsEmailWorkerRoute
   '/api/public/sdr/availability': typeof ApiPublicSdrAvailabilityRoute
   '/api/public/sdr/context': typeof ApiPublicSdrContextRoute
   '/api/public/sdr/delivery': typeof ApiPublicSdrDeliveryRoute
@@ -317,6 +331,7 @@ export interface FileRoutesByFullPath {
   '/api/public/crm/webhook/$token': typeof ApiPublicCrmWebhookTokenRoute
   '/api/public/sdr/conversations/classify': typeof ApiPublicSdrConversationsClassifyRoute
   '/api/public/sdr/crm/sends': typeof ApiPublicSdrCrmSendsRouteWithChildren
+  '/api/public/sdr/emails/run': typeof ApiPublicSdrEmailsRunRoute
   '/api/public/sdr/followups/due': typeof ApiPublicSdrFollowupsDueRoute
   '/api/public/sdr/reservations/$protocol': typeof ApiPublicSdrReservationsProtocolRoute
   '/api/public/sdr/crm/sends/due': typeof ApiPublicSdrCrmSendsDueRoute
@@ -348,6 +363,7 @@ export interface FileRoutesByTo {
   '/admin/unidades/$unitId': typeof AdminUnidadesUnitIdRoute
   '/admin/unidades': typeof AdminUnidadesIndexRoute
   '/api/public/crm/worker': typeof ApiPublicCrmWorkerRoute
+  '/api/public/notifications/email-worker': typeof ApiPublicNotificationsEmailWorkerRoute
   '/api/public/sdr/availability': typeof ApiPublicSdrAvailabilityRoute
   '/api/public/sdr/context': typeof ApiPublicSdrContextRoute
   '/api/public/sdr/delivery': typeof ApiPublicSdrDeliveryRoute
@@ -361,6 +377,7 @@ export interface FileRoutesByTo {
   '/api/public/crm/webhook/$token': typeof ApiPublicCrmWebhookTokenRoute
   '/api/public/sdr/conversations/classify': typeof ApiPublicSdrConversationsClassifyRoute
   '/api/public/sdr/crm/sends': typeof ApiPublicSdrCrmSendsRouteWithChildren
+  '/api/public/sdr/emails/run': typeof ApiPublicSdrEmailsRunRoute
   '/api/public/sdr/followups/due': typeof ApiPublicSdrFollowupsDueRoute
   '/api/public/sdr/reservations/$protocol': typeof ApiPublicSdrReservationsProtocolRoute
   '/api/public/sdr/crm/sends/due': typeof ApiPublicSdrCrmSendsDueRoute
@@ -394,6 +411,7 @@ export interface FileRoutesById {
   '/admin/unidades/$unitId': typeof AdminUnidadesUnitIdRoute
   '/admin/unidades/': typeof AdminUnidadesIndexRoute
   '/api/public/crm/worker': typeof ApiPublicCrmWorkerRoute
+  '/api/public/notifications/email-worker': typeof ApiPublicNotificationsEmailWorkerRoute
   '/api/public/sdr/availability': typeof ApiPublicSdrAvailabilityRoute
   '/api/public/sdr/context': typeof ApiPublicSdrContextRoute
   '/api/public/sdr/delivery': typeof ApiPublicSdrDeliveryRoute
@@ -407,6 +425,7 @@ export interface FileRoutesById {
   '/api/public/crm/webhook/$token': typeof ApiPublicCrmWebhookTokenRoute
   '/api/public/sdr/conversations/classify': typeof ApiPublicSdrConversationsClassifyRoute
   '/api/public/sdr/crm/sends': typeof ApiPublicSdrCrmSendsRouteWithChildren
+  '/api/public/sdr/emails/run': typeof ApiPublicSdrEmailsRunRoute
   '/api/public/sdr/followups/due': typeof ApiPublicSdrFollowupsDueRoute
   '/api/public/sdr/reservations/$protocol': typeof ApiPublicSdrReservationsProtocolRoute
   '/api/public/sdr/crm/sends/due': typeof ApiPublicSdrCrmSendsDueRoute
@@ -441,6 +460,7 @@ export interface FileRouteTypes {
     | '/admin/unidades/$unitId'
     | '/admin/unidades/'
     | '/api/public/crm/worker'
+    | '/api/public/notifications/email-worker'
     | '/api/public/sdr/availability'
     | '/api/public/sdr/context'
     | '/api/public/sdr/delivery'
@@ -454,6 +474,7 @@ export interface FileRouteTypes {
     | '/api/public/crm/webhook/$token'
     | '/api/public/sdr/conversations/classify'
     | '/api/public/sdr/crm/sends'
+    | '/api/public/sdr/emails/run'
     | '/api/public/sdr/followups/due'
     | '/api/public/sdr/reservations/$protocol'
     | '/api/public/sdr/crm/sends/due'
@@ -485,6 +506,7 @@ export interface FileRouteTypes {
     | '/admin/unidades/$unitId'
     | '/admin/unidades'
     | '/api/public/crm/worker'
+    | '/api/public/notifications/email-worker'
     | '/api/public/sdr/availability'
     | '/api/public/sdr/context'
     | '/api/public/sdr/delivery'
@@ -498,6 +520,7 @@ export interface FileRouteTypes {
     | '/api/public/crm/webhook/$token'
     | '/api/public/sdr/conversations/classify'
     | '/api/public/sdr/crm/sends'
+    | '/api/public/sdr/emails/run'
     | '/api/public/sdr/followups/due'
     | '/api/public/sdr/reservations/$protocol'
     | '/api/public/sdr/crm/sends/due'
@@ -530,6 +553,7 @@ export interface FileRouteTypes {
     | '/admin/unidades/$unitId'
     | '/admin/unidades/'
     | '/api/public/crm/worker'
+    | '/api/public/notifications/email-worker'
     | '/api/public/sdr/availability'
     | '/api/public/sdr/context'
     | '/api/public/sdr/delivery'
@@ -543,6 +567,7 @@ export interface FileRouteTypes {
     | '/api/public/crm/webhook/$token'
     | '/api/public/sdr/conversations/classify'
     | '/api/public/sdr/crm/sends'
+    | '/api/public/sdr/emails/run'
     | '/api/public/sdr/followups/due'
     | '/api/public/sdr/reservations/$protocol'
     | '/api/public/sdr/crm/sends/due'
@@ -558,6 +583,7 @@ export interface RootRouteChildren {
   ReservarSucessoRoute: typeof ReservarSucessoRoute
   ReservarIndexRoute: typeof ReservarIndexRoute
   ApiPublicCrmWorkerRoute: typeof ApiPublicCrmWorkerRoute
+  ApiPublicNotificationsEmailWorkerRoute: typeof ApiPublicNotificationsEmailWorkerRoute
   ApiPublicSdrAvailabilityRoute: typeof ApiPublicSdrAvailabilityRoute
   ApiPublicSdrContextRoute: typeof ApiPublicSdrContextRoute
   ApiPublicSdrDeliveryRoute: typeof ApiPublicSdrDeliveryRoute
@@ -571,6 +597,7 @@ export interface RootRouteChildren {
   ApiPublicCrmWebhookTokenRoute: typeof ApiPublicCrmWebhookTokenRoute
   ApiPublicSdrConversationsClassifyRoute: typeof ApiPublicSdrConversationsClassifyRoute
   ApiPublicSdrCrmSendsRoute: typeof ApiPublicSdrCrmSendsRouteWithChildren
+  ApiPublicSdrEmailsRunRoute: typeof ApiPublicSdrEmailsRunRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -764,6 +791,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicCrmWorkerRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/notifications/email-worker': {
+      id: '/api/public/notifications/email-worker'
+      path: '/api/public/notifications/email-worker'
+      fullPath: '/api/public/notifications/email-worker'
+      preLoaderRoute: typeof ApiPublicNotificationsEmailWorkerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/sdr/availability': {
       id: '/api/public/sdr/availability'
       path: '/api/public/sdr/availability'
@@ -853,6 +887,13 @@ declare module '@tanstack/react-router' {
       path: '/api/public/sdr/crm/sends'
       fullPath: '/api/public/sdr/crm/sends'
       preLoaderRoute: typeof ApiPublicSdrCrmSendsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/sdr/emails/run': {
+      id: '/api/public/sdr/emails/run'
+      path: '/api/public/sdr/emails/run'
+      fullPath: '/api/public/sdr/emails/run'
+      preLoaderRoute: typeof ApiPublicSdrEmailsRunRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/sdr/followups/due': {
@@ -972,6 +1013,8 @@ const rootRouteChildren: RootRouteChildren = {
   ReservarSucessoRoute: ReservarSucessoRoute,
   ReservarIndexRoute: ReservarIndexRoute,
   ApiPublicCrmWorkerRoute: ApiPublicCrmWorkerRoute,
+  ApiPublicNotificationsEmailWorkerRoute:
+    ApiPublicNotificationsEmailWorkerRoute,
   ApiPublicSdrAvailabilityRoute: ApiPublicSdrAvailabilityRoute,
   ApiPublicSdrContextRoute: ApiPublicSdrContextRoute,
   ApiPublicSdrDeliveryRoute: ApiPublicSdrDeliveryRoute,
@@ -986,6 +1029,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicSdrConversationsClassifyRoute:
     ApiPublicSdrConversationsClassifyRoute,
   ApiPublicSdrCrmSendsRoute: ApiPublicSdrCrmSendsRouteWithChildren,
+  ApiPublicSdrEmailsRunRoute: ApiPublicSdrEmailsRunRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
