@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
-import { ALERTS_CHANGED } from "@/components/admin/AlertBell";
+import { ALERTS_CHANGED } from "@/lib/use-alerts";
 import { EmptyState, ErrorState, ListSkeleton, StatCard } from "@/components/admin/bits";
 import { parseEmailSettings, parseNotifications, groupByDay, settingsPayload, SEVERITY_DOT, type EmailSettings, type Notif } from "@/lib/alerts";
 import { useAuth } from "@/lib/auth";

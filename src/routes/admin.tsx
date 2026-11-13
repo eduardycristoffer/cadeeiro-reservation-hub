@@ -8,7 +8,8 @@ import { AuthProvider, signOutLogged, useAuth } from "@/lib/auth";
 import { isSupabaseConfigured, supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Toaster } from "@/components/ui/sonner";
-import { AlertBell, useUnreadAlerts } from "@/components/admin/AlertBell";
+import { AlertBell } from "@/components/admin/AlertBell";
+import { useUnreadAlerts } from "@/lib/use-alerts";
 
 export const Route = createFileRoute("/admin")({
   ssr: false,
