@@ -30,6 +30,7 @@ import { Route as AdminRelatoriosRouteImport } from './routes/admin.relatorios'
 import { Route as AdminReservasRouteImport } from './routes/admin.reservas'
 import { Route as AdminSacRouteImport } from './routes/admin.sac'
 import { Route as AdminValoresRouteImport } from './routes/admin.valores'
+import { Route as AdminWifiRouteImport } from './routes/admin.wifi'
 import { Route as CSlugRouteImport } from './routes/c.$slug'
 import { Route as GoianiaPizzaRouteImport } from './routes/goiania.pizza'
 import { Route as ReservarIndexRouteImport } from './routes/reservar.index'
@@ -160,6 +161,11 @@ const AdminSacRoute = AdminSacRouteImport.update({
 const AdminValoresRoute = AdminValoresRouteImport.update({
   id: '/valores',
   path: '/valores',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminWifiRoute = AdminWifiRouteImport.update({
+  id: '/wifi',
+  path: '/wifi',
   getParentRoute: () => AdminRoute,
 } as any)
 const CSlugRoute = CSlugRouteImport.update({
@@ -322,6 +328,7 @@ export interface FileRoutesByFullPath {
   '/admin/reservas': typeof AdminReservasRoute
   '/admin/sac': typeof AdminSacRoute
   '/admin/valores': typeof AdminValoresRoute
+  '/admin/wifi': typeof AdminWifiRoute
   '/c/$slug': typeof CSlugRoute
   '/goiania/pizza': typeof GoianiaPizzaRoute
   '/reservar/sucesso': typeof ReservarSucessoRoute
@@ -370,6 +377,7 @@ export interface FileRoutesByTo {
   '/admin/reservas': typeof AdminReservasRoute
   '/admin/sac': typeof AdminSacRoute
   '/admin/valores': typeof AdminValoresRoute
+  '/admin/wifi': typeof AdminWifiRoute
   '/c/$slug': typeof CSlugRoute
   '/goiania/pizza': typeof GoianiaPizzaRoute
   '/reservar/sucesso': typeof ReservarSucessoRoute
@@ -420,6 +428,7 @@ export interface FileRoutesById {
   '/admin/reservas': typeof AdminReservasRoute
   '/admin/sac': typeof AdminSacRoute
   '/admin/valores': typeof AdminValoresRoute
+  '/admin/wifi': typeof AdminWifiRoute
   '/c/$slug': typeof CSlugRoute
   '/goiania/pizza': typeof GoianiaPizzaRoute
   '/reservar/sucesso': typeof ReservarSucessoRoute
@@ -471,6 +480,7 @@ export interface FileRouteTypes {
     | '/admin/reservas'
     | '/admin/sac'
     | '/admin/valores'
+    | '/admin/wifi'
     | '/c/$slug'
     | '/goiania/pizza'
     | '/reservar/sucesso'
@@ -519,6 +529,7 @@ export interface FileRouteTypes {
     | '/admin/reservas'
     | '/admin/sac'
     | '/admin/valores'
+    | '/admin/wifi'
     | '/c/$slug'
     | '/goiania/pizza'
     | '/reservar/sucesso'
@@ -568,6 +579,7 @@ export interface FileRouteTypes {
     | '/admin/reservas'
     | '/admin/sac'
     | '/admin/valores'
+    | '/admin/wifi'
     | '/c/$slug'
     | '/goiania/pizza'
     | '/reservar/sucesso'
@@ -774,6 +786,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminValoresRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/wifi': {
+      id: '/admin/wifi'
+      path: '/wifi'
+      fullPath: '/admin/wifi'
+      preLoaderRoute: typeof AdminWifiRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/c/$slug': {
       id: '/c/$slug'
       path: '/c/$slug'
@@ -976,6 +995,7 @@ interface AdminRouteChildren {
   AdminReservasRoute: typeof AdminReservasRoute
   AdminSacRoute: typeof AdminSacRoute
   AdminValoresRoute: typeof AdminValoresRoute
+  AdminWifiRoute: typeof AdminWifiRoute
   AdminIndexRoute: typeof AdminIndexRoute
   AdminUnidadesUnitIdRoute: typeof AdminUnidadesUnitIdRoute
   AdminUnidadesIndexRoute: typeof AdminUnidadesIndexRoute
@@ -998,6 +1018,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminReservasRoute: AdminReservasRoute,
   AdminSacRoute: AdminSacRoute,
   AdminValoresRoute: AdminValoresRoute,
+  AdminWifiRoute: AdminWifiRoute,
   AdminIndexRoute: AdminIndexRoute,
   AdminUnidadesUnitIdRoute: AdminUnidadesUnitIdRoute,
   AdminUnidadesIndexRoute: AdminUnidadesIndexRoute,
