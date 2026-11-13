@@ -38,7 +38,7 @@ export function NativeSelect({ className, children, ...props }: SelectHTMLAttrib
   );
 }
 
-export function StatCard({ label, value, hint }: { label: string; value: ReactNode; hint?: string }) {
+export function StatCard({ label, value, hint }: { label: string; value: ReactNode; hint?: string | undefined }) {
   return (
     <div className="min-w-0 rounded-3xl bg-card p-4 shadow-soft sm:p-6">
       <p className="text-sm text-muted-foreground">{label}</p>

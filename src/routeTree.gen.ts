@@ -14,7 +14,9 @@ import { Route as AdminRouteImport } from './routes/admin'
 import { Route as EntrarRouteImport } from './routes/entrar'
 import { Route as PrimeiroAcessoRouteImport } from './routes/primeiro-acesso'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
+import { Route as AdminAnunciosRouteImport } from './routes/admin.anuncios'
 import { Route as AdminAprovacoesRouteImport } from './routes/admin.aprovacoes'
+import { Route as AdminCampanhasRouteImport } from './routes/admin.campanhas'
 import { Route as AdminDeliveryRouteImport } from './routes/admin.delivery'
 import { Route as AdminEquipeRouteImport } from './routes/admin.equipe'
 import { Route as AdminHistoricoRouteImport } from './routes/admin.historico'
@@ -26,6 +28,7 @@ import { Route as AdminRelatoriosRouteImport } from './routes/admin.relatorios'
 import { Route as AdminReservasRouteImport } from './routes/admin.reservas'
 import { Route as AdminSacRouteImport } from './routes/admin.sac'
 import { Route as AdminValoresRouteImport } from './routes/admin.valores'
+import { Route as CSlugRouteImport } from './routes/c.$slug'
 import { Route as GoianiaPizzaRouteImport } from './routes/goiania.pizza'
 import { Route as ReservarIndexRouteImport } from './routes/reservar.index'
 import { Route as ReservarSucessoRouteImport } from './routes/reservar.sucesso'
@@ -72,9 +75,19 @@ const AdminIndexRoute = AdminIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminAnunciosRoute = AdminAnunciosRouteImport.update({
+  id: '/anuncios',
+  path: '/anuncios',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminAprovacoesRoute = AdminAprovacoesRouteImport.update({
   id: '/aprovacoes',
   path: '/aprovacoes',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminCampanhasRoute = AdminCampanhasRouteImport.update({
+  id: '/campanhas',
+  path: '/campanhas',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminDeliveryRoute = AdminDeliveryRouteImport.update({
@@ -131,6 +144,11 @@ const AdminValoresRoute = AdminValoresRouteImport.update({
   id: '/valores',
   path: '/valores',
   getParentRoute: () => AdminRoute,
+} as any)
+const CSlugRoute = CSlugRouteImport.update({
+  id: '/c/$slug',
+  path: '/c/$slug',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const GoianiaPizzaRoute = GoianiaPizzaRouteImport.update({
   id: '/goiania/pizza',
@@ -245,7 +263,9 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AdminRouteWithChildren
   '/entrar': typeof EntrarRoute
   '/primeiro-acesso': typeof PrimeiroAcessoRoute
+  '/admin/anuncios': typeof AdminAnunciosRoute
   '/admin/aprovacoes': typeof AdminAprovacoesRoute
+  '/admin/campanhas': typeof AdminCampanhasRoute
   '/admin/delivery': typeof AdminDeliveryRoute
   '/admin/equipe': typeof AdminEquipeRoute
   '/admin/historico': typeof AdminHistoricoRoute
@@ -257,6 +277,7 @@ export interface FileRoutesByFullPath {
   '/admin/reservas': typeof AdminReservasRoute
   '/admin/sac': typeof AdminSacRoute
   '/admin/valores': typeof AdminValoresRoute
+  '/c/$slug': typeof CSlugRoute
   '/goiania/pizza': typeof GoianiaPizzaRoute
   '/reservar/sucesso': typeof ReservarSucessoRoute
   '/admin/': typeof AdminIndexRoute
@@ -283,7 +304,9 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/entrar': typeof EntrarRoute
   '/primeiro-acesso': typeof PrimeiroAcessoRoute
+  '/admin/anuncios': typeof AdminAnunciosRoute
   '/admin/aprovacoes': typeof AdminAprovacoesRoute
+  '/admin/campanhas': typeof AdminCampanhasRoute
   '/admin/delivery': typeof AdminDeliveryRoute
   '/admin/equipe': typeof AdminEquipeRoute
   '/admin/historico': typeof AdminHistoricoRoute
@@ -295,6 +318,7 @@ export interface FileRoutesByTo {
   '/admin/reservas': typeof AdminReservasRoute
   '/admin/sac': typeof AdminSacRoute
   '/admin/valores': typeof AdminValoresRoute
+  '/c/$slug': typeof CSlugRoute
   '/goiania/pizza': typeof GoianiaPizzaRoute
   '/reservar/sucesso': typeof ReservarSucessoRoute
   '/admin': typeof AdminIndexRoute
@@ -323,7 +347,9 @@ export interface FileRoutesById {
   '/admin': typeof AdminRouteWithChildren
   '/entrar': typeof EntrarRoute
   '/primeiro-acesso': typeof PrimeiroAcessoRoute
+  '/admin/anuncios': typeof AdminAnunciosRoute
   '/admin/aprovacoes': typeof AdminAprovacoesRoute
+  '/admin/campanhas': typeof AdminCampanhasRoute
   '/admin/delivery': typeof AdminDeliveryRoute
   '/admin/equipe': typeof AdminEquipeRoute
   '/admin/historico': typeof AdminHistoricoRoute
@@ -335,6 +361,7 @@ export interface FileRoutesById {
   '/admin/reservas': typeof AdminReservasRoute
   '/admin/sac': typeof AdminSacRoute
   '/admin/valores': typeof AdminValoresRoute
+  '/c/$slug': typeof CSlugRoute
   '/goiania/pizza': typeof GoianiaPizzaRoute
   '/reservar/sucesso': typeof ReservarSucessoRoute
   '/admin/': typeof AdminIndexRoute
@@ -364,7 +391,9 @@ export interface FileRouteTypes {
     | '/admin'
     | '/entrar'
     | '/primeiro-acesso'
+    | '/admin/anuncios'
     | '/admin/aprovacoes'
+    | '/admin/campanhas'
     | '/admin/delivery'
     | '/admin/equipe'
     | '/admin/historico'
@@ -376,6 +405,7 @@ export interface FileRouteTypes {
     | '/admin/reservas'
     | '/admin/sac'
     | '/admin/valores'
+    | '/c/$slug'
     | '/goiania/pizza'
     | '/reservar/sucesso'
     | '/admin/'
@@ -402,7 +432,9 @@ export interface FileRouteTypes {
     | '/'
     | '/entrar'
     | '/primeiro-acesso'
+    | '/admin/anuncios'
     | '/admin/aprovacoes'
+    | '/admin/campanhas'
     | '/admin/delivery'
     | '/admin/equipe'
     | '/admin/historico'
@@ -414,6 +446,7 @@ export interface FileRouteTypes {
     | '/admin/reservas'
     | '/admin/sac'
     | '/admin/valores'
+    | '/c/$slug'
     | '/goiania/pizza'
     | '/reservar/sucesso'
     | '/admin'
@@ -441,7 +474,9 @@ export interface FileRouteTypes {
     | '/admin'
     | '/entrar'
     | '/primeiro-acesso'
+    | '/admin/anuncios'
     | '/admin/aprovacoes'
+    | '/admin/campanhas'
     | '/admin/delivery'
     | '/admin/equipe'
     | '/admin/historico'
@@ -453,6 +488,7 @@ export interface FileRouteTypes {
     | '/admin/reservas'
     | '/admin/sac'
     | '/admin/valores'
+    | '/c/$slug'
     | '/goiania/pizza'
     | '/reservar/sucesso'
     | '/admin/'
@@ -481,6 +517,7 @@ export interface RootRouteChildren {
   AdminRoute: typeof AdminRouteWithChildren
   EntrarRoute: typeof EntrarRoute
   PrimeiroAcessoRoute: typeof PrimeiroAcessoRoute
+  CSlugRoute: typeof CSlugRoute
   GoianiaPizzaRoute: typeof GoianiaPizzaRoute
   ReservarSucessoRoute: typeof ReservarSucessoRoute
   ReservarIndexRoute: typeof ReservarIndexRoute
@@ -536,11 +573,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminIndexRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/anuncios': {
+      id: '/admin/anuncios'
+      path: '/anuncios'
+      fullPath: '/admin/anuncios'
+      preLoaderRoute: typeof AdminAnunciosRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/aprovacoes': {
       id: '/admin/aprovacoes'
       path: '/aprovacoes'
       fullPath: '/admin/aprovacoes'
       preLoaderRoute: typeof AdminAprovacoesRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/campanhas': {
+      id: '/admin/campanhas'
+      path: '/campanhas'
+      fullPath: '/admin/campanhas'
+      preLoaderRoute: typeof AdminCampanhasRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/delivery': {
@@ -619,6 +670,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/valores'
       preLoaderRoute: typeof AdminValoresRouteImport
       parentRoute: typeof AdminRoute
+    }
+    '/c/$slug': {
+      id: '/c/$slug'
+      path: '/c/$slug'
+      fullPath: '/c/$slug'
+      preLoaderRoute: typeof CSlugRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/goiania/pizza': {
       id: '/goiania/pizza'
@@ -764,7 +822,9 @@ declare module '@tanstack/react-router' {
 }
 
 interface AdminRouteChildren {
+  AdminAnunciosRoute: typeof AdminAnunciosRoute
   AdminAprovacoesRoute: typeof AdminAprovacoesRoute
+  AdminCampanhasRoute: typeof AdminCampanhasRoute
   AdminDeliveryRoute: typeof AdminDeliveryRoute
   AdminEquipeRoute: typeof AdminEquipeRoute
   AdminHistoricoRoute: typeof AdminHistoricoRoute
@@ -782,7 +842,9 @@ interface AdminRouteChildren {
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
+  AdminAnunciosRoute: AdminAnunciosRoute,
   AdminAprovacoesRoute: AdminAprovacoesRoute,
+  AdminCampanhasRoute: AdminCampanhasRoute,
   AdminDeliveryRoute: AdminDeliveryRoute,
   AdminEquipeRoute: AdminEquipeRoute,
   AdminHistoricoRoute: AdminHistoricoRoute,
@@ -834,6 +896,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRoute: AdminRouteWithChildren,
   EntrarRoute: EntrarRoute,
   PrimeiroAcessoRoute: PrimeiroAcessoRoute,
+  CSlugRoute: CSlugRoute,
   GoianiaPizzaRoute: GoianiaPizzaRoute,
   ReservarSucessoRoute: ReservarSucessoRoute,
   ReservarIndexRoute: ReservarIndexRoute,

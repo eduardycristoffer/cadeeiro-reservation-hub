@@ -37,7 +37,9 @@ const OCCASION_ICON: Record<OccasionId, LucideIcon> = {
 };
 const STRIP_DAYS = 14;
 
-export function ReservaFlow({ initialService, campaign, city }: { initialService?: ServiceId | undefined; campaign?: string | undefined; city?: string | undefined }) {
+export type ReservaCopy = { headline?: string | null | undefined; subheadline?: string | null | undefined; cta?: string | null | undefined };
+
+export function ReservaFlow({ initialService, campaign, city, copy, pageSlug }: { initialService?: ServiceId | undefined; campaign?: string | undefined; city?: string | undefined; copy?: ReservaCopy | undefined; pageSlug?: string | undefined }) {
   const navigate = useNavigate();
   const [stage, setStage] = useState<Stage>("capa");
   const [pickedService, setPickedService] = useState<ServiceId | null>(null);
@@ -200,7 +202,7 @@ export function ReservaFlow({ initialService, campaign, city }: { initialService
       to: "/reservar/sucesso",
       search: {
         p: r.protocol, u: r.unit_name, d: r.reservation_date, t: r.reservation_time, n: r.party_size, s: r.status,
-        r: service ?? "", o: occasion, w: occ?.asksWho ? who.trim() : "",
+        r: service ?? "", o: occasion, w: occ?.asksWho ? who.trim() : "", c: pageSlug ?? "",
       },
     });
   }
@@ -215,9 +217,9 @@ export function ReservaFlow({ initialService, campaign, city }: { initialService
         <div className="flex flex-1 flex-col justify-center py-4">
           <div className="fade-up">
             <BrandLogo className="h-20 sm:h-24" />
-            <h1 className="mt-4 text-3xl font-bold leading-tight sm:text-4xl">Reservar mesa</h1>
+            <h1 className="mt-4 text-3xl font-bold leading-tight sm:text-4xl">{copy?.headline || "Reservar mesa"}</h1>
             <p className="mt-2 text-sm text-muted-foreground">
-              {initialService ? "Sua mesa em poucos toques." : "Qual rodízio você quer?"}
+              {copy?.subheadline || (initialService ? "Sua mesa em poucos toques." : "Qual rodízio você quer?")}
             </p>
           </div>
 
@@ -257,7 +259,7 @@ export function ReservaFlow({ initialService, campaign, city }: { initialService
               {service && units && offered.length === 0 && <p role="status" className="mb-3 text-sm text-muted-foreground">Sem unidades disponíveis para este rodízio.</p>}
               {!service && <p role="status" className="mb-2 text-center text-sm font-medium">Escolha um rodízio acima para continuar.</p>}
               <Button className="h-12 w-full text-base font-semibold disabled:bg-secondary disabled:text-muted-foreground disabled:opacity-100" disabled={!service || !units || offered.length === 0} onClick={() => setStage("contatos")}>
-                {service && !units && !loadError ? <Loader2 className="h-5 w-5 animate-spin" /> : "Reservar agora"}
+                {service && !units && !loadError ? <Loader2 className="h-5 w-5 animate-spin" /> : (copy?.cta || "Reservar agora")}
               </Button>
               <p className="mt-3 flex flex-wrap justify-center gap-x-4 gap-y-1 text-[11px] text-muted-foreground">
                 <span className="inline-flex items-center gap-1.5"><Clock3 className="h-3.5 w-3.5" /> Disponibilidade em tempo real</span>

@@ -37,7 +37,10 @@ export function loadPixels(ids: readonly string[]): number {
   if (typeof window === "undefined" || getConsent() !== "granted") return 0;
   const valid = ids.filter(isValidPixelId).filter((id) => !initialized.has(id));
   if (!window.fbq) {
-    const q: Fbq = function (...args: unknown[]) { (q.callMethod ? q.callMethod(...args) : q.queue?.push(args)); } as Fbq;
+    const q: Fbq = function (...args: unknown[]) {
+      if (q.callMethod) q.callMethod(...args);
+      else q.queue?.push(args);
+    } as Fbq;
     q.queue = []; q.loaded = true; q.version = "2.0"; q.push = q;
     window.fbq = q; window._fbq = q;
     const s = document.createElement("script");

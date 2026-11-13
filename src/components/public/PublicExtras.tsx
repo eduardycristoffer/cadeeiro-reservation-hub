@@ -17,10 +17,26 @@ type Ready = { goiania: boolean; anapolis: boolean };
  * Extras das páginas públicas: pixels da Meta (com consentimento), aviso de cookies e botão flutuante de WhatsApp.
  * Nunca monte isto dentro de /admin.
  */
-export function PublicExtras({ city, campaign }: { city?: string | undefined; campaign?: string | undefined }) {
+function useSiteReady(): Ready | null {
+  const [ready, setReady] = useState<Ready | null>(null);
+  useEffect(() => {
+    if (!supabase) return;
+    let off = false;
+    // melhor esforço: se a função ainda não existe no banco, a página segue sem botão
+    supabase.rpc("public_site_config").then(({ data, error }) => {
+      if (off || error || !data) return;
+      const r = (data as { whatsapp_ready?: Partial<Ready> }).whatsapp_ready;
+      setReady({ goiania: Boolean(r?.goiania), anapolis: Boolean(r?.anapolis) });
+    }, () => undefined);
+    return () => { off = true; };
+  }, []);
+  return ready;
+}
+
+export function PublicExtras({ city, campaign, fab = true }: { city?: string | undefined; campaign?: string | undefined; fab?: boolean }) {
   const citySl = citySlug(city);
   const camp = sanitizeCampaign(campaign);
-  const [ready, setReady] = useState<Ready | null>(null);
+  const ready = useSiteReady();
   const [pixels, setPixels] = useState<string[]>([]);
   const [consent, setConsentState] = useState<Consent>(null);
   const [mounted, setMounted] = useState(false);
@@ -36,12 +52,6 @@ export function PublicExtras({ city, campaign }: { city?: string | undefined; ca
   useEffect(() => {
     if (!supabase) return;
     let off = false;
-    // melhor esforço: se a função ainda não existe no banco, a página segue sem botão/pixel
-    supabase.rpc("public_site_config").then(({ data, error }) => {
-      if (off || error || !data) return;
-      const r = (data as { whatsapp_ready?: Partial<Ready> }).whatsapp_ready;
-      setReady({ goiania: Boolean(r?.goiania), anapolis: Boolean(r?.anapolis) });
-    }, () => undefined);
     supabase.rpc("public_pixels", { _city: citySl ?? null, _campaign: camp ?? null }).then(({ data, error }) => {
       if (off || error || !Array.isArray(data)) return;
       setPixels((data as unknown[]).filter((x): x is string => typeof x === "string"));
@@ -58,7 +68,7 @@ export function PublicExtras({ city, campaign }: { city?: string | undefined; ca
 
   return (
     <>
-      {anyReady && ready && <WhatsAppFab ready={ready} defaultCity={citySl} campaign={camp} raised={showBanner} />}
+      {fab && anyReady && ready && <WhatsAppFab ready={ready} defaultCity={citySl} campaign={camp} raised={showBanner} />}
       {showBanner && <ConsentBanner />}
     </>
   );
@@ -78,8 +88,15 @@ function ConsentBanner() {
   );
 }
 
-function WhatsAppFab({ ready, defaultCity, campaign, raised }: { ready: Ready; defaultCity: CitySlug | undefined; campaign: string | undefined; raised: boolean }) {
-  const [open, setOpen] = useState(false);
+type FabProps = {
+  ready: Ready; defaultCity: CitySlug | undefined; campaign: string | undefined; raised?: boolean;
+  source?: "fab" | "campanha" | "home"; showButton?: boolean; open?: boolean; onOpenChange?: (o: boolean) => void;
+};
+
+function WhatsAppFab({ ready, defaultCity, campaign, raised = false, source = "fab", showButton = true, open: openProp, onOpenChange }: FabProps) {
+  const [openState, setOpenState] = useState(false);
+  const open = openProp ?? openState;
+  const setOpen = (o: boolean) => { setOpenState(o); onOpenChange?.(o); };
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [cityPick, setCityPick] = useState<CitySlug | null>(defaultCity ?? null);
@@ -104,7 +121,7 @@ function WhatsAppFab({ ready, defaultCity, campaign, raised }: { ready: Ready; d
       _phone: phone,
       _city: cityPick,
       _campaign: campaign ?? null,
-      _source: "fab",
+      _source: source,
       _utm: pickUtm(window.location.search),
       _page: window.location.pathname,
       _privacy_accepted: privacy,
@@ -123,7 +140,7 @@ function WhatsAppFab({ ready, defaultCity, campaign, raised }: { ready: Ready; d
 
   return (
     <>
-      <button
+      {showButton && <button
         type="button"
         onClick={() => setOpen(true)}
         aria-label="Falar no WhatsApp"
@@ -134,7 +151,7 @@ function WhatsAppFab({ ready, defaultCity, campaign, raised }: { ready: Ready; d
       >
         <MessageCircle className="size-6" aria-hidden="true" />
         <span className="text-sm font-semibold">WhatsApp</span>
-      </button>
+      </button>}
 
       <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) { setDone(null); setError(null); } }}>
         <DialogContent className="max-w-sm rounded-3xl p-6">
@@ -199,6 +216,26 @@ function WhatsAppFab({ ready, defaultCity, campaign, raised }: { ready: Ready; d
           )}
         </DialogContent>
       </Dialog>
+    </>
+  );
+}
+
+/** Botão grande que abre o formulário de WhatsApp (nome + telefone + cidade) — usado nas páginas de campanha. */
+export function WhatsAppCta({ city, campaign, label = "Falar no WhatsApp" }: { city?: string | undefined; campaign?: string | undefined; label?: string }) {
+  const ready = useSiteReady();
+  const [open, setOpen] = useState(false);
+  const citySl = citySlug(city);
+  const camp = sanitizeCampaign(campaign);
+  if (!ready) return <div className="h-14 animate-pulse rounded-2xl bg-surface" aria-busy="true" />;
+  if (!ready.goiania && !ready.anapolis) {
+    return <p role="status" className="rounded-2xl bg-surface p-4 text-center text-sm text-muted-foreground">O WhatsApp desta campanha será liberado em breve.</p>;
+  }
+  return (
+    <>
+      <Button onClick={() => setOpen(true)} className="h-14 w-full rounded-2xl bg-[#168a45] text-base font-semibold text-white hover:bg-[#12733a]">
+        <MessageCircle className="size-5" aria-hidden="true" /> {label}
+      </Button>
+      <WhatsAppFab ready={ready} defaultCity={citySl} campaign={camp} source="campanha" showButton={false} open={open} onOpenChange={setOpen} />
     </>
   );
 }

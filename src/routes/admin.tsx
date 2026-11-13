@@ -1,7 +1,7 @@
 import { BrandLogo } from "@/components/BrandLogo";
 import { createFileRoute, Link, Outlet, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { BarChart3, Building2, CalendarDays, Headset, CheckCircle2, History, LayoutGrid, LogOut, Loader2, Megaphone, Menu, MessageCircle, Plug, Tag, Truck, UserCircle, Users } from "lucide-react";
+import { BarChart3, Building2, CalendarDays, Headset, CheckCircle2, History, LayoutGrid, LineChart, LogOut, Loader2, Megaphone, Menu, MessageCircle, Plug, Tag, Target, Truck, UserCircle, Users } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { usePendingCount } from "@/lib/approvals";
 import { AuthProvider, signOutLogged, useAuth } from "@/lib/auth";
@@ -39,6 +39,8 @@ const NAV = [
   { to: "/admin/unidades", label: "Unidades", icon: Building2, exact: false },
   { to: "/admin/equipe", label: "Equipe", icon: Users, exact: false, managerOnly: true },
   { to: "/admin/relatorios", label: "Relatórios", icon: BarChart3, exact: false, managerOnly: true },
+  { to: "/admin/anuncios", label: "Anúncios", icon: LineChart, exact: false, managerOnly: true },
+  { to: "/admin/campanhas", label: "Campanhas", icon: Target, exact: false, managerOnly: true },
   { to: "/admin/marketing", label: "Marketing", icon: Megaphone, exact: false, managerOnly: true },
   { to: "/admin/historico", label: "Histórico", icon: History, exact: false, managerOnly: true },
   { to: "/admin/integracoes", label: "Integrações", icon: Plug, exact: false, superOnly: true },
