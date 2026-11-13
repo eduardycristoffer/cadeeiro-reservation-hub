@@ -96,7 +96,7 @@ function CampaignPage() {
           <p className="mt-4 text-xs text-muted-foreground">Você escolhe a cidade e abrimos o WhatsApp certo.</p>
         </div>
       </div>
-      <PublicExtras city={city} campaign={cfg.campaign} fab={false} />
+      <PublicExtras city={city} campaign={cfg.campaign} />
     </main>
   );
 }

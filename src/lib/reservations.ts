@@ -3,6 +3,10 @@ import { toIsoDate } from "@/lib/format";
 export type ReservationStatus = "pendente" | "confirmada" | "cancelada" | "concluida" | "nao_compareceu";
 export type ReservationOrigin = "landing_page" | "sdr_whatsapp" | "painel" | "telefone" | "outro";
 
+export function todaySaoPaulo(now = new Date()): string {
+  return new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo", year: "numeric", month: "2-digit", day: "2-digit" }).format(now);
+}
+
 export const ORIGIN_LABEL: Record<ReservationOrigin, string> = {
   landing_page: "Página de reservas",
   sdr_whatsapp: "WhatsApp (SDR)",
@@ -12,15 +16,15 @@ export const ORIGIN_LABEL: Record<ReservationOrigin, string> = {
 };
 
 export const SERVICES = [
+  { id: "almoco_quilo", slug: "quilo", label: "Almoço por quilo" },
   { id: "rodizio_carnes", slug: "carnes", label: "Rodízio de Carnes" },
   { id: "rodizio_pizza", slug: "pizza", label: "Rodízio de Pizza" },
-  { id: "almoco_quilo", slug: "quilo", label: "Almoço por quilo" },
 ] as const;
 export type ServiceId = (typeof SERVICES)[number]["id"];
 export const SERVICE_LABEL: Record<ServiceId, string> = {
+  almoco_quilo: "Almoço por quilo",
   rodizio_carnes: "Rodízio de Carnes",
   rodizio_pizza: "Rodízio de Pizza",
-  almoco_quilo: "Almoço por quilo",
 };
 
 export const OCCASIONS = [

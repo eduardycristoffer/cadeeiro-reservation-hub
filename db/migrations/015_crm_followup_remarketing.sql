@@ -1,4 +1,4 @@
--- 014 — CRM: modelos de mensagem, follow-up pós-visita, reaver (clientes inativos e leads do WhatsApp),
+-- 015 — CRM: modelos de mensagem, follow-up pós-visita, reaver (clientes inativos e leads do WhatsApp),
 --       remarketing por campanha e fila de envios.
 --
 -- Como o envio acontece: este banco só decide QUEM recebe O QUÊ e QUANDO (fila `crm_sends`).
@@ -227,7 +227,7 @@ language sql stable security definer set search_path = public as $$
   lead_last as (
     select distinct on (l.customer_id) l.customer_id, l.id as lead_id, l.unit_id, l.created_at
       from public.whatsapp_leads l
-     where l.organization_id = _org and l.customer_id is not null and l.status in ('novo','em_atendimento','perdido')
+     where l.organization_id = _org and l.customer_id is not null and l.status in ('novo','chamado','perdido')
      order by l.customer_id, l.created_at desc
   ),
   cand as (
@@ -293,7 +293,7 @@ begin
              public._crm_finalize('reaver_lead', public._crm_render(public._crm_body(o.id, 'reaver_lead'),
                public._crm_vars(l.unit_id, split_part(btrim(l.full_name), ' ', 1), null, null, 'reaver-lead'))), now()
         from public.whatsapp_leads l join public.customers c on c.id = l.customer_id and c.whatsapp_opt_in and c.whatsapp_opt_out_at is null
-       where l.organization_id = o.id and l.customer_id is not null and l.status in ('novo','em_atendimento')
+       where l.organization_id = o.id and l.customer_id is not null and l.status in ('novo','chamado')
          and l.created_at <= now() - make_interval(hours => cfg.reaver_lead_hours) and l.created_at > now() - interval '7 days'
          and not exists (select 1 from public.reservations r where r.customer_id = l.customer_id and r.created_at >= l.created_at and r.status <> 'cancelada')
          and not exists (select 1 from public.crm_sends s where s.kind = 'reaver_lead' and s.lead_id = l.id)

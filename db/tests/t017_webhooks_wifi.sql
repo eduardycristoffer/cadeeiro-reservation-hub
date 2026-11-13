@@ -1,4 +1,4 @@
--- Cenários da migração 016 (webhook do Wi-Fi). Cada bloco usa ASSERT: se algo quebrar, o psql para com erro.
+-- Cenários da migração 017 (webhook do Wi-Fi). Cada bloco usa ASSERT: se algo quebrar, o psql para com erro.
 \set ON_ERROR_STOP on
 select id as org from organizations limit 1 \gset
 begin;

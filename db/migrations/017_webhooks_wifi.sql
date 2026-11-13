@@ -1,4 +1,4 @@
--- 016 · Webhooks de entrada (Wi-Fi do salão) --------------------------------------------------------------------------
+-- 017 · Webhooks de entrada (Wi-Fi do salão) --------------------------------------------------------------------------
 -- Um sistema de Wi-Fi de terceiros chama uma URL secreta toda vez que um cliente conecta. O painel guarda quem conectou
 -- (nome, telefone, e-mail, aparelho), conta as visitas por dia/horário e cruza com as reservas.
 --  · A URL contém um token; só o hash fica no banco (o token aparece uma única vez, ao criar ou trocar).

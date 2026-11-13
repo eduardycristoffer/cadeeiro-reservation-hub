@@ -4,7 +4,7 @@ import { REJECT_REASONS, UNDO_MS, rejectNote, sortPending } from "@/lib/approval
 describe("aprovações", () => {
   it("janela de desfazer é de 8 segundos", () => { expect(UNDO_MS).toBe(8000); });
   it("motivos rápidos de recusa", () => {
-    expect([...REJECT_REASONS]).toEqual(["Sem mesa disponível", "Horário indisponível", "Pediu cancelamento", "Outro"]);
+    expect([...REJECT_REASONS]).toEqual(["Sem mesa disponível", "Horário indisponível", "Cliente pediu cancelamento", "Cliente não respondeu", "Duplicada", "Outro"]);
   });
   it("nota de recusa nunca é vazia e inclui o complemento", () => {
     expect(rejectNote("Sem mesa disponível")).toBe("Recusada: Sem mesa disponível");

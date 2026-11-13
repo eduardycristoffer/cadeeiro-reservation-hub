@@ -28,7 +28,7 @@ insert into reservations(id,protocol,organization_id,unit_id,customer_id,reserva
  ('00000000-0000-0000-0000-0000000000f4','R4',:'org','00000000-0000-0000-0000-0000000000a2','00000000-0000-0000-0000-0000000000e4',current_date+2,'13:00',5,'landing_page','pendente','rodizio_carnes','pascoa'),
  ('00000000-0000-0000-0000-0000000000f5','R5',:'org','00000000-0000-0000-0000-0000000000a1','00000000-0000-0000-0000-0000000000e4',current_date+2,'14:00',2,'landing_page','cancelada','rodizio_pizza','black-friday');
 -- leads
-insert into whatsapp_leads(organization_id,unit_id,city,full_name,phone_e164,campaign) values (:'org','00000000-0000-0000-0000-0000000000a1','goiania','W1','5562991111111','black-friday'),(:'org','00000000-0000-0000-0000-0000000000a1','goiania','W2','5562991111112','black-friday');
+insert into whatsapp_leads(organization_id,unit_id,city,full_name,phone_e164,campaign,page_path) values (:'org','00000000-0000-0000-0000-0000000000a1','goiania','W1 Teste','5562991111111','black-friday','/'),(:'org','00000000-0000-0000-0000-0000000000a1','goiania','W2 Teste','5562991111112','black-friday','/');
 insert into reservation_leads(organization_id,full_name,phone_e164,campaign,unit_id) values (:'org','L1','5562992222221','black-friday','00000000-0000-0000-0000-0000000000a1');
 
 -- gestor (2 unidades) lanca gasto, orcamento e importa

@@ -1,4 +1,4 @@
--- 013 — Anúncios (gasto, orçamento, CAC, projeção) e gerador de páginas de campanha.
+-- 014 — Anúncios (gasto, orçamento, CAC, projeção) e gerador de páginas de campanha.
 -- Aditiva. O gasto de anúncios é lançado no painel (manual ou CSV); o app não puxa dados da Meta sozinho.
 -- Atribuição: reservations.campaign / whatsapp_leads.campaign / reservation_leads.campaign = mesmo texto de
 -- ad_spend.campaign (o ?campanha= do link). Relatórios são security definer, só gestor, limitados às unidades do usuário.

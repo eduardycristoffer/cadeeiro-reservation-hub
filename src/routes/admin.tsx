@@ -1,7 +1,8 @@
 import { BrandLogo } from "@/components/BrandLogo";
 import { createFileRoute, Link, Outlet, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { BarChart3, Bell, Building2, CalendarDays, Headset, CheckCircle2, HeartHandshake, History, LayoutGrid, LineChart, LogOut, Loader2, Megaphone, Menu, MessageCircle, Plug, Tag, Target, Truck, UserCircle, Users, Wifi } from "lucide-react";
+import { BarChart3, Bell, Building2, CalendarDays, Headset, CheckCircle2, HeartHandshake, History, LayoutGrid, LineChart, LogOut, Loader2, Megaphone, Menu, MessageCircle, Plug, Search, Tag, Target, Truck, UserCircle, Users, Wifi } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { usePendingCount } from "@/lib/approvals";
 import { AuthProvider, signOutLogged, useAuth } from "@/lib/auth";
@@ -38,6 +39,7 @@ const NAV = [
   { to: "/admin/sac", label: "SAC", icon: Headset, exact: false },
   { to: "/admin/leads", label: "Leads WhatsApp", icon: MessageCircle, exact: false },
   { to: "/admin/delivery", label: "Delivery", icon: Truck, exact: false },
+  { to: "/admin/leads", label: "Contatos", icon: Users, exact: false },
   { to: "/admin/valores", label: "Valores", icon: Tag, exact: false, managerOnly: true },
   { to: "/admin/unidades", label: "Unidades", icon: Building2, exact: false },
   { to: "/admin/equipe", label: "Equipe", icon: Users, exact: false, managerOnly: true },
@@ -114,15 +116,23 @@ function Shell({ nav: allNav, email }: { nav: readonly NavItem[]; email: string 
   const nav = allNav.filter((n) => n.to !== "/admin/alertas" || alerts !== null);
   const badge = (to: string) => (to === "/admin/aprovacoes" ? pending : to === "/admin/sac" ? sacOpen : to === "/admin/alertas" ? alerts : null);
   const [more, setMore] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [query, setQuery] = useState("");
+  const navigate = useNavigate();
   const primary = nav.filter((n) => PRIMARY.includes(n.to));
   const rest = nav.filter((n) => !PRIMARY.includes(n.to));
   const signOut = () => signOutLogged();
   return (
-    <div className="flex min-h-screen bg-background">
+    <div className="flex min-h-screen bg-surface">
       <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col border-r bg-sidebar p-4 md:flex">
         <div className="px-3 py-2"><BrandLogo className="h-12" /></div>
+        <Button variant="outline" className="mt-3 h-11 justify-start" onClick={() => setSearchOpen(true)}><Search />Buscar</Button>
         <nav aria-label="Navegação do painel" className="mt-4 flex-1 space-y-1">
           {nav.map((n) => (
+            <div key={n.to}>
+            {n.to === "/admin" && <p className="px-3 pb-2 pt-2 text-xs font-medium text-muted-foreground">Operação</p>}
+            {n.to === "/admin/sac" && <p className="px-3 pb-2 pt-4 text-xs font-medium text-muted-foreground">Atendimento</p>}
+            {n.to === "/admin/valores" && <p className="px-3 pb-2 pt-4 text-xs font-medium text-muted-foreground">Gestão</p>}
             <Link
               key={n.to}
               to={n.to}
@@ -132,6 +142,7 @@ function Shell({ nav: allNav, email }: { nav: readonly NavItem[]; email: string 
               <n.icon className="h-4 w-4" aria-hidden="true" /> {n.label}
               <Badge n={badge(n.to)} />
             </Link>
+            </div>
           ))}
         </nav>
         <div className="border-t pt-4">
@@ -142,11 +153,11 @@ function Shell({ nav: allNav, email }: { nav: readonly NavItem[]; email: string 
         </div>
       </aside>
       <div className="min-w-0 flex-1">
-        <header className="sticky top-0 z-30 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 border-b bg-background/90 px-4 py-2 backdrop-blur md:hidden">
+        <header className="sticky top-0 z-30 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 border-b bg-background/80 px-4 py-2 backdrop-blur-xl md:hidden">
           <BrandLogo className="h-9" />
           <div className="flex items-center">
+            <Button variant="ghost" size="icon" className="h-11 w-11" aria-label="Busca global" onClick={() => setSearchOpen(true)}><Search /></Button>
             <AlertBell count={alerts} />
-            <Button variant="ghost" size="icon" className="h-11 w-11" aria-label="Sair" onClick={signOut}><LogOut /></Button>
           </div>
         </header>
         <main className="admin-content admin-main mx-auto min-w-0 max-w-6xl px-4 pt-5 md:px-10 md:pt-10">
@@ -161,7 +172,7 @@ function Shell({ nav: allNav, email }: { nav: readonly NavItem[]; email: string 
               <span className="relative">
                 <n.icon className="h-5 w-5" aria-hidden="true" />
                 {badge(n.to) ? (
-                  <span className="absolute -right-3 -top-1.5 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-brand px-1 text-[10px] font-bold text-brand-foreground">{badge(n.to)! > 99 ? "99+" : badge(n.to)}<span className="sr-only"> pendentes</span></span>
+                  <span className="absolute -right-3 -top-1.5 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-brand px-1 text-[10px] font-bold text-brand-foreground">{(badge(n.to) ?? 0) > 99 ? "99+" : badge(n.to)}<span className="sr-only"> pendentes</span></span>
                 ) : null}
               </span>
               {n.label}
@@ -183,6 +194,17 @@ function Shell({ nav: allNav, email }: { nav: readonly NavItem[]; email: string 
             ))}
           </div>
           <p className="mt-4 truncate text-xs text-muted-foreground">{email}</p>
+          <Button variant="ghost" className="mt-2 h-11" onClick={signOut}><LogOut />Sair</Button>
+        </SheetContent>
+      </Sheet>
+      <Sheet open={searchOpen} onOpenChange={setSearchOpen}>
+        <SheetContent side="bottom" className="mx-auto max-w-lg rounded-t-3xl p-5 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
+          <SheetHeader><SheetTitle>Buscar</SheetTitle></SheetHeader>
+          <form className="mt-5 space-y-3" onSubmit={(e) => { e.preventDefault(); setSearchOpen(false); navigate({ to: "/admin/reservas", search: { view: "lista", cal: "mes", periodo: "todas", pagina: 1, q: query.trim() || undefined } }); }}>
+            <Input aria-label="Nome, telefone ou protocolo" placeholder="Nome, telefone ou protocolo" autoFocus className="h-12" value={query} onChange={(e) => setQuery(e.target.value)} />
+            <Button className="h-12 w-full" type="submit"><Search />Buscar reservas</Button>
+          </form>
+          <div className="mt-3 grid grid-cols-2 gap-2"><Button asChild variant="outline" className="h-11"><Link to="/admin/sac" onClick={() => setSearchOpen(false)}>SAC</Link></Button><Button asChild variant="outline" className="h-11"><Link to="/admin/leads" onClick={() => setSearchOpen(false)}>Contatos</Link></Button></div>
         </SheetContent>
       </Sheet>
     </div>

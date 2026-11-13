@@ -7,7 +7,7 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "
 import { useAuth } from "@/lib/auth";
 import { friendlyError, requireSupabase } from "@/lib/supabase";
 import { canConfirmLargeGroup } from "@/lib/reservations";
-import { REJECT_REASONS, UNDO_MS, rejectNote, scheduleApproval } from "@/lib/approvals";
+import { REJECT_REASONS, UNDO_MS, cancellationNote, validReason, scheduleApproval } from "@/lib/approvals";
 import { cn } from "@/lib/utils";
 
 export function useCanManage() {
@@ -19,7 +19,8 @@ export function useCanManage() {
 export function approve(ids: string[], onChanged: () => void) {
   if (ids.length === 0) return;
   const undo = scheduleApproval(ids, (failed) => {
-    if (failed.length) toast.error(failed.length === ids.length ? `Não foi possível aprovar: ${friendlyError(failed[0]!.error)}` : `${failed.length} de ${ids.length} não foram aprovadas: ${friendlyError(failed[0]!.error)}`);
+    const first = failed[0];
+    if (first) toast.error(failed.length === ids.length ? `Não foi possível aprovar: ${friendlyError(first.error)}` : `${failed.length} de ${ids.length} não foram aprovadas: ${friendlyError(first.error)}`);
     onChanged();
   });
   toast.success(ids.length === 1 ? "Reserva aprovada — cliente avisado por WhatsApp" : `${ids.length} reservas aprovadas — clientes avisados por WhatsApp`, {
@@ -52,38 +53,41 @@ export function PendingActions({ id, isLargeGroup, onChanged, className, size = 
   );
 }
 
-export function RejectSheet({ ids, onClose, onDone }: { ids: string[]; onClose: () => void; onDone: () => void }) {
+export function RejectSheet({ ids, onClose, onDone, refused = true }: { ids: string[]; onClose: () => void; onDone: () => void; refused?: boolean }) {
   const [extra, setExtra] = useState("");
-  const [busy, setBusy] = useState<string | null>(null);
-  async function reject(reason: string) {
-    setBusy(reason);
+  const [reason, setReason] = useState("");
+  const [busy, setBusy] = useState(false);
+  async function reject() {
+    if (!validReason(reason, extra)) return;
+    setBusy(true);
     try {
       const sb = requireSupabase();
       for (const id of ids) {
-        const { error } = await sb.rpc("set_reservation_status", { _reservation_id: id, _status: "cancelada", _note: rejectNote(reason, extra) });
+        const { error } = await sb.rpc("set_reservation_status", { _reservation_id: id, _status: "cancelada", _note: cancellationNote(reason, extra, refused) });
         if (error) throw error;
       }
-      toast.success(ids.length === 1 ? "Reserva recusada — cliente avisado por WhatsApp" : "Reservas recusadas — clientes avisados por WhatsApp");
-      setExtra(""); onClose(); onDone();
+      toast.success(refused ? "Reserva recusada" : "Reserva cancelada");
+      setExtra(""); setReason(""); onClose(); onDone();
     } catch (e) { toast.error(friendlyError(e)); }
-    finally { setBusy(null); }
+    finally { setBusy(false); }
   }
   return (
-    <Sheet open={ids.length > 0} onOpenChange={(o) => !o && onClose()}>
+    <Sheet open={ids.length > 0} onOpenChange={(o) => { if (!o && !busy) { setReason(""); setExtra(""); onClose(); } }}>
       <SheetContent side="bottom" className="mx-auto max-w-lg rounded-t-3xl px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-5" onClick={(e) => e.stopPropagation()}>
         <SheetHeader className="text-left">
-          <SheetTitle>Recusar reserva</SheetTitle>
-          <SheetDescription>Toque no motivo. O cliente será avisado por WhatsApp.</SheetDescription>
+          <SheetTitle>{refused ? "Recusar reserva" : "Cancelar reserva"}</SheetTitle>
+          <SheetDescription>O cliente será avisado por WhatsApp com este motivo.</SheetDescription>
         </SheetHeader>
-        <label className="mt-4 block text-sm font-medium" htmlFor="reject-extra">Detalhe (opcional)</label>
+        <label className="mt-4 block text-sm font-medium" htmlFor="reject-extra">{reason === "Outro" ? "Detalhe (obrigatório)" : "Detalhe (opcional)"}</label>
         <Textarea id="reject-extra" value={extra} onChange={(e) => setExtra(e.target.value)} maxLength={300} rows={2} className="mt-1 rounded-xl" placeholder="Ex.: sugerimos 21h" />
         <div className="mt-4 grid grid-cols-2 gap-2">
           {REJECT_REASONS.map((r) => (
-            <Button key={r} variant="outline" className="h-12 whitespace-normal rounded-2xl text-sm" disabled={!!busy} onClick={() => reject(r)}>
-              {busy === r ? <Loader2 className="h-4 w-4 animate-spin" /> : r}
+            <Button key={r} variant={reason === r ? "secondary" : "outline"} aria-pressed={reason === r} className={cn("h-12 whitespace-normal rounded-2xl text-sm", reason === r && "ring-2 ring-brand")} disabled={busy} onClick={() => setReason(r)}>
+              {r}
             </Button>
           ))}
         </div>
+        <Button variant="destructive" className="mt-4 h-12 w-full" disabled={busy || !validReason(reason, extra)} onClick={reject}>{busy ? <Loader2 className="animate-spin" /> : refused ? "Recusar" : "Cancelar reserva"}</Button>
       </SheetContent>
     </Sheet>
   );

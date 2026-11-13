@@ -1,4 +1,4 @@
--- 015 — Alertas no painel (sino) e por e-mail
+-- 016 — Alertas no painel (sino) e por e-mail
 -- Quando acontece algo que a equipe precisa ver (reserva nova, grupo grande, cancelamento do cliente, SAC, lead do
 -- WhatsApp, mensagem que não saiu), o banco grava um alerta e, se o e-mail estiver ligado, enfileira um e-mail por
 -- pessoa que deve receber. Quem envia é o servidor do app (Resend), chamado pelo n8n a cada minuto.

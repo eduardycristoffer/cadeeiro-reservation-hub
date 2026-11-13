@@ -4,7 +4,15 @@ import { toIsoDate } from "@/lib/format";
 
 export const UNDO_MS = 8000;
 
-export const REJECT_REASONS = ["Sem mesa disponível", "Horário indisponível", "Pediu cancelamento", "Outro"] as const;
+export const REJECT_REASONS = ["Sem mesa disponível", "Horário indisponível", "Cliente pediu cancelamento", "Cliente não respondeu", "Duplicada", "Outro"] as const;
+
+export function validReason(reason: string, extra: string): boolean {
+  return (REJECT_REASONS as readonly string[]).includes(reason) && (reason !== "Outro" || extra.trim().length > 0);
+}
+export function cancellationNote(reason: string, extra = "", refused = false): string {
+  if (!validReason(reason, extra)) throw new Error("Escolha o motivo e detalhe Outro.");
+  return `${refused ? "Recusada" : "Cancelada"}: ${reason}${extra.trim() ? ` — ${extra.trim()}` : ""}`;
+}
 
 /** Nota gravada no histórico ao recusar (o RPC exige um motivo não vazio). */
 export function rejectNote(reason: string, extra?: string): string {

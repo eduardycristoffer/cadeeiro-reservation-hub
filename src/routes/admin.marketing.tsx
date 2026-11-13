@@ -8,17 +8,16 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { EmptyState, ErrorState, ListSkeleton, NativeSelect } from "@/components/admin/bits";
 import { useAuth } from "@/lib/auth";
-import { formatPhoneE164 } from "@/lib/reservations";
 import { isValidPixelId } from "@/lib/pixel";
 import { friendlyError, requireSupabase } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/admin/marketing")({
-  head: () => ({ meta: [{ title: "Marketing — Candeeiro Gestão" }, { name: "description", content: "Pixels da Meta e WhatsApp do site." }, { property: "og:title", content: "Marketing — Candeeiro Gestão" }, { property: "og:description", content: "Pixels e WhatsApp do site." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({ meta: [{ title: "Marketing — Candeeiro Gestão" }, { name: "description", content: "Pixels da Meta e ticket médio." }, { property: "og:title", content: "Marketing — Candeeiro Gestão" }, { property: "og:description", content: "Pixels e ticket médio." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }, { name: "robots", content: "noindex" }] }),
   component: Marketing,
 });
 
-type Tab = "pixels" | "whatsapp";
+type Tab = "pixels" | "ticket";
 
 function Marketing() {
   const { roles } = useAuth();
@@ -28,14 +27,14 @@ function Marketing() {
   return (
     <div className="fade-up">
       <h1 className="text-2xl font-semibold sm:text-4xl">Marketing</h1>
-      <p className="mt-1 text-sm text-muted-foreground">Pixels da Meta e o WhatsApp que o botão do site abre.</p>
+      <p className="mt-1 text-sm text-muted-foreground">Pixels da Meta e o ticket médio usado nos relatórios de anúncios.</p>
       <div className="mt-5 inline-flex gap-1 rounded-full bg-surface p-1" role="tablist">
-        {([["pixels", "Pixels da Meta"], ["whatsapp", "WhatsApp do site"]] as const).map(([k, label]) => (
+        {([["pixels", "Pixels da Meta"], ["ticket", "Ticket médio"]] as const).map(([k, label]) => (
           <button key={k} role="tab" aria-selected={tab === k} onClick={() => setTab(k)}
             className={cn("min-h-10 rounded-full px-4 text-sm transition", tab === k ? "bg-card font-medium shadow-soft" : "text-muted-foreground")}>{label}</button>
         ))}
       </div>
-      <div className="mt-5">{tab === "pixels" ? <Pixels /> : <SiteWhatsApp />}</div>
+      <div className="mt-5">{tab === "pixels" ? <Pixels /> : <TicketMedio />}</div>
     </div>
   );
 }
@@ -124,57 +123,42 @@ function Pixels() {
   );
 }
 
-function SiteWhatsApp() {
+function TicketMedio() {
   const [loaded, setLoaded] = useState(false);
   const [err, setErr] = useState<string | null>(null);
-  const [go, setGo] = useState("");
-  const [an, setAn] = useState("");
-  const [msg, setMsg] = useState("Olá! Meu nome é {{nome}}. Quero fazer uma reserva no Candeeiro {{unidade}}.");
   const [ticket, setTicket] = useState("");
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    requireSupabase().from("site_settings").select("*").maybeSingle().then(({ data, error }) => {
+    requireSupabase().from("site_settings").select("quilo_avg_ticket").maybeSingle().then(({ data, error }) => {
       if (error) { setErr(friendlyError(error)); return; }
-      if (data) {
-        setGo(data.whatsapp_goiania ? formatPhoneE164(data.whatsapp_goiania) : "");
-        setAn(data.whatsapp_anapolis ? formatPhoneE164(data.whatsapp_anapolis) : "");
-        setMsg(data.wa_message);
-        setTicket(data.quilo_avg_ticket != null ? String(data.quilo_avg_ticket).replace(".", ",") : "");
-      }
+      if (data?.quilo_avg_ticket != null) setTicket(String(data.quilo_avg_ticket).replace(".", ","));
       setLoaded(true);
     });
   }, []);
 
+  const invalid = ticket.trim() !== "" && !Number.isFinite(Number(ticket.replace(",", ".")));
+
   async function save(e: React.FormEvent) {
     e.preventDefault();
     setSaving(true);
-    const { error } = await requireSupabase().rpc("site_settings_save", { _whatsapp_goiania: go, _whatsapp_anapolis: an, _wa_message: msg, _quilo_avg_ticket: ticket.trim() ? Number(ticket.replace(",", ".")) : null });
+    const { error } = await requireSupabase().rpc("site_settings_save", { _quilo_avg_ticket: ticket.trim() ? Number(ticket.replace(",", ".")) : null } as never);
     setSaving(false);
     if (error) { toast.error(friendlyError(error)); return; }
-    toast.success("WhatsApp do site salvo");
+    toast.success("Ticket médio salvo");
   }
 
   if (err) return <ErrorState message={err} />;
   if (!loaded) return <ListSkeleton rows={2} />;
   return (
     <form onSubmit={save} className="space-y-4 rounded-3xl bg-card p-5 shadow-soft">
-      <p className="text-sm text-muted-foreground">O botão flutuante pergunta a cidade e abre o WhatsApp certo com a mensagem abaixo já preenchida. Cidade sem número fica de fora do botão.</p>
-      <div className="grid gap-3 sm:grid-cols-2">
-        <div><Label htmlFor="wa-go">WhatsApp de Goiânia</Label><Input id="wa-go" value={go} inputMode="tel" onChange={(e) => setGo(e.target.value)} placeholder="(62) 90000-0000" className="mt-1.5 h-12 rounded-xl tabular-nums" /></div>
-        <div><Label htmlFor="wa-an">WhatsApp de Anápolis</Label><Input id="wa-an" value={an} inputMode="tel" onChange={(e) => setAn(e.target.value)} placeholder="(62) 90000-0000" className="mt-1.5 h-12 rounded-xl tabular-nums" /></div>
-      </div>
-      <div>
-        <Label htmlFor="wa-msg">Mensagem inicial</Label>
-        <Input id="wa-msg" value={msg} maxLength={300} onChange={(e) => setMsg(e.target.value)} className="mt-1.5 h-12 rounded-xl" />
-        <p className="mt-1 text-xs text-muted-foreground">Use {"{{nome}}"} e {"{{unidade}}"} para encaixar o nome da pessoa e a unidade.</p>
-      </div>
       <div>
         <Label htmlFor="wa-ticket">Ticket médio por pessoa no almoço por quilo (R$)</Label>
         <Input id="wa-ticket" value={ticket} inputMode="decimal" onChange={(e) => setTicket(e.target.value.replace(/[^\d,.]/g, "").slice(0, 7))} placeholder="Ex.: 45,00" className="mt-1.5 h-12 max-w-48 rounded-xl tabular-nums" />
         <p className="mt-1 text-xs text-muted-foreground">O quilo é vendido por peso, então o relatório de anúncios usa este valor para estimar o faturamento. Rodízios usam a tabela de Valores.</p>
       </div>
-      <Button type="submit" disabled={saving || (ticket.trim() !== "" && !Number.isFinite(Number(ticket.replace(",", "."))))} className="h-11 rounded-xl">{saving ? <Loader2 className="size-4 animate-spin" /> : "Salvar"}</Button>
+      <p className="text-xs text-muted-foreground">O WhatsApp de cada cidade (Goiânia e Anápolis) é editado em Integrações → WhatsApp.</p>
+      <Button type="submit" disabled={saving || invalid} className="h-11 rounded-xl">{saving ? <Loader2 className="size-4 animate-spin" /> : "Salvar"}</Button>
     </form>
   );
 }

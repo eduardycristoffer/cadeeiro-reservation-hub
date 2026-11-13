@@ -27,10 +27,10 @@ insert into reservations(protocol,organization_id,unit_id,customer_id,reservatio
  ('C5',:'org','00000000-0000-0000-0000-0000000000a1','00000000-0000-0000-0000-0000000000e5',current_date-120,'12:00',2,'telefone','concluida','rodizio_pizza'),
  ('C5F',:'org','00000000-0000-0000-0000-0000000000a1','00000000-0000-0000-0000-0000000000e5',current_date+3,'12:00',2,'telefone','confirmada','rodizio_pizza'),
  ('C6',:'org','00000000-0000-0000-0000-0000000000a2','00000000-0000-0000-0000-0000000000e6',current_date-80,'12:00',2,'telefone','concluida','rodizio_carnes');
-insert into whatsapp_leads(organization_id,customer_id,unit_id,city,full_name,phone_e164,status,created_at) values
- (:'org','00000000-0000-0000-0000-0000000000e7','00000000-0000-0000-0000-0000000000a1','goiania','Gabi Luz','5562990000007','novo',now()-interval '30 hours'),
- (:'org','00000000-0000-0000-0000-0000000000e8','00000000-0000-0000-0000-0000000000a1','goiania','Hugo Sá','5562990000008','novo',now()-interval '1 hour'),
- (:'org','00000000-0000-0000-0000-0000000000e9','00000000-0000-0000-0000-0000000000a1','goiania','Iara Paz','5562990000009','novo',now()-interval '30 hours');
+insert into whatsapp_leads(organization_id,customer_id,unit_id,city,full_name,phone_e164,status,created_at,page_path) values
+ (:'org','00000000-0000-0000-0000-0000000000e7','00000000-0000-0000-0000-0000000000a1','goiania','Gabi Luz','5562990000007','novo',now()-interval '30 hours','/'),
+ (:'org','00000000-0000-0000-0000-0000000000e8','00000000-0000-0000-0000-0000000000a1','goiania','Hugo Sá','5562990000008','novo',now()-interval '1 hour','/'),
+ (:'org','00000000-0000-0000-0000-0000000000e9','00000000-0000-0000-0000-0000000000a1','goiania','Iara Paz','5562990000009','novo',now()-interval '30 hours','/');
 insert into reservations(protocol,organization_id,unit_id,customer_id,reservation_date,reservation_time,party_size,origin,status,service) values
  ('C9',:'org','00000000-0000-0000-0000-0000000000a1','00000000-0000-0000-0000-0000000000e9',current_date+5,'12:00',2,'telefone','pendente','rodizio_pizza');
 -- ate aqui nenhuma regra do CRM foi usada: janela larga para o teste nao depender do relogio

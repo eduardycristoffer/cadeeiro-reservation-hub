@@ -1,4 +1,4 @@
--- Cenários da migração 015 (alertas + e-mail). Cada bloco usa ASSERT: se algo quebrar, o psql para com erro.
+-- Cenários da migração 016 (alertas + e-mail). Cada bloco usa ASSERT: se algo quebrar, o psql para com erro.
 \set ON_ERROR_STOP on
 select id as org from organizations limit 1 \gset
 begin;
@@ -101,8 +101,8 @@ do $$ declare mails text[]; begin
 end $$;
 
 -- T7: lead do WhatsApp -> sino sim, e-mail não (padrão desligado)
-insert into whatsapp_leads(id,organization_id,customer_id,unit_id,city,full_name,phone_e164,source,campaign) values
- ('00000000-0000-0000-0000-0000000000f1',:'org','00000000-0000-0000-0000-0000000000e1','00000000-0000-0000-0000-0000000000a1','goiania','Maria Souza','5562990000001','campanha','black-friday');
+insert into whatsapp_leads(id,organization_id,customer_id,unit_id,city,full_name,phone_e164,page_path,campaign) values
+ ('00000000-0000-0000-0000-0000000000f1',:'org','00000000-0000-0000-0000-0000000000e1','00000000-0000-0000-0000-0000000000a1','goiania','Maria Souza','5562990000001','/','black-friday');
 do $$ declare n record; begin
   select * into n from notifications where entity_id='00000000-0000-0000-0000-0000000000f1';
   assert n.kind='lead_whatsapp' and n.body like 'Maria · Goi% · black-friday', 'T7 corpo: '||coalesce(n.body,'(nulo)');
