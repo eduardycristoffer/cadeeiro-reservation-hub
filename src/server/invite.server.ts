@@ -1,4 +1,4 @@
-// Gera o link de primeiro acesso (sem mandar e-mail do Supabase) e envia pelo Resend quando configurado.
+// Gera o link de primeiro acesso (sem mandar e-mail do Supabase) e envia pelo e-mail da Rede Candeeiro quando disponível.
 import { buildInviteLink } from "@/lib/invite-link";
 import { renderInviteEmail } from "@/lib/email";
 import { emailConfig, sendEmail } from "./email.server";

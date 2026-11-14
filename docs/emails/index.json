@@ -3,7 +3,7 @@
     "id": "convite",
     "group": "acesso",
     "name": "Convite para a equipe",
-    "when": "Quando um gestor convida uma pessoa.",
+    "when": "Quando um admin convida uma pessoa.",
     "subject": "Seu acesso ao painel Rede Candeeiro"
   },
   {
@@ -52,7 +52,7 @@
     "id": "grupo-grande",
     "group": "alerta",
     "name": "Grupo grande",
-    "when": "Reserva de grupo grande — só gestores recebem.",
+    "when": "Reserva de grupo grande — só admins recebem.",
     "subject": "Grupo grande aguardando você — {{unidade}}"
   },
   {
@@ -80,7 +80,7 @@
     "id": "falha-envio",
     "group": "alerta",
     "name": "Mensagem que não saiu",
-    "when": "Confirmação ou CRM que falhou — só gestores.",
+    "when": "Confirmação ou CRM que falhou — só admins.",
     "subject": "Mensagem não enviada — {{cliente}}"
   },
   {

@@ -1,7 +1,7 @@
 // Link de primeiro acesso. Em vez de mandar o link direto do Supabase (que é consumido por quem
 // "pré-visualiza" o e-mail, como o Outlook e antivírus), mandamos um link do próprio painel com o
 // token; a pessoa só gasta o token ao abrir a página e o navegador rodar o script.
-export const INVITE_TYPES = ["invite", "magiclink", "recovery", "email"] as const;
+export const INVITE_TYPES = ["invite", "magiclink", "recovery", "email", "signup", "email_change"] as const;
 export type InviteType = (typeof INVITE_TYPES)[number];
 
 const TOKEN_RE = /^[A-Za-z0-9_-]{16,200}$/;
@@ -23,4 +23,19 @@ export function parseInviteParams(search: string): { tokenHash: string; type: In
   const type = p.get("type") ?? "";
   if (!TOKEN_RE.test(tokenHash) || !(INVITE_TYPES as readonly string[]).includes(type)) return null;
   return { tokenHash, type: type as InviteType };
+}
+
+/**
+ * O e-mail de acesso do Supabase traz um link no domínio dele (`.../auth/v1/verify?token=...&type=...`).
+ * Aqui trocamos pelo link do próprio painel, que gasta o token só quando a pessoa abre a página.
+ * Devolve null se o link não tiver o formato esperado.
+ */
+export function ownLinkFromAuthUrl(base: string, authUrl: string | null | undefined): string | null {
+  if (!authUrl) return null;
+  try {
+    const u = new URL(authUrl);
+    const token = u.searchParams.get("token") ?? u.searchParams.get("token_hash") ?? "";
+    const type = u.searchParams.get("type") ?? "";
+    return buildInviteLink(base, token, type, type === "recovery" ? "/redefinir-senha" : "/primeiro-acesso");
+  } catch { return null; }
 }

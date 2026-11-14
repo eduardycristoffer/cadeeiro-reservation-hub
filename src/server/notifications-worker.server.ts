@@ -1,4 +1,4 @@
-// Rodada única de notificações: e-mails (Resend) + popups (Web Push). Um não depende do outro:
+// Rodada única de notificações: e-mails + popups (Web Push). Um não depende do outro:
 // sem provedor de e-mail os popups continuam saindo, e vice-versa.
 import { runEmailWorker, type EmailRun } from "./email-worker.server";
 import { runPushWorker, type PushRun } from "./push.server";
