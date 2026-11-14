@@ -1868,6 +1868,119 @@ export type Database = {
         }
         Relationships: []
       }
+      push_outbox: {
+        Row: {
+          alert_kind: string | null
+          attempts: number
+          body: string | null
+          created_at: string
+          id: string
+          kind: string
+          last_error: string | null
+          link: string | null
+          notification_id: string | null
+          scheduled_for: string
+          sent_at: string | null
+          severity: string
+          status: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          alert_kind?: string | null
+          attempts?: number
+          body?: string | null
+          created_at?: string
+          id?: string
+          kind: string
+          last_error?: string | null
+          link?: string | null
+          notification_id?: string | null
+          scheduled_for?: string
+          sent_at?: string | null
+          severity?: string
+          status?: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          alert_kind?: string | null
+          attempts?: number
+          body?: string | null
+          created_at?: string
+          id?: string
+          kind?: string
+          last_error?: string | null
+          link?: string | null
+          notification_id?: string | null
+          scheduled_for?: string
+          sent_at?: string | null
+          severity?: string
+          status?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "push_outbox_notification_id_fkey"
+            columns: ["notification_id"]
+            isOneToOne: false
+            referencedRelation: "notifications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      push_subscriptions: {
+        Row: {
+          auth: string
+          created_at: string
+          device_label: string | null
+          disabled_at: string | null
+          endpoint: string
+          failures: number
+          id: string
+          last_error: string | null
+          last_seen_at: string
+          last_success_at: string | null
+          p256dh: string
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          auth: string
+          created_at?: string
+          device_label?: string | null
+          disabled_at?: string | null
+          endpoint: string
+          failures?: number
+          id?: string
+          last_error?: string | null
+          last_seen_at?: string
+          last_success_at?: string | null
+          p256dh: string
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          auth?: string
+          created_at?: string
+          device_label?: string | null
+          disabled_at?: string | null
+          endpoint?: string
+          failures?: number
+          id?: string
+          last_error?: string | null
+          last_seen_at?: string
+          last_success_at?: string | null
+          p256dh?: string
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       reservation_blocks: {
         Row: {
           block_date: string
@@ -3088,6 +3201,12 @@ export type Database = {
         }
         Returns: string
       }
+      _push_recipients: {
+        Args: { _kind: string; _org: string; _unit: string }
+        Returns: {
+          user_id: string
+        }[]
+      }
       _rand_hex: { Args: { _len: number }; Returns: string }
       _report_guard: { Args: { _unit: string }; Returns: undefined }
       _sac_can: { Args: { _uid: string; _unit: string }; Returns: boolean }
@@ -3568,6 +3687,32 @@ export type Database = {
         Args: { _campaign?: string; _city?: string }
         Returns: string[]
       }
+      push_device_remove: { Args: { _id: string }; Returns: undefined }
+      push_devices: {
+        Args: never
+        Returns: {
+          created_at: string
+          device_label: string
+          disabled: boolean
+          endpoint_tail: string
+          failures: number
+          id: string
+          last_seen_at: string
+          last_success_at: string
+        }[]
+      }
+      push_subscribe: {
+        Args: {
+          _auth: string
+          _endpoint: string
+          _label?: string
+          _p256dh: string
+          _ua?: string
+        }
+        Returns: string
+      }
+      push_test: { Args: never; Returns: string }
+      push_unsubscribe: { Args: { _endpoint: string }; Returns: undefined }
       report_ads: {
         Args: { _campaign?: string; _from: string; _to: string; _unit?: string }
         Returns: Json
@@ -3856,6 +4001,15 @@ export type Database = {
           _ok: boolean
           _protocol: string
         }
+        Returns: undefined
+      }
+      sdr_push_claim: { Args: { _limit?: number }; Returns: Json }
+      sdr_push_mark: {
+        Args: { _error?: string; _id: string; _retry?: boolean; _sent: number }
+        Returns: undefined
+      }
+      sdr_push_sub_result: {
+        Args: { _error?: string; _gone?: boolean; _ok: boolean; _sub: string }
         Returns: undefined
       }
       sdr_scoped_followups_due: {
