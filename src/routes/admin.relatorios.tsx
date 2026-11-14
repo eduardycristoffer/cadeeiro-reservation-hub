@@ -10,6 +10,7 @@ import { downloadCsv, pctChange, toCsvTable } from "@/lib/csv";
 import { ROLE_LABEL } from "@/lib/audit";
 import { ORIGIN as SAC_ORIGIN, sacStatusLabel, typeLabel } from "@/lib/sac";
 import { useAuth } from "@/lib/auth";
+import { AdsTab } from "@/components/admin/AdsTab";
 import { friendlyError, requireSupabase } from "@/lib/supabase";
 
 export const Route = createFileRoute("/admin/relatorios")({
@@ -21,7 +22,7 @@ type J = Record<string, any>; // eslint-disable-line @typescript-eslint/no-expli
 type KN = { k: string | number; n: number; [x: string]: unknown };
 const TABS = [
   { k: "consolidado", label: "Consolidado" }, { k: "reservas", label: "Reservas" }, { k: "funil", label: "Origem e funil" },
-  { k: "sdr", label: "WhatsApp" }, { k: "sac", label: "SAC" }, { k: "clientes", label: "Clientes" }, { k: "equipe", label: "Equipe" },
+  { k: "sdr", label: "WhatsApp" }, { k: "sac", label: "SAC" }, { k: "clientes", label: "Clientes" }, { k: "equipe", label: "Equipe" }, { k: "anuncios", label: "Anúncios e CAC" },
 ] as const;
 type Tab = (typeof TABS)[number]["k"];
 const PERIODS = { hoje: "Hoje", "7d": "7 dias", "30d": "30 dias", mes: "Este mês", custom: "Personalizado" } as const;
@@ -69,6 +70,7 @@ function Relatorios() {
     if (!allowed) return;
     let cancel = false;
     setData(null); setErr(null);
+    if (tab === "anuncios") return;
     const sb = requireSupabase();
     const base = { _from: from, _to: to, _unit: unit || null };
     const full = { ...base, _service: service || null, _origin: origin || null };
@@ -80,7 +82,7 @@ function Relatorios() {
       sac: () => sb.rpc("report_sac", base),
       clientes: () => sb.rpc("report_customers", full),
       equipe: () => sb.rpc("report_team", base),
-    }[tab];
+    }[tab as Exclude<Tab, "anuncios">];
     call().then(({ data, error }) => {
       if (cancel) return;
       if (error) setErr(friendlyError(error)); else setData(data as J);
@@ -122,7 +124,7 @@ function Relatorios() {
       </div>
       {(tab === "sdr" || tab === "sac" || tab === "equipe") && (service || origin) && <p className="no-print mt-2 text-xs text-muted-foreground">Serviço e origem não se aplicam a esta aba.</p>}
 
-      <div role="tablist" aria-label="Abas do relatório" className="seg-scroll no-print mt-4 grid grid-cols-3 gap-1 rounded-2xl bg-surface p-1 sm:grid-cols-7">
+      <div role="tablist" aria-label="Abas do relatório" className="seg-scroll no-print mt-4 grid grid-cols-3 gap-1 rounded-2xl bg-surface p-1 sm:grid-cols-8">
         {TABS.map((t) => (
           <button key={t.k} role="tab" type="button" aria-selected={tab === t.k} onClick={() => setTab(t.k)}
             className={`min-h-11 rounded-xl px-3 text-xs font-medium sm:px-2 sm:text-sm ${tab === t.k ? "bg-background shadow-soft" : "text-muted-foreground"}`}>{t.label}</button>
@@ -130,7 +132,7 @@ function Relatorios() {
       </div>
 
       <div className="mt-5">
-        {err ? <ErrorState message={err} onRetry={() => setTick((n) => n + 1)} />
+        {tab === "anuncios" ? <AdsTab from={from} to={to} unit={unit} /> : err ? <ErrorState message={err} onRetry={() => setTick((n) => n + 1)} />
           : !data ? <ListSkeleton rows={3} />
           : tab === "consolidado" ? <Summary d={data} />
           : tab === "reservas" ? <Reservas d={data} />
@@ -372,5 +374,6 @@ function buildCsv(tab: Tab, d: J): { h: string[]; rows: unknown[][] } {
     case "sac": return { h: ["indicador", "valor", "resolvidos"], rows: [...kv(d), ...list("tipo", d["by_type"], (k) => typeLabel(String(k))), ...list("unidade", d["by_unit"]), ...list("origem", d["by_origin"]), ...((d["by_assignee"] ?? []) as KN[]).map((r) => [`responsável: ${r.k}`, r.n, r["resolved"]])] };
     case "clientes": return { h: ["lista", "cliente", "telefone", "quantidade", "pessoas/data"], rows: [...kv(d).map(([k, v]) => [k, "", "", v, ""]), ...((d["top_customers"] ?? []) as KN[]).map((r) => ["mais reservas", r.k, r["phone"], r.n, r["p"]]), ...((d["largest_groups"] ?? []) as KN[]).map((r) => ["maiores grupos", r.k, "", r.n, r["date"]]), ...((d["recurrent_cancellations"] ?? []) as KN[]).map((r) => ["cancelamentos", r.k, r["phone"], r.n, ""])] };
     case "equipe": return { h: ["pessoa", "papel", "aprovadas", "recusadas", "canceladas", "criadas", "sac_resolvidos", "acoes_sac", "total"], rows: ((d["people"] ?? []) as J[]).map((p) => [p["k"], p["role"] ? ROLE_LABEL[p["role"]] ?? p["role"] : "", p["approved"], p["refused"], p["cancelled"], p["created"], p["sac_resolved"], p["sac_actions"], p["total"]]) };
+    case "anuncios": return { h: [], rows: [] };
   }
 }

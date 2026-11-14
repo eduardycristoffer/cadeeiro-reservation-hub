@@ -203,3 +203,21 @@ export function paceGap(p: AdsProjection | null): { expected: number; gap: numbe
   const expected = Math.round((p.budget_month / p.days_in_month) * p.days_elapsed * 100) / 100;
   return { expected, gap: Math.round((expected - p.spend_to_date) * 100) / 100 };
 }
+
+// ---------------------------------------------------------------- lançamento por dia ou por mês (tela de Relatórios)
+
+/** Divide o total de um mês igualmente pelos dias (em centavos; a sobra vai para os últimos dias). Mês corrente: só até hoje. */
+export function splitMonthSpend(month: string, total: number, today: string): { date: string; amount: number }[] {
+  const [y, m] = month.split("-").map(Number) as [number, number];
+  const days = new Date(y, m, 0).getDate();
+  const cur = today.slice(0, 7) === month;
+  const last = cur ? Math.min(days, Number(today.slice(8, 10))) : days;
+  if (month > today.slice(0, 7) || last < 1 || !(total > 0)) return [];
+  const cents = Math.round(total * 100);
+  const base = Math.floor(cents / last);
+  const extra = cents - base * last;
+  return Array.from({ length: last }, (_, i) => ({
+    date: `${month}-${String(i + 1).padStart(2, "0")}`,
+    amount: (base + (i >= last - extra ? 1 : 0)) / 100,
+  }));
+}

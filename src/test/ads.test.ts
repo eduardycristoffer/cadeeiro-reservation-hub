@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { brl, budgetStatus, campaignUrl, isValidSlug, normalizeDate, normalizeMoney, paceGap, parseAdsReport, parseSpendCsv, pct, periodRange, slugify } from "@/lib/ads";
+import { splitMonthSpend, brl, budgetStatus, campaignUrl, isValidSlug, normalizeDate, normalizeMoney, paceGap, parseAdsReport, parseSpendCsv, pct, periodRange, slugify } from "@/lib/ads";
 
 describe("formatação", () => {
   it("reais e porcentagem em pt-BR; vazio vira traço", () => {
@@ -118,5 +118,26 @@ describe("período e ritmo", () => {
     expect(paceGap({ ...base, spend_to_date: 1500 })?.gap).toBe(-380);
     expect(paceGap({ ...base, budget_month: 0 })).toBeNull();
     expect(paceGap(null)).toBeNull();
+  });
+});
+
+describe("splitMonthSpend (gasto do mês dividido por dia)", () => {
+  it("mês fechado: soma exata, sobra de centavos nos últimos dias", () => {
+    const rows = splitMonthSpend("2026-09", 1000, "2026-11-13");
+    expect(rows).toHaveLength(30);
+    expect(rows[0]!.date).toBe("2026-09-01");
+    expect(rows.reduce((a, r) => a + Math.round(r.amount * 100), 0)).toBe(100000);
+    expect(rows[0]!.amount).toBe(33.33);
+    expect(rows[29]!.amount).toBe(33.34);
+  });
+  it("mês corrente: só até hoje", () => {
+    const rows = splitMonthSpend("2026-11", 130, "2026-11-13");
+    expect(rows).toHaveLength(13);
+    expect(rows.every((r) => r.amount === 10)).toBe(true);
+    expect(rows.at(-1)!.date).toBe("2026-11-13");
+  });
+  it("mês futuro ou valor zero: nada", () => {
+    expect(splitMonthSpend("2026-12", 100, "2026-11-13")).toEqual([]);
+    expect(splitMonthSpend("2026-10", 0, "2026-11-13")).toEqual([]);
   });
 });

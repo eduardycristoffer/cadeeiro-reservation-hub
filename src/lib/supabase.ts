@@ -65,7 +65,7 @@ const ERRORS: Record<string, string> = {
   INVALID_AUDIENCE: "Escolha para quem enviar.",
   EMPTY_AUDIENCE: "Ninguém se encaixa nesse público agora (ou já recebeu mensagem recentemente).",
   TOO_MANY: "Esse público passa de 500 pessoas. Escolha uma unidade ou reduza o filtro.",
-  UNIT_REQUIRED: "Escolha a unidade: cada unidade tem a sua página de avaliação no Google.",
+  UNIT_REQUIRED: "Escolha a unidade antes de continuar.",
   INVALID_REVIEW_URL: "O link de avaliação precisa ser do Google (g.page, search.google.com, maps.app.goo.gl ou share.google) e começar com https://",
   INVALID_DAYS: "Escolha entre 1 e 90 dias.",
   MISSING_REVIEW_LINK: "A mensagem precisa ter o {{link_avaliacao}}, senão o cliente não recebe o link.",

@@ -473,3 +473,73 @@ language sql stable security invoker set search_path = public as $$
 $$;
 revoke all on function public.notifications_unread_count() from public, anon;
 grant execute on function public.notifications_unread_count() to authenticated;
+
+-- Gasto em anúncios sem unidade ("toda a rede") só o super admin lança; gestor lança na própria unidade.
+create or replace function public.ad_spend_save(_date date, _platform text, _campaign text, _unit uuid, _amount numeric,
+  _impressions integer default null, _clicks integer default null, _leads integer default null, _notes text default null)
+returns uuid language plpgsql security definer set search_path = public as $$
+declare v_org uuid := public._ad_scope_org(); v_id uuid; v_camp text := coalesce(lower(btrim(_campaign)), '');
+begin
+  if not public._is_manager(auth.uid()) then raise exception 'FORBIDDEN'; end if;
+  if _unit is not null and not public.can_manage_unit(auth.uid(), _unit) then raise exception 'FORBIDDEN'; end if;
+  if _unit is null and not public.has_role(auth.uid(), 'super_admin') then raise exception 'UNIT_REQUIRED'; end if;
+  if _date is null or _date > current_date + 1 or _date < current_date - 800 then raise exception 'INVALID_DATE'; end if;
+  if _amount is null or _amount < 0 then raise exception 'INVALID_AMOUNT'; end if;
+  if v_camp <> '' and v_camp !~ '^[a-z0-9_-]{1,60}$' then raise exception 'INVALID_CAMPAIGN'; end if;
+  insert into public.ad_spend as a (organization_id, spend_date, platform, campaign, unit_id, amount, impressions, clicks, leads_reported, notes, created_by)
+  values (v_org, _date, coalesce(_platform,'meta'), v_camp, _unit, _amount, _impressions, _clicks, _leads, nullif(btrim(coalesce(_notes,'')),''), auth.uid())
+  on conflict (organization_id, spend_date, platform, campaign, (coalesce(unit_id, '00000000-0000-0000-0000-000000000000'::uuid)))
+  do update set amount = excluded.amount, impressions = excluded.impressions, clicks = excluded.clicks,
+                leads_reported = excluded.leads_reported, notes = excluded.notes
+  returning a.id into v_id;
+  perform public.write_audit('painel', 'anuncio.gasto_salvo', 'ad_spend', v_id, _unit, null,
+    jsonb_build_object('data', _date, 'plataforma', coalesce(_platform,'meta'), 'campanha', v_camp, 'valor', _amount), null);
+  return v_id;
+end $$;
+revoke all on function public.ad_spend_save(date,text,text,uuid,numeric,integer,integer,integer,text) from public, anon;
+grant execute on function public.ad_spend_save(date,text,text,uuid,numeric,integer,integer,integer,text) to authenticated;
+
+create or replace function public.ad_spend_import(_rows jsonb)
+returns jsonb language plpgsql security definer set search_path = public as $$
+declare
+  v_org uuid := public._ad_scope_org(); r jsonb; i int := 0; ok int := 0; errs jsonb := '[]'::jsonb;
+  v_date date; v_unit uuid; v_amount numeric; v_camp text; v_plat text; v_slug text;
+begin
+  if not public._is_manager(auth.uid()) then raise exception 'FORBIDDEN'; end if;
+  if jsonb_typeof(_rows) <> 'array' or jsonb_array_length(_rows) = 0 then raise exception 'EMPTY_IMPORT'; end if;
+  if jsonb_array_length(_rows) > 500 then raise exception 'IMPORT_TOO_LARGE'; end if;
+  for r in select * from jsonb_array_elements(_rows) loop
+    i := i + 1;
+    begin
+      v_date := (r->>'data')::date;
+      v_amount := replace(coalesce(r->>'valor','x'), ',', '.')::numeric;
+      v_camp := coalesce(lower(btrim(r->>'campanha')), '');
+      v_plat := coalesce(nullif(lower(btrim(r->>'plataforma')), ''), 'meta');
+      v_slug := nullif(lower(btrim(coalesce(r->>'unidade',''))), '');
+      v_unit := null;
+      if v_slug is null and not public.has_role(auth.uid(), 'super_admin') then raise exception 'unidade obrigatória'; end if;
+      if v_slug is not null then
+        select id into v_unit from public.units where organization_id = v_org and slug = v_slug;
+        if v_unit is null then raise exception 'unidade desconhecida: %', v_slug; end if;
+      end if;
+      if v_unit is not null and not public.can_manage_unit(auth.uid(), v_unit) then raise exception 'sem acesso à unidade'; end if;
+      if v_date > current_date + 1 or v_date < current_date - 800 then raise exception 'data fora do intervalo'; end if;
+      if v_plat not in ('meta','google','tiktok','outro') then raise exception 'plataforma inválida: %', v_plat; end if;
+      if v_camp <> '' and v_camp !~ '^[a-z0-9_-]{1,60}$' then raise exception 'campanha inválida'; end if;
+      insert into public.ad_spend as a (organization_id, spend_date, platform, campaign, unit_id, amount, impressions, clicks, leads_reported, created_by)
+      values (v_org, v_date, v_plat, v_camp, v_unit, v_amount,
+              nullif(r->>'impressoes','')::int, nullif(r->>'cliques','')::int, nullif(r->>'leads','')::int, auth.uid())
+      on conflict (organization_id, spend_date, platform, campaign, (coalesce(unit_id, '00000000-0000-0000-0000-000000000000'::uuid)))
+      do update set amount = excluded.amount, impressions = excluded.impressions, clicks = excluded.clicks, leads_reported = excluded.leads_reported;
+      ok := ok + 1;
+    exception when others then
+      errs := errs || jsonb_build_array(jsonb_build_object('linha', i, 'erro', left(sqlerrm, 120)));
+    end;
+  end loop;
+  perform public.write_audit('painel', 'anuncio.importacao', 'ad_spend', null, null, null,
+    jsonb_build_object('linhas', i, 'importadas', ok, 'com_erro', i - ok), null);
+  return jsonb_build_object('importadas', ok, 'com_erro', i - ok, 'erros', errs);
+end $$;
+revoke all on function public.ad_spend_import(jsonb) from public, anon;
+grant execute on function public.ad_spend_import(jsonb) to authenticated;
+

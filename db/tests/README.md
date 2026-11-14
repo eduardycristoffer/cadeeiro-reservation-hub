@@ -1,6 +1,6 @@
 # Testes de banco (Postgres local descartável)
 
-Cenários SQL que provam as regras das migrações 013–018 (por cima da 012 do Lovable) (permissões, isolamento por unidade,
+Cenários SQL que provam as regras das migrações 013–019 (por cima da 012 do Lovable) (permissões, isolamento por unidade,
 fila de envios, limites, opt-out). **Não rodam em produção** — usam um Postgres temporário com
 `stubs.sql` simulando `auth`, `net` (pg_net) e os papéis do Supabase.
 

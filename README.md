@@ -87,6 +87,7 @@ As migrations 010 e 011 entregam equipe/histórico e SAC/relatórios. A 012 acre
 | `016_alertas_notificacoes_email` | Alertas no sistema e por e-mail (Resend), sino de notificações |
 | `017_webhooks_wifi` | Ambiente de webhooks e entrada de dados do Wi‑Fi (cliente conectou → dados do sistema de terceiros) |
 | `018_crm_avaliacao_google` | Campanha de pedido de avaliação no Google: link definido na criação (só domínios do Google), público de visitas recentes por unidade, sem repetir em 90 dias, sem SAC aberto, envio espaçado pela fila do CRM |
+| `019_multiloja_clientes_perfil` | Várias lojas (super admin troca de loja; gestor vê só a sua), base de clientes com ficha/histórico, importar/exportar contatos, redefinir senha, perfil e preferências de alerta, log de quem fez o quê e gasto em anúncios (CAC) por unidade |
 
 O fluxo n8n "CRM envios" (`n8n/crm-envios.workflow.ts`) entrega a fila do CRM (follow-up, reaver, remarketing e pedido de avaliação no Google) pelo WhatsApp da unidade; ele nasce despublicado e desligado (`crm_envios_ativo = nao`). Detalhes em `docs/ATENDENTE_WHATSAPP.md`.
 
@@ -112,7 +113,7 @@ Segredos usados pelo envio de e-mail: `RESEND_API_KEY`, `EMAIL_FROM` e, opcional
 
 - Acesso à equipe já é por convite, sem cadastro aberto.
 - Números de WhatsApp das duas cidades começam vazios. O super admin deve configurar os números reais em Integrações → WhatsApp por cidade. Sem número, o contato é capturado e a página informa recebimento, sem redirecionar nem simular mensagem.
-- Pixel da Meta, alertas e e-mail estão implementados na branch (migrations 013–018) e dependem de aplicar essas migrations e de configurar os IDs de pixel e o remetente do Resend.
+- Pixel da Meta, alertas e e-mail estão implementados na branch (migrations 013–019) e dependem de aplicar essas migrations e de configurar os IDs de pixel e o remetente do Resend.
 - Captura → redirecionamento real, alteração de status do lead e cancelamento de reserva real não foram executados com dados reais nesta revisão; nenhum contato fictício foi criado.
 - Lint global aponta formatação preexistente; testes e compilação automáticos são registrados no roadmap.
 - Instância do Tryade CRM ainda não criada; sem credenciais o worker responde "CRM não configurado" e não simula envio.

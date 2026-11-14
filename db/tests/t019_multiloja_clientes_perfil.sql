@@ -88,6 +88,10 @@ select pg_temp.ok((select email from public.customers where phone_e164='55629911
 select public.customer_save('00000000-0000-0000-0000-0000000002e1','Ana Souza','62991110001','ana@x.com','cliente fiel','00000000-0000-0000-0000-0000000000a1', false);
 select pg_temp.ok((select whatsapp_opt_out_at is not null from public.customers where id='00000000-0000-0000-0000-0000000002e1'), 'desmarcar aceite grava a data de saída');
 select public.customers_export_log(2,'00000000-0000-0000-0000-0000000000a1');
+select pg_temp.ok(pg_temp.fails($q$select public.ad_spend_save(current_date,'meta','x',null,10)$q$, '%UNIT_REQUIRED%'), 'gestor não lança gasto "toda a rede"');
+select pg_temp.ok(pg_temp.fails($q$select public.ad_spend_save(current_date,'meta','x','00000000-0000-0000-0000-0000000000a2',10)$q$, '%FORBIDDEN%'), 'gestor não lança gasto em unidade de outro');
+select pg_temp.ok(public.ad_spend_save(current_date,'meta','x','00000000-0000-0000-0000-0000000000a1',10) is not null, 'gestor lança gasto na própria unidade');
+select pg_temp.ok((public.ad_spend_import('[{"data":"2026-11-01","valor":"5","unidade":"a1"},{"data":"2026-11-02","valor":"5"}]'::jsonb)->>'com_erro')::int = 1, 'importação: linha sem unidade recusada para gestor');
 reset role;
 select pg_temp.ok(exists (select 1 from public.customer_consents k join public.customers c on c.id = k.customer_id where c.phone_e164='5562991110007' and k.granted), 'aceite de WhatsApp grava consentimento');
 
@@ -122,6 +126,7 @@ select pg_temp.ok((select count(*) from public.customers_directory(null,null,100
 select pg_temp.ok(public.platform_create_organization('Loja C Teste') is not null, 'super admin cria loja');
 select pg_temp.ok(pg_temp.fails($q$select public.platform_create_organization('Loja C Teste')$q$, '%SLUG_EXISTS%'), 'slug repetido recusado');
 select pg_temp.ok(pg_temp.fails($q$select public.platform_create_organization('x')$q$, '%INVALID_NAME%'), 'nome curto recusado');
+select pg_temp.ok(public.ad_spend_save(current_date,'meta','rede',null,20) is not null, 'super admin lança gasto da rede toda');
 reset role;
 
 -- quem não é super admin não é afetado por um registro de loja ativa

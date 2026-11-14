@@ -97,7 +97,7 @@ de IA foram sincronizados com o que está no ar; ao mudar um nó no n8n, copie o
 
 ### Fluxo "CRM envios": como liberar
 
-1. Aplique as migrations 013–018, mescle o PR e publique o app (a fila `/crm/sends/*` só existe depois disso).
+1. Aplique as migrations 013–019, mescle o PR e publique o app (a fila `/crm/sends/*` só existe depois disso).
 2. Confira as caixas (`inbox_envios_goiania`, `inbox_envios_anapolis`) e a janela de envio em Painel > CRM > Resumo
    (padrão 09h–20h, no máximo 80 mensagens por dia; as mensagens que não são transacionais saem com o aviso "responda SAIR").
 3. Com `modo_teste = sim`, só números de `numeros_teste` recebem; os demais voltam para a fila com o motivo e, após 3
