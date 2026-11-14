@@ -34,3 +34,5 @@
 - Staff never writes `sac_tickets`/`sac_ticket_events` directly (grants revoked in 011): panel actions go through `sac_*` RPCs so every change creates a ticket event and an `audit_log` row; SDR keeps using `sdr_create_sac`/`sdr_handoff` unchanged.
 - `audit_log` (010) is append-only (triggers block UPDATE/DELETE/TRUNCATE) and written only via `write_audit`/`zz_audit_log` triggers; reports are SECURITY DEFINER `report_*` RPCs gated by `_report_guard` and per-row `can_access_unit`, so aggregation never ships raw cross-unit rows to the client.
 - Team access is invite-only: sign-up is disabled, `inviteTeamMember` server function checks `admin_check_invite` as the caller before creating the account, and deactivation also bans the auth user.
+
+- Managed authentication emails share a React Email layout and preserve the scaffolded SDK handler and action props; transactional panel emails remain separate to avoid changing panel delivery.
