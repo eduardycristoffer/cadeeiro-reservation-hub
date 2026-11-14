@@ -33,10 +33,6 @@ function Home() {
   return (
     <div className="min-h-dvh bg-background">
       <div className="mx-auto flex min-h-dvh w-full max-w-5xl flex-col public-pad px-4 pt-3 sm:px-8">
-        <header className="flex items-center justify-end">
-          <a href="/entrar" className="rounded-full px-3 py-2 text-sm text-muted-foreground hover:text-foreground">Área da equipe</a>
-        </header>
-
         <main className="flex flex-1 flex-col justify-center py-8">
           <div className="fade-up text-center">
             <BrandLogo className="mx-auto h-16 sm:h-24" />
