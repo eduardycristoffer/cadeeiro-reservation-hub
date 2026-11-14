@@ -27,7 +27,7 @@ const errMsg = (e: string) => INVITE_ERRORS[e] ?? e;
 
 /** Link de convite que não saiu por e-mail, para o gestor copiar e mandar. */
 type PendingLink = { email: string; link: string; reason: string | null };
-const reasonText = (reason: string | null) => (!reason || reason === "sem_provedor" ? "O envio de e-mail ainda não está configurado no sistema." : `O e-mail não saiu (${reason}).`);
+const reasonText = (reason: string | null) => (!reason || reason === "sem_provedor" ? "O envio de e-mail está indisponível no momento." : `O e-mail não saiu (${reason}).`);
 
 function Equipe() {
   const { roles, user } = useAuth();

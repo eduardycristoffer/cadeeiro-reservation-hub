@@ -3,10 +3,11 @@ import { z } from "zod";
 
 /** Endereço público do painel: segredo PUBLIC_APP_URL ou o endereço desta requisição. */
 async function appBase(): Promise<string> {
+  const { publicOrigin } = await import("@/lib/site");
   const fixed = process.env["PUBLIC_APP_URL"]?.trim();
-  if (fixed) return new URL(fixed).origin;
+  if (fixed) return publicOrigin(fixed);
   const { getRequest } = await import("@tanstack/react-start/server");
-  return new URL(getRequest().url).origin;
+  return publicOrigin(new URL(getRequest().url).origin);
 }
 
 /**
@@ -15,8 +16,8 @@ async function appBase(): Promise<string> {
  *  - só gera link para conta ativa e com papel no painel;
  *  - no máximo 3 pedidos por conta a cada 15 minutos;
  *  - cada pedido fica no histórico.
- * O link vai pelo Resend, apontando para o próprio painel (leitores de e-mail não gastam o token).
- * Sem Resend configurado, cai no envio padrão do Supabase.
+ * O link vai pelo e-mail da Rede Candeeiro, apontando para o próprio painel (leitores de e-mail não gastam o token).
+ * Sem provedor de e-mail configurado, cai no envio padrão de autenticação (que também sai com o link do painel).
  */
 export const requestPasswordReset = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({ email: z.string().trim().toLowerCase().email().max(254) }).parse(d))

@@ -156,21 +156,6 @@ export function AuthAction({
           {children}
         </Button>
       </Section>
-      <Text
-        style={{
-          margin: "12px 0 0",
-          fontSize: "12px",
-          lineHeight: "1.5",
-          color: colors.muted,
-          wordBreak: "break-all",
-        }}
-      >
-        Se o botão não abrir, copie este endereço no navegador:
-        <br />
-        <Link href={confirmationUrl} style={{ color: colors.muted }}>
-          {confirmationUrl}
-        </Link>
-      </Text>
     </>
   );
 }

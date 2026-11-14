@@ -12,10 +12,11 @@ function code(e: unknown): string {
 
 /** Endereço público do painel para montar o link do convite: segredo PUBLIC_APP_URL ou o endereço desta requisição. */
 async function appBase(): Promise<string> {
+  const { publicOrigin } = await import("@/lib/site");
   const fixed = process.env["PUBLIC_APP_URL"]?.trim();
-  if (fixed) return new URL(fixed).origin;
+  if (fixed) return publicOrigin(fixed);
   const { getRequest } = await import("@tanstack/react-start/server");
-  return new URL(getRequest().url).origin;
+  return publicOrigin(new URL(getRequest().url).origin);
 }
 
 async function inviterName(sb: { from: (t: "user_profiles") => { select: (c: string) => { eq: (c: string, v: string) => { maybeSingle: () => PromiseLike<{ data: { full_name?: string | null } | null }> } } } }, uid: string) {
@@ -24,7 +25,7 @@ async function inviterName(sb: { from: (t: "user_profiles") => { select: (c: str
 }
 
 /**
- * Convida uma pessoa: valida permissão no banco (como quem chama), cria a conta e manda o convite por e-mail (Resend).
+ * Convida uma pessoa: valida permissão no banco (como quem chama), cria a conta e manda o convite por e-mail.
  * Sem provedor de e-mail (ou se o envio falhar) devolve o link para o gestor copiar e mandar pelo WhatsApp.
  */
 export const inviteTeamMember = createServerFn({ method: "POST" })

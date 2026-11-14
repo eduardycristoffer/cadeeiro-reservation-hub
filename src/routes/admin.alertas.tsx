@@ -214,7 +214,7 @@ function Gestor() {
     const { error } = await requireSupabase().rpc("email_test_enqueue" as never);
     setBusy(null);
     if (error) { toast.error(friendlyError(error)); return; }
-    toast.success(status?.configured ? "E-mail de teste na fila. Chega em até 1 minuto." : "Teste na fila, mas o envio ainda não está configurado.");
+    toast.success(status?.configured ? "E-mail de teste na fila. Chega em até 1 minuto." : "Teste na fila, mas o envio de e-mail está indisponível no momento.");
     void load();
   }
   const setKind = (k: AlertKind, v: boolean) => setCfg({ ...cfg, email_kinds: { ...cfg.email_kinds, [k]: v } });
@@ -225,8 +225,8 @@ function Gestor() {
 
       {status && !status.configured && (
         <div role="status" className="rounded-2xl bg-amber-50 p-4 text-sm text-amber-950 dark:bg-amber-950/30 dark:text-amber-100">
-          <p className="font-medium">O envio de e-mail ainda não está configurado.</p>
-          <p className="mt-1">Os alertas aparecem no sino normalmente. Para enviar por e-mail falta cadastrar no servidor: <span className="font-mono">{status.missing.join(", ")}</span>.</p>
+          <p className="font-medium">O envio de e-mail está indisponível no momento.</p>
+          <p className="mt-1">Os alertas continuam aparecendo no sino. Fale com o suporte da Tryade para reativar o envio por e-mail.</p>
         </div>
       )}
       {status?.configured && !status.appUrl && (

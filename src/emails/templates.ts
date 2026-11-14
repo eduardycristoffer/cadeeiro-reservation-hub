@@ -53,8 +53,7 @@ export function render(t: Tpl, logo = LOGO): string {
     ? `<p style="margin:18px 0 8px;text-align:center"><span style="display:inline-block;background:#f5f5f7;border-radius:14px;padding:16px 26px;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:32px;font-weight:700;letter-spacing:.35em;color:${INK}">${t.code}</span></p>`
     : "";
   const btn = t.button
-    ? `<table role="presentation" cellspacing="0" cellpadding="0" style="margin:24px 0 4px"><tr><td style="border-radius:14px;background:${RED}"><a href="${t.button.url}" style="display:inline-block;padding:16px 28px;font-family:${FONT};font-size:16px;font-weight:700;line-height:1;color:#ffffff;text-decoration:none;border-radius:14px">${t.button.label}</a></td></tr></table>
-<p style="margin:12px 0 0;font-size:12px;line-height:1.5;color:${MUTED};word-break:break-all">Se o botão não abrir, copie este endereço no navegador:<br><a href="${t.button.url}" style="color:${MUTED}">${t.button.url}</a></p>`
+    ? `<table role="presentation" cellspacing="0" cellpadding="0" style="margin:24px 0 4px"><tr><td style="border-radius:14px;background:${RED}"><a href="${t.button.url}" style="display:inline-block;padding:16px 28px;font-family:${FONT};font-size:16px;font-weight:700;line-height:1;color:#ffffff;text-decoration:none;border-radius:14px">${t.button.label}</a></td></tr></table>`
     : "";
   const small = t.small ? `<p style="margin:18px 0 0;font-size:14px;line-height:1.55;color:${MUTED}">${t.small}</p>` : "";
   const foot =

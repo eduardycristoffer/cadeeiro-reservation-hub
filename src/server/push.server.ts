@@ -3,6 +3,7 @@
 // então não há nada novo para configurar. Trocar o segredo troca a chave: os aparelhos reativam sozinhos ao abrir o app.
 import { buildPushMessage, deriveVapidKeys, sendWebPush, type VapidKeys } from "@/lib/integration/webpush";
 import { rpc } from "./sdr.server";
+import { SITE_URL, publicOrigin } from "@/lib/site";
 
 function seed(): string | null {
   const v = process.env["PUSH_SEED"]?.trim() || process.env["SUPABASE_SERVICE_ROLE_KEY"]?.trim();
@@ -25,8 +26,8 @@ function subject(origin: string): string {
   const fixed = process.env["PUSH_SUBJECT"]?.trim();
   if (fixed && /^(mailto:[^\s@]+@[^\s@]+|https:\/\/[^\s/]+)/.test(fixed)) return fixed;
   const pub = process.env["PUBLIC_APP_URL"]?.trim();
-  try { if (pub) return new URL(pub).origin; } catch { /* usa a origem da requisição */ }
-  return origin.startsWith("https://") ? new URL(origin).origin : "https://candeeiro.lovable.app";
+  try { if (pub) return publicOrigin(pub); } catch { /* usa a origem da requisição */ }
+  return origin.startsWith("https://") ? publicOrigin(origin) : SITE_URL;
 }
 
 type Sub = { id: string; endpoint: string; p256dh: string; auth: string };
