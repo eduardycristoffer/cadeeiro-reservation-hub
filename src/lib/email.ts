@@ -41,20 +41,25 @@ export type Mail = { subject: string; text: string; html: string };
 
 const FONT = "-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif";
 
+const SITE_URL = "https://candeeiro.tryade.com.br";
+const RED = "#d9201f";
+
+/** Layout da marca (igual aos modelos em docs/emails): faixa vermelha, logo colorida em fundo branco, botão vermelho. */
 function shell(title: string, bodyHtml: string, button: { label: string; url: string } | null): string {
   const btn = button
-    ? `<p style="margin:28px 0 0"><a href="${escapeHtml(button.url)}" style="display:inline-block;background:#1d1d1f;color:#ffffff;text-decoration:none;font-weight:600;font-size:16px;line-height:1;padding:16px 26px;border-radius:14px">${escapeHtml(button.label)}</a></p>`
+    ? `<table role="presentation" cellspacing="0" cellpadding="0" style="margin:24px 0 4px"><tr><td style="border-radius:14px;background:${RED}"><a href="${escapeHtml(button.url)}" style="display:inline-block;padding:16px 28px;font-family:${FONT};font-size:16px;font-weight:700;line-height:1;color:#ffffff;text-decoration:none;border-radius:14px">${escapeHtml(button.label)}</a></td></tr></table>`
     : "";
-  return `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${escapeHtml(title)}</title></head>
-<body style="margin:0;padding:24px 12px;background:#f5f5f7;font-family:${FONT};color:#1d1d1f">
-<table role="presentation" width="100%" cellspacing="0" cellpadding="0"><tr><td align="center">
-<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:520px;background:#ffffff;border-radius:22px">
-<tr><td style="padding:32px 28px">
-<p style="margin:0 0 18px;font-size:13px;letter-spacing:.04em;text-transform:uppercase;color:#6e6e73">${BRAND}</p>
-<h1 style="margin:0 0 12px;font-size:22px;line-height:1.25;font-weight:700">${escapeHtml(title)}</h1>
+  return `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light"><title>${escapeHtml(title)}</title></head>
+<body style="margin:0;padding:0;background:#f5f5f7;font-family:${FONT};color:#1d1d1f">
+<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f5f5f7"><tr><td align="center" style="padding:28px 12px">
+<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:560px;background:#ffffff;border-radius:24px;border-collapse:separate;overflow:hidden">
+<tr><td style="height:6px;background:${RED};font-size:0;line-height:0">&nbsp;</td></tr>
+<tr><td align="center" style="padding:26px 28px 6px"><img src="${SITE_URL}/email-logo.png" width="200" alt="${BRAND}" style="display:block;width:200px;max-width:70%;height:auto;border:0"></td></tr>
+<tr><td style="padding:14px 32px 34px">
+<h1 style="margin:0 0 14px;font-size:24px;line-height:1.25;font-weight:700;color:#1d1d1f">${escapeHtml(title)}</h1>
 ${bodyHtml}${btn}
 </td></tr></table>
-<p style="max-width:520px;margin:16px auto 0;font-size:12px;line-height:1.5;color:#86868b">Você recebe este e-mail por fazer parte da equipe no painel ${BRAND}.</p>
+<p style="max-width:560px;margin:18px auto 0;font-size:12px;line-height:1.6;color:#86868b;text-align:center">Você recebe este e-mail por fazer parte da equipe da ${BRAND}.</p>
 </td></tr></table></body></html>`;
 }
 

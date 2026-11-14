@@ -18,7 +18,7 @@ describe("e-mail: segurança do conteúdo", () => {
   it("assunto em uma linha", () => expect(oneLine("Oi\r\nBcc: x@y.com")).toBe("Oi Bcc: x@y.com"));
   it("alerta com HTML malicioso não injeta tag", () => {
     const m = renderAlertEmail({ subject: "[Candeeiro] <script>x</script>", body: "<img src=x onerror=alert(1)> · Motivo: ok", url: null });
-    expect(m.html).not.toContain("<script>"); expect(m.html).not.toContain("<img"); expect(m.html).toContain("&lt;img");
+    expect(m.html).not.toContain("<script>"); expect(m.html).not.toContain("<img src=x"); expect(m.html).not.toContain("onerror=alert(1)>"); expect(m.html).toContain("&lt;img");
   });
 });
 
