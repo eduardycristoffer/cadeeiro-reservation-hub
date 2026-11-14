@@ -11,11 +11,22 @@ import { resolve } from "node:path";
 const config = defineConfig({
   vite: {
     resolve: {
-      alias: {
-        "entities/lib/decode.js": resolve(process.cwd(), "node_modules/entities/lib/decode.js"),
-        "entities/lib/encode.js": resolve(process.cwd(), "node_modules/entities/lib/encode.js"),
-        entities: resolve(process.cwd(), "node_modules/entities"),
-      },
+      // Legacy React Email imports use v4; modern htmlparser2 subpaths must
+      // resolve through its own v7 package exports, not a v4 directory alias.
+      alias: [
+        {
+          find: "entities/lib/decode.js",
+          replacement: resolve(process.cwd(), "node_modules/entities/lib/decode.js"),
+        },
+        {
+          find: "entities/lib/encode.js",
+          replacement: resolve(process.cwd(), "node_modules/entities/lib/encode.js"),
+        },
+        {
+          find: /^entities$/,
+          replacement: resolve(process.cwd(), "node_modules/entities"),
+        },
+      ],
     },
   },
   tanstackStart: {
