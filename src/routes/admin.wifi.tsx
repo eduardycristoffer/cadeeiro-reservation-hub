@@ -310,7 +310,7 @@ function CreateSheet({ open, onOpenChange, units, isSuper, onCreated }: { open: 
   }
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="bottom" className="mx-auto max-h-[92dvh] max-w-lg overflow-y-auto rounded-t-3xl px-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-5">
+      <SheetContent side="bottom" className="mx-auto max-h-[92dvh] max-w-lg overflow-y-auto rounded-3xl px-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-5">
         <SheetHeader className="text-left"><SheetTitle>Novo endereço do Wi-Fi</SheetTitle></SheetHeader>
         <form onSubmit={submit} className="mt-4 space-y-4">
           <div className="space-y-1.5"><Label htmlFor="wh-name">Nome</Label>
@@ -337,7 +337,7 @@ function SecretSheet({ secret, onClose }: { secret: Secret | null; onClose: () =
   }
   return (
     <Sheet open={!!secret} onOpenChange={(o) => !o && onClose()}>
-      <SheetContent side="bottom" className="mx-auto max-h-[92dvh] max-w-lg overflow-y-auto rounded-t-3xl px-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-5">
+      <SheetContent side="bottom" className="mx-auto max-h-[92dvh] max-w-lg overflow-y-auto rounded-3xl px-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-5">
         {secret && (
           <>
             <SheetHeader className="text-left"><SheetTitle>{secret.rotated ? "Novo endereço" : "Endereço criado"}: {secret.name}</SheetTitle></SheetHeader>
@@ -367,7 +367,7 @@ function EventsSheet({ endpoint, onClose }: { endpoint: Endpoint | null; onClose
   const pretty = useMemo(() => (p: unknown) => { try { return JSON.stringify(p, null, 2); } catch { return String(p); } }, []);
   return (
     <Sheet open={!!endpoint} onOpenChange={(o) => !o && onClose()}>
-      <SheetContent side="bottom" className="mx-auto flex max-h-[92dvh] max-w-lg flex-col rounded-t-3xl p-0">
+      <SheetContent side="bottom" className="mx-auto flex max-h-[92dvh] max-w-lg flex-col rounded-3xl p-0">
         <SheetHeader className="border-b px-4 pb-3 pt-5 text-left">
           <SheetTitle className="truncate pr-10">Últimos recebidos · {endpoint?.name}</SheetTitle>
           <p className="text-xs text-muted-foreground">Guardados por 30 dias. Contêm dados pessoais: não compartilhe.</p>

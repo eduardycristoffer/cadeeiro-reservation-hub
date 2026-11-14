@@ -50,7 +50,7 @@ export function GlobalSearch({ open, onOpenChange, pages }: { open: boolean; onO
         <DialogTitle className="sr-only">Busca</DialogTitle>
         <DialogDescription className="sr-only">Procure telas, clientes e reservas</DialogDescription>
         <Command shouldFilter={false} className="rounded-2xl">
-          <CommandInput value={q} onValueChange={setQ} placeholder="Buscar tela, cliente, telefone ou protocolo…" className="h-12" />
+          <CommandInput value={q} onValueChange={setQ} placeholder="Buscar tela, cliente, telefone ou protocolo…" className="h-12 pr-12" />
           <CommandList className="max-h-[min(60vh,420px)]">
             {term.length >= 2 && (
               <CommandGroup heading="Reservas">

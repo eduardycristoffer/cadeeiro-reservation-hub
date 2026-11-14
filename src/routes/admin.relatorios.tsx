@@ -11,7 +11,9 @@ import { ROLE_LABEL } from "@/lib/audit";
 import { ORIGIN as SAC_ORIGIN, sacStatusLabel, typeLabel } from "@/lib/sac";
 import { useAuth } from "@/lib/auth";
 import { AdsTab } from "@/components/admin/AdsTab";
+import { ColumnChart, DonutChart, FunnelChart, RankBars, SplitBar, TrendChart } from "@/components/admin/Charts";
 import { friendlyError, requireSupabase } from "@/lib/supabase";
+import { useSwr } from "@/lib/swr";
 
 export const Route = createFileRoute("/admin/relatorios")({
   head: () => ({ meta: [{ title: "Relatórios — Candeeiro Gestão" }, { name: "description", content: "Relatórios de reservas, SAC, WhatsApp, clientes e equipe da Rede Candeeiro." }, { property: "og:title", content: "Relatórios — Candeeiro Gestão" }, { property: "og:description", content: "Números consolidados da Rede Candeeiro." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }, { name: "robots", content: "noindex" }] }),
@@ -28,7 +30,7 @@ type Tab = (typeof TABS)[number]["k"];
 const PERIODS = { hoje: "Hoje", "7d": "7 dias", "30d": "30 dias", mes: "Este mês", custom: "Personalizado" } as const;
 type P = keyof typeof PERIODS;
 const STATUS: Record<string, string> = { pendente: "Pendentes", confirmada: "Confirmadas", cancelada: "Canceladas/recusadas", concluida: "Concluídas", nao_compareceu: "Não compareceu" };
-const ORIGINS: Record<string, string> = { landing_page: "Site", whatsapp_botao: "WhatsApp do site", sdr_whatsapp: "WhatsApp (SDR)", painel: "Painel", telefone: "Telefone", outro: "Outro" };
+const ORIGINS: Record<string, string> = { landing_page: "Site", whatsapp_botao: "WhatsApp do site", sdr_whatsapp: "WhatsApp (SDR)", painel: "Balcão / painel", telefone: "Telefone", whatsapp: "WhatsApp", presencial: "Presencial", instagram: "Instagram", google: "Google", indicacao: "Indicação", outro: "Outro" };
 const WEEK = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 const OCC: Record<string, string> = { sem: "Sem ocasião", aniversario: "Aniversário", confraternizacao: "Confraternização", casal: "Casal", familia: "Família", negocios: "Negócios", outro: "Outro" };
 const MSG: Record<string, string> = { reservation_confirmed: "Confirmação", reservation_cancelled: "Cancelamento" };
@@ -59,18 +61,14 @@ function Relatorios() {
   const [service, setService] = useState("");
   const [origin, setOrigin] = useState("");
   const [units, setUnits] = useState<{ id: string; name: string }[]>([]);
-  const [data, setData] = useState<J | null>(null);
-  const [err, setErr] = useState<string | null>(null);
   const [tick, setTick] = useState(0);
   const [from, to] = range(p, de, ate);
 
   useEffect(() => { scopedUnits("id,name").order("sort_order").order("name").then(({ data }) => setUnits((data ?? []) as typeof units)); }, []);
 
-  useEffect(() => {
-    if (!allowed) return;
-    let cancel = false;
-    setData(null); setErr(null);
-    if (tab === "anuncios") return;
+  // dado anterior fica na tela enquanto o novo carrega (trocar período/aba não pisca) e voltar a uma aba já vista é instantâneo
+  const { data, error, stale, reload } = useSwr<J | null>(`rel:${tab}:${from}:${to}:${unit}:${service}:${origin}`, async () => {
+    if (!allowed || tab === "anuncios") return null;
     const sb = requireSupabase();
     const base = { _from: from, _to: to, _unit: unit || null };
     const full = { ...base, _service: service || null, _origin: origin || null };
@@ -83,12 +81,12 @@ function Relatorios() {
       clientes: () => sb.rpc("report_customers", full),
       equipe: () => sb.rpc("report_team", base),
     }[tab as Exclude<Tab, "anuncios">];
-    call().then(({ data, error }) => {
-      if (cancel) return;
-      if (error) setErr(friendlyError(error)); else setData(data as J);
-    });
-    return () => { cancel = true; };
-  }, [tab, from, to, unit, service, origin, allowed, tick]);
+    const { data, error } = await call();
+    if (error) throw error;
+    return data as J;
+  }, [tick], tab);
+  const err = error ? friendlyError(error) : null;
+  void reload; void stale;
 
   const csv = useMemo(() => (data ? buildCsv(tab, data) : null), [tab, data]);
   if (!allowed) return <p className="text-muted-foreground">Somente gestores e super admin veem relatórios.</p>;
@@ -134,8 +132,8 @@ function Relatorios() {
       <div className="mt-5">
         {tab === "anuncios" ? <AdsTab from={from} to={to} unit={unit} /> : err ? <ErrorState message={err} onRetry={() => setTick((n) => n + 1)} />
           : !data ? <ListSkeleton rows={3} />
-          : tab === "consolidado" ? <Summary d={data} />
-          : tab === "reservas" ? <Reservas d={data} />
+          : tab === "consolidado" ? <Summary d={data} from={from} to={to} />
+          : tab === "reservas" ? <Reservas d={data} from={from} to={to} />
           : tab === "funil" ? <Funil d={data} />
           : tab === "sdr" ? <Sdr d={data} />
           : tab === "sac" ? <SacTab d={data} />
@@ -162,36 +160,6 @@ function Grid({ children }: { children: React.ReactNode }) { return <div classNa
 function Box({ title, children }: { title: string; children: React.ReactNode }) {
   return <section className="mt-4 break-inside-avoid rounded-2xl bg-card p-4 shadow-soft"><h2 className="text-sm font-semibold">{title}</h2><div className="mt-3">{children}</div></section>;
 }
-function Bars({ rows, label = (k) => String(k), empty = "Sem dados no período." }: { rows: KN[] | undefined; label?: (k: string | number) => string; empty?: string }) {
-  const list = rows ?? [];
-  if (!list.length) return <p className="text-sm text-muted-foreground">{empty}</p>;
-  const max = Math.max(...list.map((r) => n0(r.n)), 1);
-  return (
-    <ul className="space-y-2">
-      {list.map((r, i) => (
-        <li key={i} className="grid grid-cols-[minmax(0,7.5rem)_minmax(0,1fr)_2.5rem] items-center gap-2 text-xs">
-          <span className="truncate">{label(r.k)}</span>
-          <span className="h-3 rounded-full bg-surface"><span className="block h-3 rounded-full bg-primary" style={{ width: `${(n0(r.n) / max) * 100}%` }} /></span>
-          <span className="text-right font-medium">{r.n}</span>
-        </li>
-      ))}
-    </ul>
-  );
-}
-function Line({ rows }: { rows: { k: string; n: number }[] | undefined }) {
-  const list = rows ?? [];
-  if (list.length < 2) return <Bars rows={list} label={(k) => br(String(k))} />;
-  const max = Math.max(...list.map((r) => r.n), 1);
-  const pts = list.map((r, i) => `${(i / (list.length - 1)) * 100},${40 - (r.n / max) * 36}`).join(" ");
-  return (
-    <div>
-      <svg viewBox="0 0 100 42" className="h-28 w-full" preserveAspectRatio="none" role="img" aria-label="Reservas por dia">
-        <polyline points={pts} fill="none" stroke="currentColor" strokeWidth="1.2" vectorEffect="non-scaling-stroke" className="text-primary" />
-      </svg>
-      <div className="flex justify-between text-[11px] text-muted-foreground"><span>{br(list[0]!.k)}</span><span>máx. {max}/dia</span><span>{br(list[list.length - 1]!.k)}</span></div>
-    </div>
-  );
-}
 function Table({ head, rows, empty = "Sem dados no período." }: { head: string[]; rows: React.ReactNode[][]; empty?: string }) {
   if (!rows.length) return <p className="text-sm text-muted-foreground">{empty}</p>;
   return (
@@ -207,9 +175,25 @@ function Table({ head, rows, empty = "Sem dados no período." }: { head: string[
 }
 const entries = (o: J | undefined, labels: Record<string, string>) => Object.entries(o ?? {}).map(([k, n]) => ({ k: labels[k] ?? k, n: n0(n) }));
 const isEmpty = (d: J, key = "total") => n0(d[key]) === 0;
+const STATUS_COLOR: Record<string, string> = { Pendentes: "var(--series-4)", Confirmadas: "var(--series-3)", "Canceladas/recusadas": "#d03b3b", Concluídas: "var(--series-1)", "Não compareceu": "var(--muted-foreground)" };
+/** Preenche os dias da semana (0–6) e as horas sem movimento com zero, para o gráfico não "pular" valores. */
+const fullWeek = (rows: KN[] | undefined): KN[] => Array.from({ length: 7 }, (_, i) => ({ k: i, n: n0((rows ?? []).find((r) => Number(r.k) === i)?.n) }));
+const fullHours = (rows: KN[] | undefined): KN[] => {
+  const l = rows ?? []; if (!l.length) return [];
+  const hs = l.map((r) => Number(r.k)); const a = Math.min(...hs), b = Math.max(...hs);
+  return Array.from({ length: b - a + 1 }, (_, i) => ({ k: a + i, n: n0(l.find((r) => Number(r.k) === a + i)?.n) }));
+};
+/** Dias do período sem reserva entram como zero (a linha mostra a realidade, não só os dias com movimento). */
+const fullDays = (rows: KN[] | undefined, from?: string, to?: string): KN[] => {
+  const l = rows ?? []; if (!l.length || !from || !to) return l;
+  const m = new Map(l.map((r) => [String(r.k), n0(r.n)])); const out: KN[] = [];
+  for (let t = Date.parse(from + "T12:00:00Z"); t <= Date.parse(to + "T12:00:00Z") && out.length < 400; t += 86400000) { const k = new Date(t).toISOString().slice(0, 10); out.push({ k, n: m.get(k) ?? 0 }); }
+  return out;
+};
+const dm = (k: string) => k.slice(8, 10) + "/" + k.slice(5, 7);
 
 /* ---------- abas ---------- */
-function Reservas({ d }: { d: J }) {
+function Reservas({ d, from, to }: { d: J; from: string; to: string }) {
   if (isEmpty(d)) return <EmptyState icon={BarChart3} title="Nenhuma reserva no período" text="Mude o período ou os filtros." />;
   const st = d["by_status"] ?? {};
   return (
@@ -222,12 +206,12 @@ function Reservas({ d }: { d: J }) {
         <Kpi label="Média por mesa" v={d["avg_party"]} suf=" pessoas" /><Kpi label="Taxa de aprovação" v={d["approval_rate"]} suf="%" />
         <Kpi label="Tempo até aprovar" v={d["avg_minutes_to_approve"]} suf=" min" /><Kpi label="Ocupação" v={d["occupancy_pct"]} suf="%" />
       </Grid>
-      <Box title="Reservas por dia"><Line rows={d["by_day"]} /></Box>
+      <Box title="Reservas por dia"><TrendChart rows={fullDays(d["by_day"], from, to) as { k: string; n: number }[]} label="Reservas por dia" fmtKey={dm} /></Box>
       <div className="grid gap-x-4 lg:grid-cols-2">
-        <Box title="Por dia da semana"><Bars rows={d["by_weekday"]} label={(k) => WEEK[Number(k)] ?? String(k)} /></Box>
-        <Box title="Por horário"><Bars rows={d["by_hour"]} label={(k) => `${k}h`} /></Box>
-        <Box title="Por ocasião"><Bars rows={d["by_occasion"]} label={(k) => OCC[String(k)] ?? String(k)} /></Box>
-        <Box title="Por status"><Bars rows={entries(st, STATUS)} /></Box>
+        <Box title="Por dia da semana"><ColumnChart rows={fullWeek(d["by_weekday"])} label="Reservas por dia da semana" fmtKey={(k) => WEEK[Number(k)] ?? String(k)} /></Box>
+        <Box title="Por horário"><ColumnChart rows={fullHours(d["by_hour"])} label="Reservas por horário" fmtKey={(k) => `${k}h`} /></Box>
+        <Box title="Por status"><DonutChart rows={entries(st, STATUS)} label="Reservas por status" colors={STATUS_COLOR} /></Box>
+        <Box title="Por ocasião"><DonutChart rows={((d["by_occasion"] ?? []) as KN[]).map((r) => ({ k: OCC[String(r.k)] ?? String(r.k), n: n0(r.n) }))} label="Reservas por ocasião" /></Box>
       </div>
       {d["capacity_seats"] === 0 && <p className="mt-3 text-xs text-muted-foreground">Ocupação sem cálculo: não há regras de capacidade cadastradas para o período.</p>}
     </>
@@ -238,11 +222,12 @@ function Funil({ d }: { d: J }) {
   return (
     <>
       <Box title="Funil do site e de todas as origens">
-        <Bars rows={[{ k: "Contatos no site", n: n0(d["leads"]) }, { k: "Reservas criadas", n: n0(d["created"]) }, { k: "Confirmadas", n: n0(d["confirmed"]) }]} />
+        <FunnelChart steps={[{ label: "Contatos no site", n: n0(d["leads"]) }, { label: "Reservas criadas", n: n0(d["created"]) }, { label: "Confirmadas", n: n0(d["confirmed"]) }]} />
         <p className="mt-2 text-xs text-muted-foreground">Visitas à página de reservas não são registradas; o funil começa no contato deixado no site.</p>
       </Box>
       <Box title="Reservas por origem"><Table head={["Origem", "Criadas", "Confirmadas", "Conversão"]} rows={(d["by_origin"] as KN[]).map((r) => [ORIGINS[String(r.k)] ?? r.k, r.n, n0(r["c"]), `${Math.round((n0(r["c"]) / Math.max(r.n, 1)) * 100)}%`])} /></Box>
-      <Box title="Campanhas"><Bars rows={d["by_campaign"]} /></Box>
+      <Box title="Origem das reservas"><DonutChart rows={((d["by_origin"] ?? []) as KN[]).map((r) => ({ k: ORIGINS[String(r.k)] ?? String(r.k), n: n0(r.n) }))} label="Reservas por origem" /></Box>
+      <Box title="Campanhas"><RankBars rows={d["by_campaign"]} /></Box>
       <Box title="WhatsApp do site · whatsapp_botao"><Grid><Kpi label="Contatos" v={d["whatsapp_button"]?.total ?? 0} /><Kpi label="Convertidos" v={d["whatsapp_button"]?.converted ?? 0} /></Grid></Box>
     </>
   );
@@ -263,10 +248,10 @@ function Sdr({ d }: { d: J }) {
         <Kpi label="Mensagens automáticas enviadas" v={sent} /><Kpi label="Mensagens com falha" v={failed} />
       </Grid>
       <div className="grid gap-x-4 lg:grid-cols-2">
-        <Box title="Assuntos das conversas"><Bars rows={d["by_classification"]} label={(k) => CLS[String(k)] ?? String(k)} /></Box>
-        <Box title="Motivos de passar para humano"><Bars rows={d["handoff_reasons"]} /></Box>
+        <Box title="Assuntos das conversas"><RankBars rows={d["by_classification"]} label={(k) => CLS[String(k)] ?? String(k)} /></Box>
+        <Box title="Motivos de passar para humano"><RankBars rows={d["handoff_reasons"]} /></Box>
         <Box title="Mensagens automáticas"><Table head={["Tipo", "Status", "Qtd"]} rows={msgs.map((m) => [MSG[m.k] ?? m.k, m.status, m.n])} /></Box>
-        <Box title="Delivery por status"><Bars rows={entries(d["delivery_by_status"], {})} /></Box>
+        <Box title="Delivery por status"><DonutChart rows={entries(d["delivery_by_status"], {})} label="Delivery por status" unit="pedidos" /></Box>
       </div>
       <p className="mt-3 text-xs text-muted-foreground">“Respondidos” dos lembretes e perguntas que o bot não soube responder ainda não são registrados pelo atendente.</p>
     </>
@@ -282,10 +267,10 @@ function SacTab({ d }: { d: J }) {
         <Kpi label="Clientes reincidentes" v={d["recurrent_customers"]} /><Kpi label="Reabertos" v={d["reopened"]} />
       </Grid>
       <div className="grid gap-x-4 lg:grid-cols-2">
-        <Box title="Por tipo"><Bars rows={d["by_type"]} label={(k) => typeLabel(String(k))} /></Box>
-        <Box title="Por status"><Bars rows={entries(d["by_status"], Object.fromEntries(["aberto", "em_andamento", "aguardando_cliente", "resolvido", "encerrado"].map((k) => [k, sacStatusLabel(k)])))} /></Box>
-        <Box title="Por unidade"><Bars rows={d["by_unit"]} /></Box>
-        <Box title="Por origem"><Bars rows={d["by_origin"]} label={(k) => SAC_ORIGIN[String(k)] ?? String(k)} /></Box>
+        <Box title="Por tipo"><DonutChart rows={((d["by_type"] ?? []) as KN[]).map((r) => ({ k: typeLabel(String(r.k)), n: n0(r.n) }))} label="Chamados por tipo" unit="chamados" /></Box>
+        <Box title="Por status"><RankBars rows={entries(d["by_status"], Object.fromEntries(["aberto", "em_andamento", "aguardando_cliente", "resolvido", "encerrado"].map((k) => [k, sacStatusLabel(k)])))} /></Box>
+        <Box title="Por unidade"><RankBars rows={d["by_unit"]} /></Box>
+        <Box title="Por origem"><RankBars rows={d["by_origin"]} label={(k) => SAC_ORIGIN[String(k)] ?? String(k)} /></Box>
       </div>
       <Box title="Responsáveis"><Table head={["Pessoa", "Chamados", "Resolvidos"]} rows={(d["by_assignee"] as KN[]).map((r) => [r.k, `${r.n} ch.`, `${n0(r["resolved"])} res.`])} /></Box>
     </>
@@ -296,6 +281,7 @@ function Clientes({ d }: { d: J }) {
   return (
     <>
       <Grid><Kpi label="Clientes" v={d["customers"]} /><Kpi label="Novos" v={d["new"]} /><Kpi label="Recorrentes" v={d["returning"]} /></Grid>
+      <Box title="Novos e recorrentes"><SplitBar parts={[{ label: "Novos", n: n0(d["new"]), color: "var(--series-1)" }, { label: "Recorrentes", n: n0(d["returning"]), color: "var(--series-3)" }]} /></Box>
       <div className="grid gap-x-4 lg:grid-cols-2">
         <Box title="Mais reservas"><Table head={["Cliente", "Reservas", "Pessoas"]} rows={(d["top_customers"] as KN[]).map((r) => [r.k, `${r.n} res.`, `${n0(r["p"])} pes.`])} /></Box>
         <Box title="Maiores grupos"><Table head={["Cliente", "Pessoas", "Data"]} rows={(d["largest_groups"] as KN[]).map((r) => [r.k, `${r.n} pes.`, br(String(r["date"]))])} /></Box>
@@ -323,7 +309,7 @@ function Equipe({ d }: { d: J }) {
     </Box>
   );
 }
-function Summary({ d }: { d: J }) {
+function Summary({ d, from, to }: { d: J; from: string; to: string }) {
   const c = d["current"] ?? {}, pv = d["prev"] ?? {};
   const r = c.reservations ?? {}, rp = pv.reservations ?? {};
   const conf = (x: J) => n0(x["by_status"]?.confirmada) + n0(x["by_status"]?.concluida);
@@ -336,6 +322,17 @@ function Summary({ d }: { d: J }) {
         <Kpi label="Pessoas esperadas" v={r.guests_expected} prev={rp.guests_expected} /><Kpi label="Taxa de aprovação" v={r.approval_rate} prev={rp.approval_rate} suf="%" />
         <Kpi label="Ocupação" v={r.occupancy_pct} prev={rp.occupancy_pct} suf="%" /><Kpi label="Tempo até aprovar" v={r.avg_minutes_to_approve} prev={rp.avg_minutes_to_approve} suf=" min" invert />
       </Grid>
+      {n0(r.total) > 0 && (
+        <Box title="Reservas por dia">
+          <TrendChart rows={fullDays(r["by_day"], from, to) as { k: string; n: number }[]} label="Reservas por dia" fmtKey={dm} />
+        </Box>
+      )}
+      {n0(r.total) > 0 && (
+        <div className="grid gap-x-4 lg:grid-cols-2">
+          <Box title="Dia da semana mais cheio"><ColumnChart rows={fullWeek(r["by_weekday"])} label="Reservas por dia da semana" fmtKey={(k) => WEEK[Number(k)] ?? String(k)} /></Box>
+          <Box title="Situação das reservas"><DonutChart rows={entries(r["by_status"], STATUS)} label="Reservas por status" colors={STATUS_COLOR} /></Box>
+        </div>
+      )}
       <h2 className="mb-2 mt-4 text-sm font-semibold">WhatsApp e site</h2>
       <Grid>
         <Kpi label="Conversas no WhatsApp" v={c.sdr?.conversations} prev={pv.sdr?.conversations} /><Kpi label="Reservas pelo bot" v={c.sdr?.reservations} prev={pv.sdr?.reservations} />

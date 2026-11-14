@@ -122,7 +122,7 @@ function Sac() {
       </form>
       <div className="mt-4 hidden md:block">{filters}</div>
       <Sheet open={sheet} onOpenChange={setSheet}>
-        <SheetContent side="bottom" className="max-h-[90dvh] overflow-y-auto rounded-t-3xl px-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-5 md:hidden">
+        <SheetContent side="bottom" className="max-h-[90dvh] overflow-y-auto rounded-3xl px-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-5 md:hidden">
           <SheetHeader className="text-left"><SheetTitle>Filtros</SheetTitle></SheetHeader>
           <div className="mt-4">{filters}</div>
           <Button className="mt-4 h-12 w-full" onClick={() => setSheet(false)}>Ver chamados</Button>
@@ -255,7 +255,7 @@ function TicketSheet({ id, onClose, onChanged }: { id: string | null; onClose: (
 
   return (
     <Sheet open={!!id} onOpenChange={(o) => !o && onClose()}>
-      <SheetContent side="bottom" className="mx-auto flex max-h-[94dvh] max-w-2xl flex-col rounded-t-3xl p-0">
+      <SheetContent side="bottom" className="mx-auto flex max-h-[94dvh] max-w-2xl flex-col rounded-3xl p-0">
         <SheetHeader className="border-b px-4 pb-3 pt-5 text-left">
           <SheetTitle className="pr-10 text-base">{d ? d.subject : "Chamado"}</SheetTitle>
           {d && <p className="text-xs text-muted-foreground">{d.protocol} · {d.unit_name ?? "Sem unidade"} · {ORIGIN[d.origin ?? "painel"] ?? d.origin} · aberto {timeLabel(d.opened_at)}</p>}
@@ -388,7 +388,7 @@ function NewTicketSheet({ open, onOpenChange, units, onCreated }: { open: boolea
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="bottom" className="mx-auto max-h-[94dvh] max-w-lg overflow-y-auto rounded-t-3xl px-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-5">
+      <SheetContent side="bottom" className="mx-auto max-h-[94dvh] max-w-lg overflow-y-auto rounded-3xl px-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-5">
         <SheetHeader className="text-left"><SheetTitle>Novo chamado</SheetTitle></SheetHeader>
         <form onSubmit={submit} className="mt-4 grid gap-3">
           <Fld id="n-unit" label="Unidade"><NativeSelect id="n-unit" required value={unit} onChange={(e) => setUnit(e.target.value)}><option value="">Escolha</option>{units.map((u) => <option key={u.id} value={u.id}>{u.name}</option>)}</NativeSelect></Fld>

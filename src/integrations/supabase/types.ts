@@ -3967,6 +3967,11 @@ export type Database = {
         | "painel"
         | "telefone"
         | "outro"
+        | "whatsapp"
+        | "presencial"
+        | "instagram"
+        | "google"
+        | "indicacao"
       reservation_status:
         | "pendente"
         | "confirmada"
@@ -4145,6 +4150,11 @@ export const Constants = {
         "painel",
         "telefone",
         "outro",
+        "whatsapp",
+        "presencial",
+        "instagram",
+        "google",
+        "indicacao",
       ],
       reservation_status: [
         "pendente",

@@ -108,3 +108,31 @@ export const setFirstAccessPassword = createServerFn({ method: "POST" })
     if (r.error) return { ok: false as const, error: /weak|pwned|leaked/i.test(r.error.message) ? "Senha fraca ou já vazada na internet. Escolha outra." : r.error.message };
     return { ok: true as const, error: null };
   });
+
+/**
+ * Perdeu o celular? Quem pode gerenciar a pessoa (mesma regra de desativar/reativar) remove o 2FA dela.
+ * Depois disso ela entra só com e-mail e senha e pode ligar o 2FA de novo no perfil. Fica no histórico.
+ */
+export const resetTeamMemberTwoFactor = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ userId: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const can = await supabaseAdmin.rpc("_can_manage_user" as never, { _uid: context.userId, _target: data.userId } as never);
+    if (can.error || can.data !== true) return { ok: false as const, error: "FORBIDDEN" };
+    const list = await supabaseAdmin.auth.admin.mfa.listFactors({ userId: data.userId });
+    if (list.error) return { ok: false as const, error: "Não foi possível consultar o 2FA agora. Tente de novo." };
+    const factors = list.data?.factors ?? [];
+    for (const f of factors) {
+      const del = await supabaseAdmin.auth.admin.mfa.deleteFactor({ id: f.id, userId: data.userId });
+      if (del.error) return { ok: false as const, error: "Não foi possível remover o 2FA agora. Tente de novo." };
+    }
+    if (factors.length > 0) {
+      const { data: me } = await supabaseAdmin.from("user_profiles").select("full_name").eq("id", context.userId).maybeSingle();
+      await supabaseAdmin.from("audit_log" as never).insert({
+        source: "painel", action: "usuario.2fa_removido", entity_type: "usuario", entity_id: data.userId, actor_user_id: context.userId,
+        actor_name: me?.full_name ?? null, note: "2FA removido por quem gerencia o acesso",
+      } as never);
+    }
+    return { ok: true as const, error: null, removed: factors.length };
+  });

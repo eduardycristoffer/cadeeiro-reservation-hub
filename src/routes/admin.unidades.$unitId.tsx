@@ -113,7 +113,7 @@ function UnitDetail() {
         </div>
       </Section>
 
-      <Section title="Horários e capacidade" hint="Cada faixa gera horários no intervalo definido. A capacidade é o total de pessoas por horário.">
+      <Section title="Horários de funcionamento" hint="Cada faixa gera horários no intervalo definido. Não há limite de reservas por horário: a equipe aprova ou recusa cada uma.">
         <RuleList rules={rules} onChange={load} />
         <RuleForm unitId={unitId} onSaved={load} />
       </Section>
@@ -142,7 +142,7 @@ function RuleList({ rules, onChange }: { rules: Rule[]; onChange: () => void }) 
     <div className="overflow-x-auto rounded-2xl border">
       <table className="w-full text-sm">
         <thead className="bg-surface text-left text-muted-foreground">
-          <tr><th className="px-4 py-3 font-medium">Dia</th><th className="px-4 py-3 font-medium">Faixa</th><th className="px-4 py-3 font-medium">Intervalo</th><th className="px-4 py-3 font-medium">Capacidade</th><th className="px-4 py-3 font-medium">Máx. grupo</th><th /></tr>
+          <tr><th className="px-4 py-3 font-medium">Dia</th><th className="px-4 py-3 font-medium">Faixa</th><th className="px-4 py-3 font-medium">Intervalo</th><th /></tr>
         </thead>
         <tbody>
           {rules.map((r) => (
@@ -150,8 +150,6 @@ function RuleList({ rules, onChange }: { rules: Rule[]; onChange: () => void }) 
               <td className="px-4 py-3 font-medium">{WEEKDAYS[r.weekday]}</td>
               <td className="px-4 py-3">{hhmm(r.start_time)}–{hhmm(r.end_time)}</td>
               <td className="px-4 py-3">{r.slot_interval_minutes} min</td>
-              <td className="px-4 py-3">{r.max_guests_per_slot} pessoas</td>
-              <td className="px-4 py-3">{r.max_party_size}</td>
               <td className="px-4 py-3 text-right">
                 <Button variant="ghost" size="icon" aria-label="Remover faixa" onClick={async () => { const { error } = await requireSupabase().from("reservation_capacity_rules").delete().eq("id", r.id); if (error) toast.error(friendlyError(error)); else onChange(); }} className="text-muted-foreground hover:text-destructive"><Trash2 className="h-4 w-4" /></Button>
               </td>
@@ -168,8 +166,6 @@ function RuleForm({ unitId, onSaved }: { unitId: string; onSaved: () => void }) 
   const [start, setStart] = useState("18:00");
   const [end, setEnd] = useState("23:00");
   const [interval, setIntervalMin] = useState(30);
-  const [cap, setCap] = useState(40);
-  const [maxParty, setMaxParty] = useState(20);
   const [err, setErr] = useState<string | null>(null);
 
   async function save() {
@@ -177,7 +173,7 @@ function RuleForm({ unitId, onSaved }: { unitId: string; onSaved: () => void }) 
     if (end <= start) return setErr("O fim precisa ser depois do início.");
     if (days.length === 0) return setErr("Selecione ao menos um dia.");
     const { error } = await requireSupabase().from("reservation_capacity_rules").insert(
-      days.map((d) => ({ unit_id: unitId, weekday: d, start_time: start, end_time: end, slot_interval_minutes: interval, max_guests_per_slot: cap, max_party_size: maxParty })),
+      days.map((d) => ({ unit_id: unitId, weekday: d, start_time: start, end_time: end, slot_interval_minutes: interval, max_guests_per_slot: 9999, max_party_size: 200 })),
     );
     if (error) return setErr("Sem permissão ou dados inválidos.");
     onSaved();
@@ -194,12 +190,10 @@ function RuleForm({ unitId, onSaved }: { unitId: string; onSaved: () => void }) 
           </button>
         ))}
       </div>
-      <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-5">
+      <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
         <L label="Início"><Input type="time" value={start} onChange={(e) => setStart(e.target.value)} className="rounded-xl bg-background" /></L>
         <L label="Fim"><Input type="time" value={end} onChange={(e) => setEnd(e.target.value)} className="rounded-xl bg-background" /></L>
         <L label="Intervalo (min)"><Input type="number" inputMode="numeric" min={5} value={interval} onChange={(e) => setIntervalMin(Number(e.target.value))} className="rounded-xl bg-background" /></L>
-        <L label="Pessoas/horário"><Input type="number" inputMode="numeric" min={1} value={cap} onChange={(e) => setCap(Number(e.target.value))} className="rounded-xl bg-background" /></L>
-        <L label="Máx. por grupo"><Input type="number" inputMode="numeric" min={1} value={maxParty} onChange={(e) => setMaxParty(Number(e.target.value))} className="rounded-xl bg-background" /></L>
       </div>
       {err && <p className="mt-3 text-sm text-destructive">{err}</p>}
       <Button className="mt-4" onClick={save}>Adicionar</Button>

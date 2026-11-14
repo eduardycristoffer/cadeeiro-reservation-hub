@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { scopedUnits } from "@/lib/scope";
 import { useCallback, useEffect, useState } from "react";
-import { ChevronRight, Copy, Loader2, Mail, UserPlus, Users } from "lucide-react";
+import { ChevronRight, Copy, Loader2, Mail, ShieldOff, UserPlus, Users } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -13,7 +13,7 @@ import { AuditTimeline } from "@/components/admin/AuditTimeline";
 import { assignableRoles, INVITE_ERRORS, ROLE_LABEL, timeLabel, type AuditRow } from "@/lib/audit";
 import { useAuth, type Role } from "@/lib/auth";
 import { friendlyError, requireSupabase } from "@/lib/supabase";
-import { inviteTeamMember, resendTeamInvite, setTeamMemberActive } from "@/lib/team.functions";
+import { inviteTeamMember, resendTeamInvite, resetTeamMemberTwoFactor, setTeamMemberActive } from "@/lib/team.functions";
 
 export const Route = createFileRoute("/admin/equipe")({
   head: () => ({ meta: [{ name: "description", content: "Equipe e acesso às unidades da Rede Candeeiro." }, { property: "og:title", content: "Equipe — Candeeiro Gestão" }, { property: "og:description", content: "Equipe e acesso às unidades da Rede Candeeiro." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }, { title: "Equipe — Candeeiro Gestão" }, { name: "robots", content: "noindex" }] }),
@@ -147,7 +147,7 @@ function InviteSheet({ open, onOpenChange, units, isSuper, onDone, onLink }: { o
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="bottom" className="mx-auto max-h-[92dvh] max-w-lg overflow-y-auto rounded-t-3xl px-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-5">
+      <SheetContent side="bottom" className="mx-auto max-h-[92dvh] max-w-lg overflow-y-auto rounded-3xl px-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-5">
         <SheetHeader className="text-left"><SheetTitle>Convidar pessoa</SheetTitle></SheetHeader>
         <form onSubmit={submit} className="mt-4 space-y-4">
           <div className="space-y-1.5"><Label htmlFor="iv-email">E-mail</Label>
@@ -212,6 +212,15 @@ function PersonSheet({ person, me, units, isSuper, unitName, onClose, onChanged,
     onChanged();
   }
 
+  async function resetMfa(): Promise<void> {
+    if (!person) return;
+    setBusy("mfa");
+    const r = await resetTeamMemberTwoFactor({ data: { userId: person.id } }).catch(() => ({ ok: false as const, error: "Falha de rede. Tente de novo.", removed: 0 }));
+    setBusy(null);
+    if (!r.ok) { toast.error(errMsg(r.error)); return; }
+    toast.success(r.removed ? "2FA removido. A pessoa entra só com e-mail e senha." : "Essa pessoa não usa 2FA.");
+  }
+
   async function resend(): Promise<void> {
     if (!person) return;
     setBusy("resend");
@@ -225,7 +234,7 @@ function PersonSheet({ person, me, units, isSuper, unitName, onClose, onChanged,
 
   return (
     <Sheet open={!!person} onOpenChange={(o) => !o && onClose()}>
-      <SheetContent side="bottom" className="mx-auto flex max-h-[92dvh] max-w-lg flex-col rounded-t-3xl p-0">
+      <SheetContent side="bottom" className="mx-auto flex max-h-[92dvh] max-w-lg flex-col rounded-3xl p-0">
         {person && (
           <>
             <SheetHeader className="border-b px-4 pb-3 pt-5 text-left">
@@ -263,6 +272,15 @@ function PersonSheet({ person, me, units, isSuper, unitName, onClose, onChanged,
                         </Button>
                       </div>
                     )}
+                    {!person.needs_onboarding && (
+                      <div className="rounded-2xl bg-surface p-3">
+                        <p className="text-sm font-medium">Perdeu o celular do 2FA?</p>
+                        <p className="mt-0.5 text-xs text-muted-foreground">Remove a verificação em duas etapas dessa pessoa. Ela entra só com e-mail e senha e liga de novo no perfil.</p>
+                        <Button variant="outline" className="mt-2 h-11 w-full" disabled={!!busy} onClick={resetMfa}>
+                          {busy === "mfa" ? <Loader2 className="h-4 w-4 animate-spin" /> : <><ShieldOff className="h-4 w-4" /> Remover 2FA</>}
+                        </Button>
+                      </div>
+                    )}
                     {person.invited_at && <p className="text-xs text-muted-foreground">Convidado em {timeLabel(person.invited_at)}</p>}
                     <p className="text-xs text-muted-foreground">Unidades atuais: {person.roles.includes("super_admin") ? "todas" : person.unit_ids.map(unitName).join(", ") || "nenhuma"}</p>
                   </div>
@@ -295,7 +313,7 @@ function LinkSheet({ info, onClose }: { info: PendingLink | null; onClose: () =>
   }
   return (
     <Sheet open={!!info} onOpenChange={(o) => !o && onClose()}>
-      <SheetContent side="bottom" className="mx-auto max-h-[92dvh] max-w-lg overflow-y-auto rounded-t-3xl px-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-5">
+      <SheetContent side="bottom" className="mx-auto max-h-[92dvh] max-w-lg overflow-y-auto rounded-3xl px-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-5">
         {info && (
           <>
             <SheetHeader className="text-left"><SheetTitle>Mande este link para {info.email}</SheetTitle></SheetHeader>

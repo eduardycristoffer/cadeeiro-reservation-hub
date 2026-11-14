@@ -1,5 +1,6 @@
+import * as React from "react";
 import { useEffect, useState } from "react";
-import { ArrowLeft, ArrowRight, Loader2, Minus, Plus, UserCheck } from "lucide-react";
+import { ArrowLeft, ArrowRight, Loader2, MessageCircle, Minus, Plus, UserCheck } from "lucide-react";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -12,6 +13,10 @@ import { preferredUnitId } from "@/lib/scope";
 import { formatDateLong } from "@/lib/format";
 import { hhmm, isValidBrPhone, maskBrPhone, toIsoDate } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import { ORIGIN_LABEL, type ReservationOrigin } from "@/lib/reservations";
+
+/** "Como chegou": as origens que a equipe escolhe ao criar uma reserva. */
+const STAFF_ORIGINS: ReservationOrigin[] = ["telefone", "whatsapp", "presencial", "instagram", "google", "indicacao", "outro"];
 
 type Slot = { slot_time: string; remaining: number; available: boolean };
 
@@ -33,7 +38,7 @@ export function NewReservationDialog({ open, units, onClose, onCreated }: {
   const [phone, setPhone] = useState("");
   const [known, setKnown] = useState<Known | null>(null);
   const [notes, setNotes] = useState("");
-  const [origin, setOrigin] = useState<"painel" | "telefone">("telefone");
+  const [origin, setOrigin] = useState<ReservationOrigin>("telefone");
   const [status, setStatus] = useState<"confirmada" | "pendente">("confirmada");
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState<string | null>(null);
@@ -93,7 +98,7 @@ export function NewReservationDialog({ open, units, onClose, onCreated }: {
       return;
     }
     const row = (Array.isArray(data) ? data[0] : data) as { id: string; protocol: string; status: string };
-    toast.success(`Reserva ${row.protocol} criada`, { description: row.status === "pendente" ? "Ficou pendente (grupo grande precisa de gestor)." : undefined });
+    toast.success(`Reserva ${row.protocol} criada`, { description: row.status === "confirmada" ? "Confirmação enviada ao WhatsApp do cliente." : status === "confirmada" ? "Ficou pendente: grupo grande precisa de um gestor para confirmar." : undefined });
     setName(""); setPhone(""); setNotes(""); setTime(null);
     onClose();
     onCreated(row.id);
@@ -123,8 +128,8 @@ export function NewReservationDialog({ open, units, onClose, onCreated }: {
                 {units.length > 1 ? (
                   <L label="Unidade"><NativeSelect value={unitId} onChange={(e) => setUnitId(e.target.value)} className="h-11 w-full">{units.map((u) => <option key={u.id} value={u.id}>{u.name}</option>)}</NativeSelect></L>
                 ) : <p className="rounded-xl bg-surface px-3 py-2 text-sm"><span className="text-muted-foreground">Unidade: </span><span className="font-medium">{unitName}</span></p>}
-                <div className="grid grid-cols-2 gap-3">
-                  <L label="Data"><Input type="date" value={date} min={toIsoDate(new Date())} onChange={(e) => setDate(e.target.value)} className="h-11 rounded-xl" /></L>
+                <div className="grid grid-cols-1 gap-3 min-[400px]:grid-cols-2">
+                  <L label="Data"><Input type="date" aria-label="Data" value={date} min={toIsoDate(new Date())} onChange={(e) => setDate(e.target.value)} className="h-11 rounded-xl" /></L>
                   <L label="Quantas pessoas">
                     <div className="flex h-11 items-center justify-between rounded-xl border bg-background px-1">
                       <Button type="button" variant="ghost" size="icon" className="h-9 w-9" aria-label="Menos uma pessoa" disabled={people <= 1} onClick={() => setPeople((n) => Math.max(1, n - 1))}><Minus /></Button>
@@ -133,16 +138,15 @@ export function NewReservationDialog({ open, units, onClose, onCreated }: {
                     </div>
                   </L>
                 </div>
-                <L label="Horário (só os que têm vaga)">
+                <L label="Horário">
                   {!slots ? <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" aria-label="Buscando horários" /> : slots.length === 0 ? (
-                    <p className="rounded-xl bg-surface p-3 text-sm text-muted-foreground">Sem horários com vaga para {people} {people === 1 ? "pessoa" : "pessoas"} nesse dia. Tente outra data ou menos pessoas.</p>
+                    <p className="rounded-xl bg-surface p-3 text-sm text-muted-foreground">A unidade não abre ou está bloqueada nesse dia. Tente outra data.</p>
                   ) : (
                     <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
                       {slots.map((s) => (
                         <button type="button" key={s.slot_time} onClick={() => setTime(s.slot_time)} aria-pressed={time === s.slot_time}
                           className={cn("tile py-2 text-sm", time === s.slot_time && "tile-selected")}>
                           {hhmm(s.slot_time)}
-                          <span className="block text-[10px] text-muted-foreground">{s.remaining} vagas</span>
                         </button>
                       ))}
                     </div>
@@ -171,9 +175,8 @@ export function NewReservationDialog({ open, units, onClose, onCreated }: {
                 <L label="Observação (opcional)"><Textarea value={notes} maxLength={500} placeholder="Aniversário, cadeirinha, mesa perto da janela…" onChange={(e) => setNotes(e.target.value)} className="rounded-xl" /></L>
                 <div className="grid grid-cols-2 gap-3">
                   <L label="Como chegou">
-                    <NativeSelect value={origin} onChange={(e) => setOrigin(e.target.value as "painel" | "telefone")} className="w-full">
-                      <option value="telefone">Telefone</option>
-                      <option value="painel">Balcão / painel</option>
+                    <NativeSelect value={origin} onChange={(e) => setOrigin(e.target.value as ReservationOrigin)} className="w-full">
+                      {STAFF_ORIGINS.map((o) => <option key={o} value={o}>{ORIGIN_LABEL[o]}</option>)}
                     </NativeSelect>
                   </L>
                   <L label="Status inicial">
@@ -183,6 +186,7 @@ export function NewReservationDialog({ open, units, onClose, onCreated }: {
                     </NativeSelect>
                   </L>
                 </div>
+                {status === "confirmada" && <p className="flex items-start gap-2 rounded-xl bg-surface p-3 text-xs text-muted-foreground"><MessageCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />Ao criar como Confirmada, o cliente recebe a confirmação no WhatsApp ({phone}).</p>}
               </>
             )}
             {err && <p role="alert" className="rounded-xl bg-surface p-3 text-sm text-destructive">{err}</p>}
@@ -200,10 +204,14 @@ export function NewReservationDialog({ open, units, onClose, onCreated }: {
 }
 
 function L({ label, className, children }: { label: string; className?: string; children: React.ReactNode }) {
+  const id = React.useId();
+  // campo único (Input, select, textarea): o rótulo aponta para ele; o resto (ex.: quantidade de pessoas) vira grupo
+  const field = React.isValidElement<{ "aria-labelledby"?: string; "aria-label"?: string }>(children) && typeof children.type !== "string" && !(children.props as { "aria-label"?: string })["aria-label"];
   return (
-    <label className={cn("block", className)}>
-      <span className="mb-1.5 block text-sm font-medium">{label}</span>
-      {children}
-    </label>
+    // <div>, não <label>: no Safari do iPhone o toque dentro de um label vira toque no primeiro botão (o "−" da quantidade de pessoas)
+    <div role={field ? undefined : "group"} aria-labelledby={field ? undefined : id} className={cn("block min-w-0", className)}>
+      <span id={id} className="mb-1.5 block text-sm font-medium">{label}</span>
+      {field ? React.cloneElement(children as React.ReactElement<{ "aria-labelledby"?: string }>, { "aria-labelledby": id }) : children}
+    </div>
   );
 }

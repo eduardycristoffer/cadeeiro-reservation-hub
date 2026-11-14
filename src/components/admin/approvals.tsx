@@ -73,7 +73,7 @@ export function RejectSheet({ ids, onClose, onDone, refused = true }: { ids: str
   }
   return (
     <Sheet open={ids.length > 0} onOpenChange={(o) => { if (!o && !busy) { setReason(""); setExtra(""); onClose(); } }}>
-      <SheetContent side="bottom" className="mx-auto max-w-lg rounded-t-3xl px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-5" onClick={(e) => e.stopPropagation()}>
+      <SheetContent side="bottom" className="mx-auto max-w-lg rounded-3xl px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-5" onClick={(e) => e.stopPropagation()}>
         <SheetHeader className="text-left">
           <SheetTitle>{refused ? "Recusar reserva" : "Cancelar reserva"}</SheetTitle>
           <SheetDescription>O cliente será avisado por WhatsApp com este motivo.</SheetDescription>

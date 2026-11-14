@@ -85,7 +85,7 @@ export function ReservationDrawer({ id, tick, onClose, onChanged }: { id: string
 
   return (
     <Sheet open={Boolean(id)} onOpenChange={(o) => !o && onClose()}>
-      <SheetContent side={isMobile ? "bottom" : "right"} className={isMobile ? "flex h-[92dvh] flex-col gap-0 rounded-t-3xl p-0" : "flex w-full flex-col gap-0 p-0 sm:max-w-lg"}>
+      <SheetContent side={isMobile ? "bottom-sheet" : "right"} className={isMobile ? "flex h-[92dvh] flex-col gap-0 rounded-t-3xl p-0" : "flex w-full flex-col gap-0 p-0 sm:max-w-lg"}>
         {loadError ? <div className="p-6"><SheetTitle className="sr-only">Reserva</SheetTitle><p role="alert" className="py-10 text-sm">{loadError}</p><Button variant="outline" onClick={() => setRetry((n) => n + 1)}>Tentar de novo</Button></div> : !r ? (
           <div className="flex h-full items-center justify-center"><SheetTitle className="sr-only">Carregando reserva</SheetTitle><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
         ) : (

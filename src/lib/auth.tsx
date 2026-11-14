@@ -56,6 +56,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     load();
     const { data: sub } = sb.auth.onAuthStateChange((event) => {
+      if (event === "SIGNED_IN" || event === "SIGNED_OUT") void import("@/lib/swr").then((m) => m.clearSwr()); // outra pessoa pode entrar neste aparelho
       if (event === "SIGNED_IN" || event === "SIGNED_OUT" || event === "USER_UPDATED") load();
     });
     return () => sub.subscription.unsubscribe();

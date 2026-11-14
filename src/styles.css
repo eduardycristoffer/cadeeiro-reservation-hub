@@ -115,9 +115,11 @@
   --sidebar-ring: oklch(0.21 0.003 286);
   --shadow-soft-v: 0 1px 2px oklch(0 0 0 / 0.04), 0 8px 24px -12px oklch(0 0 0 / 0.08);
   --shadow-lift-v: 0 2px 4px oklch(0 0 0 / 0.04), 0 20px 40px -16px oklch(0 0 0 / 0.16);
+  --series-1: #2a78d6; --series-2: #eb6834; --series-3: #1baf7a; --series-4: #eda100; --series-5: #e87ba4; --series-6: #008300;
 }
 
 .dark {
+  --series-1: #3987e5; --series-2: #d95926; --series-3: #199e70; --series-4: #c98500; --series-5: #d55181; --series-6: #0ca30c;
   --status-pending: oklch(0.85 0.12 85); --status-pending-bg: oklch(0.3 0.06 75);
   --status-confirmed: oklch(0.82 0.13 155); --status-confirmed-bg: oklch(0.28 0.06 155);
   --status-done: oklch(0.82 0.1 255); --status-done-bg: oklch(0.28 0.06 255);
@@ -154,6 +156,7 @@
 
 @media (prefers-color-scheme: dark) {
   :root:not(.light) {
+  --series-1: #3987e5; --series-2: #d95926; --series-3: #199e70; --series-4: #c98500; --series-5: #d55181; --series-6: #0ca30c;
   --status-pending: oklch(0.85 0.12 85); --status-pending-bg: oklch(0.3 0.06 75);
   --status-confirmed: oklch(0.82 0.13 155); --status-confirmed-bg: oklch(0.28 0.06 155);
   --status-done: oklch(0.82 0.1 255); --status-done-bg: oklch(0.28 0.06 255);
@@ -195,8 +198,22 @@
     text-size-adjust: 100%;
     -webkit-tap-highlight-color: transparent;
   }
+  :focus-visible { outline: 2px solid var(--color-ring); outline-offset: 2px; }
   /* toque responde na hora (sem a espera de 300 ms do toque duplo) */
   a, button, summary, [role="button"], label, select, input[type="checkbox"], input[type="radio"] { touch-action: manipulation; }
+  /* Safari/iPhone: campos de data e hora ignoram largura/altura e estouram a grade. Aqui eles se comportam como os outros campos. */
+  input[type="date"], input[type="time"], input[type="month"], input[type="datetime-local"] {
+    -webkit-appearance: none; appearance: none;
+    min-width: 0; max-width: 100%; min-height: 2.25rem;
+    display: block; text-align: start; line-height: 1.25;
+  }
+  input[type="date"]::-webkit-date-and-time-value, input[type="time"]::-webkit-date-and-time-value,
+  input[type="month"]::-webkit-date-and-time-value, input[type="datetime-local"]::-webkit-date-and-time-value {
+    text-align: start; margin: 0; min-height: 1.25em;
+  }
+  input[type="date"]::-webkit-datetime-edit, input[type="time"]::-webkit-datetime-edit { padding: 0; }
+  /* iOS dá zoom ao focar campo com fonte menor que 16px */
+  @media (pointer: coarse) { input, select, textarea { font-size: max(16px, 1em); } }
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
@@ -298,7 +315,6 @@ html[data-reserva-stage] .whatsapp-float { display: none; }
 .safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
 .admin-main { padding-bottom: calc(5.5rem + env(safe-area-inset-bottom)); }
 @media (min-width: 768px) { .admin-main { padding-bottom: 2.5rem; } }
-:focus-visible { outline: 2px solid var(--color-ring); outline-offset: 2px; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
 }
