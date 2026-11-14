@@ -13,24 +13,34 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as EntrarRouteImport } from './routes/entrar'
 import { Route as PrimeiroAcessoRouteImport } from './routes/primeiro-acesso'
+import { Route as RedefinirSenhaRouteImport } from './routes/redefinir-senha'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
+import { Route as AdminAlertasRouteImport } from './routes/admin.alertas'
+import { Route as AdminAnunciosRouteImport } from './routes/admin.anuncios'
 import { Route as AdminAprovacoesRouteImport } from './routes/admin.aprovacoes'
+import { Route as AdminCampanhasRouteImport } from './routes/admin.campanhas'
+import { Route as AdminCrmRouteImport } from './routes/admin.crm'
 import { Route as AdminDeliveryRouteImport } from './routes/admin.delivery'
 import { Route as AdminEquipeRouteImport } from './routes/admin.equipe'
 import { Route as AdminHistoricoRouteImport } from './routes/admin.historico'
 import { Route as AdminIntegracoesRouteImport } from './routes/admin.integracoes'
 import { Route as AdminLeadsRouteImport } from './routes/admin.leads'
+import { Route as AdminMarketingRouteImport } from './routes/admin.marketing'
 import { Route as AdminPerfilRouteImport } from './routes/admin.perfil'
 import { Route as AdminRelatoriosRouteImport } from './routes/admin.relatorios'
 import { Route as AdminReservasRouteImport } from './routes/admin.reservas'
 import { Route as AdminSacRouteImport } from './routes/admin.sac'
 import { Route as AdminValoresRouteImport } from './routes/admin.valores'
+import { Route as AdminWifiRouteImport } from './routes/admin.wifi'
+import { Route as CSlugRouteImport } from './routes/c.$slug'
 import { Route as GoianiaPizzaRouteImport } from './routes/goiania.pizza'
 import { Route as ReservarIndexRouteImport } from './routes/reservar.index'
 import { Route as ReservarSucessoRouteImport } from './routes/reservar.sucesso'
 import { Route as AdminUnidadesIndexRouteImport } from './routes/admin.unidades.index'
 import { Route as AdminUnidadesUnitIdRouteImport } from './routes/admin.unidades.$unitId'
 import { Route as ApiPublicCrmWorkerRouteImport } from './routes/api.public.crm.worker'
+import { Route as ApiPublicHooksTokenRouteImport } from './routes/api.public.hooks.$token'
+import { Route as ApiPublicNotificationsEmailWorkerRouteImport } from './routes/api.public.notifications.email-worker'
 import { Route as ApiPublicSdrAvailabilityRouteImport } from './routes/api.public.sdr.availability'
 import { Route as ApiPublicSdrContextRouteImport } from './routes/api.public.sdr.context'
 import { Route as ApiPublicSdrDeliveryRouteImport } from './routes/api.public.sdr.delivery'
@@ -43,8 +53,11 @@ import { Route as ApiPublicSdrSacRouteImport } from './routes/api.public.sdr.sac
 import { Route as ApiPublicSdrUnitsRouteImport } from './routes/api.public.sdr.units'
 import { Route as ApiPublicCrmWebhookTokenRouteImport } from './routes/api.public.crm.webhook.$token'
 import { Route as ApiPublicSdrConversationsClassifyRouteImport } from './routes/api.public.sdr.conversations.classify'
+import { Route as ApiPublicSdrCrmSendsRouteImport } from './routes/api.public.sdr.crm.sends'
+import { Route as ApiPublicSdrEmailsRunRouteImport } from './routes/api.public.sdr.emails.run'
 import { Route as ApiPublicSdrFollowupsDueRouteImport } from './routes/api.public.sdr.followups.due'
 import { Route as ApiPublicSdrReservationsProtocolRouteImport } from './routes/api.public.sdr.reservations.$protocol'
+import { Route as ApiPublicSdrCrmSendsDueRouteImport } from './routes/api.public.sdr.crm.sends.due'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -66,14 +79,39 @@ const PrimeiroAcessoRoute = PrimeiroAcessoRouteImport.update({
   path: '/primeiro-acesso',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RedefinirSenhaRoute = RedefinirSenhaRouteImport.update({
+  id: '/redefinir-senha',
+  path: '/redefinir-senha',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminIndexRoute = AdminIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminAlertasRoute = AdminAlertasRouteImport.update({
+  id: '/alertas',
+  path: '/alertas',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminAnunciosRoute = AdminAnunciosRouteImport.update({
+  id: '/anuncios',
+  path: '/anuncios',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminAprovacoesRoute = AdminAprovacoesRouteImport.update({
   id: '/aprovacoes',
   path: '/aprovacoes',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminCampanhasRoute = AdminCampanhasRouteImport.update({
+  id: '/campanhas',
+  path: '/campanhas',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminCrmRoute = AdminCrmRouteImport.update({
+  id: '/crm',
+  path: '/crm',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminDeliveryRoute = AdminDeliveryRouteImport.update({
@@ -101,6 +139,11 @@ const AdminLeadsRoute = AdminLeadsRouteImport.update({
   path: '/leads',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminMarketingRoute = AdminMarketingRouteImport.update({
+  id: '/marketing',
+  path: '/marketing',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminPerfilRoute = AdminPerfilRouteImport.update({
   id: '/perfil',
   path: '/perfil',
@@ -125,6 +168,16 @@ const AdminValoresRoute = AdminValoresRouteImport.update({
   id: '/valores',
   path: '/valores',
   getParentRoute: () => AdminRoute,
+} as any)
+const AdminWifiRoute = AdminWifiRouteImport.update({
+  id: '/wifi',
+  path: '/wifi',
+  getParentRoute: () => AdminRoute,
+} as any)
+const CSlugRoute = CSlugRouteImport.update({
+  id: '/c/$slug',
+  path: '/c/$slug',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const GoianiaPizzaRoute = GoianiaPizzaRouteImport.update({
   id: '/goiania/pizza',
@@ -156,6 +209,17 @@ const ApiPublicCrmWorkerRoute = ApiPublicCrmWorkerRouteImport.update({
   path: '/api/public/crm/worker',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicHooksTokenRoute = ApiPublicHooksTokenRouteImport.update({
+  id: '/api/public/hooks/$token',
+  path: '/api/public/hooks/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicNotificationsEmailWorkerRoute =
+  ApiPublicNotificationsEmailWorkerRouteImport.update({
+    id: '/api/public/notifications/email-worker',
+    path: '/api/public/notifications/email-worker',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicSdrAvailabilityRoute =
   ApiPublicSdrAvailabilityRouteImport.update({
     id: '/api/public/sdr/availability',
@@ -221,6 +285,16 @@ const ApiPublicSdrConversationsClassifyRoute =
     path: '/api/public/sdr/conversations/classify',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicSdrCrmSendsRoute = ApiPublicSdrCrmSendsRouteImport.update({
+  id: '/api/public/sdr/crm/sends',
+  path: '/api/public/sdr/crm/sends',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicSdrEmailsRunRoute = ApiPublicSdrEmailsRunRouteImport.update({
+  id: '/api/public/sdr/emails/run',
+  path: '/api/public/sdr/emails/run',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicSdrFollowupsDueRoute =
   ApiPublicSdrFollowupsDueRouteImport.update({
     id: '/due',
@@ -233,23 +307,36 @@ const ApiPublicSdrReservationsProtocolRoute =
     path: '/$protocol',
     getParentRoute: () => ApiPublicSdrReservationsRoute,
   } as any)
+const ApiPublicSdrCrmSendsDueRoute = ApiPublicSdrCrmSendsDueRouteImport.update({
+  id: '/due',
+  path: '/due',
+  getParentRoute: () => ApiPublicSdrCrmSendsRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
   '/entrar': typeof EntrarRoute
   '/primeiro-acesso': typeof PrimeiroAcessoRoute
+  '/redefinir-senha': typeof RedefinirSenhaRoute
+  '/admin/alertas': typeof AdminAlertasRoute
+  '/admin/anuncios': typeof AdminAnunciosRoute
   '/admin/aprovacoes': typeof AdminAprovacoesRoute
+  '/admin/campanhas': typeof AdminCampanhasRoute
+  '/admin/crm': typeof AdminCrmRoute
   '/admin/delivery': typeof AdminDeliveryRoute
   '/admin/equipe': typeof AdminEquipeRoute
   '/admin/historico': typeof AdminHistoricoRoute
   '/admin/integracoes': typeof AdminIntegracoesRoute
   '/admin/leads': typeof AdminLeadsRoute
+  '/admin/marketing': typeof AdminMarketingRoute
   '/admin/perfil': typeof AdminPerfilRoute
   '/admin/relatorios': typeof AdminRelatoriosRoute
   '/admin/reservas': typeof AdminReservasRoute
   '/admin/sac': typeof AdminSacRoute
   '/admin/valores': typeof AdminValoresRoute
+  '/admin/wifi': typeof AdminWifiRoute
+  '/c/$slug': typeof CSlugRoute
   '/goiania/pizza': typeof GoianiaPizzaRoute
   '/reservar/sucesso': typeof ReservarSucessoRoute
   '/admin/': typeof AdminIndexRoute
@@ -257,6 +344,8 @@ export interface FileRoutesByFullPath {
   '/admin/unidades/$unitId': typeof AdminUnidadesUnitIdRoute
   '/admin/unidades/': typeof AdminUnidadesIndexRoute
   '/api/public/crm/worker': typeof ApiPublicCrmWorkerRoute
+  '/api/public/hooks/$token': typeof ApiPublicHooksTokenRoute
+  '/api/public/notifications/email-worker': typeof ApiPublicNotificationsEmailWorkerRoute
   '/api/public/sdr/availability': typeof ApiPublicSdrAvailabilityRoute
   '/api/public/sdr/context': typeof ApiPublicSdrContextRoute
   '/api/public/sdr/delivery': typeof ApiPublicSdrDeliveryRoute
@@ -269,24 +358,35 @@ export interface FileRoutesByFullPath {
   '/api/public/sdr/units': typeof ApiPublicSdrUnitsRoute
   '/api/public/crm/webhook/$token': typeof ApiPublicCrmWebhookTokenRoute
   '/api/public/sdr/conversations/classify': typeof ApiPublicSdrConversationsClassifyRoute
+  '/api/public/sdr/crm/sends': typeof ApiPublicSdrCrmSendsRouteWithChildren
+  '/api/public/sdr/emails/run': typeof ApiPublicSdrEmailsRunRoute
   '/api/public/sdr/followups/due': typeof ApiPublicSdrFollowupsDueRoute
   '/api/public/sdr/reservations/$protocol': typeof ApiPublicSdrReservationsProtocolRoute
+  '/api/public/sdr/crm/sends/due': typeof ApiPublicSdrCrmSendsDueRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/entrar': typeof EntrarRoute
   '/primeiro-acesso': typeof PrimeiroAcessoRoute
+  '/redefinir-senha': typeof RedefinirSenhaRoute
+  '/admin/alertas': typeof AdminAlertasRoute
+  '/admin/anuncios': typeof AdminAnunciosRoute
   '/admin/aprovacoes': typeof AdminAprovacoesRoute
+  '/admin/campanhas': typeof AdminCampanhasRoute
+  '/admin/crm': typeof AdminCrmRoute
   '/admin/delivery': typeof AdminDeliveryRoute
   '/admin/equipe': typeof AdminEquipeRoute
   '/admin/historico': typeof AdminHistoricoRoute
   '/admin/integracoes': typeof AdminIntegracoesRoute
   '/admin/leads': typeof AdminLeadsRoute
+  '/admin/marketing': typeof AdminMarketingRoute
   '/admin/perfil': typeof AdminPerfilRoute
   '/admin/relatorios': typeof AdminRelatoriosRoute
   '/admin/reservas': typeof AdminReservasRoute
   '/admin/sac': typeof AdminSacRoute
   '/admin/valores': typeof AdminValoresRoute
+  '/admin/wifi': typeof AdminWifiRoute
+  '/c/$slug': typeof CSlugRoute
   '/goiania/pizza': typeof GoianiaPizzaRoute
   '/reservar/sucesso': typeof ReservarSucessoRoute
   '/admin': typeof AdminIndexRoute
@@ -294,6 +394,8 @@ export interface FileRoutesByTo {
   '/admin/unidades/$unitId': typeof AdminUnidadesUnitIdRoute
   '/admin/unidades': typeof AdminUnidadesIndexRoute
   '/api/public/crm/worker': typeof ApiPublicCrmWorkerRoute
+  '/api/public/hooks/$token': typeof ApiPublicHooksTokenRoute
+  '/api/public/notifications/email-worker': typeof ApiPublicNotificationsEmailWorkerRoute
   '/api/public/sdr/availability': typeof ApiPublicSdrAvailabilityRoute
   '/api/public/sdr/context': typeof ApiPublicSdrContextRoute
   '/api/public/sdr/delivery': typeof ApiPublicSdrDeliveryRoute
@@ -306,8 +408,11 @@ export interface FileRoutesByTo {
   '/api/public/sdr/units': typeof ApiPublicSdrUnitsRoute
   '/api/public/crm/webhook/$token': typeof ApiPublicCrmWebhookTokenRoute
   '/api/public/sdr/conversations/classify': typeof ApiPublicSdrConversationsClassifyRoute
+  '/api/public/sdr/crm/sends': typeof ApiPublicSdrCrmSendsRouteWithChildren
+  '/api/public/sdr/emails/run': typeof ApiPublicSdrEmailsRunRoute
   '/api/public/sdr/followups/due': typeof ApiPublicSdrFollowupsDueRoute
   '/api/public/sdr/reservations/$protocol': typeof ApiPublicSdrReservationsProtocolRoute
+  '/api/public/sdr/crm/sends/due': typeof ApiPublicSdrCrmSendsDueRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -315,17 +420,25 @@ export interface FileRoutesById {
   '/admin': typeof AdminRouteWithChildren
   '/entrar': typeof EntrarRoute
   '/primeiro-acesso': typeof PrimeiroAcessoRoute
+  '/redefinir-senha': typeof RedefinirSenhaRoute
+  '/admin/alertas': typeof AdminAlertasRoute
+  '/admin/anuncios': typeof AdminAnunciosRoute
   '/admin/aprovacoes': typeof AdminAprovacoesRoute
+  '/admin/campanhas': typeof AdminCampanhasRoute
+  '/admin/crm': typeof AdminCrmRoute
   '/admin/delivery': typeof AdminDeliveryRoute
   '/admin/equipe': typeof AdminEquipeRoute
   '/admin/historico': typeof AdminHistoricoRoute
   '/admin/integracoes': typeof AdminIntegracoesRoute
   '/admin/leads': typeof AdminLeadsRoute
+  '/admin/marketing': typeof AdminMarketingRoute
   '/admin/perfil': typeof AdminPerfilRoute
   '/admin/relatorios': typeof AdminRelatoriosRoute
   '/admin/reservas': typeof AdminReservasRoute
   '/admin/sac': typeof AdminSacRoute
   '/admin/valores': typeof AdminValoresRoute
+  '/admin/wifi': typeof AdminWifiRoute
+  '/c/$slug': typeof CSlugRoute
   '/goiania/pizza': typeof GoianiaPizzaRoute
   '/reservar/sucesso': typeof ReservarSucessoRoute
   '/admin/': typeof AdminIndexRoute
@@ -333,6 +446,8 @@ export interface FileRoutesById {
   '/admin/unidades/$unitId': typeof AdminUnidadesUnitIdRoute
   '/admin/unidades/': typeof AdminUnidadesIndexRoute
   '/api/public/crm/worker': typeof ApiPublicCrmWorkerRoute
+  '/api/public/hooks/$token': typeof ApiPublicHooksTokenRoute
+  '/api/public/notifications/email-worker': typeof ApiPublicNotificationsEmailWorkerRoute
   '/api/public/sdr/availability': typeof ApiPublicSdrAvailabilityRoute
   '/api/public/sdr/context': typeof ApiPublicSdrContextRoute
   '/api/public/sdr/delivery': typeof ApiPublicSdrDeliveryRoute
@@ -345,8 +460,11 @@ export interface FileRoutesById {
   '/api/public/sdr/units': typeof ApiPublicSdrUnitsRoute
   '/api/public/crm/webhook/$token': typeof ApiPublicCrmWebhookTokenRoute
   '/api/public/sdr/conversations/classify': typeof ApiPublicSdrConversationsClassifyRoute
+  '/api/public/sdr/crm/sends': typeof ApiPublicSdrCrmSendsRouteWithChildren
+  '/api/public/sdr/emails/run': typeof ApiPublicSdrEmailsRunRoute
   '/api/public/sdr/followups/due': typeof ApiPublicSdrFollowupsDueRoute
   '/api/public/sdr/reservations/$protocol': typeof ApiPublicSdrReservationsProtocolRoute
+  '/api/public/sdr/crm/sends/due': typeof ApiPublicSdrCrmSendsDueRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -355,17 +473,25 @@ export interface FileRouteTypes {
     | '/admin'
     | '/entrar'
     | '/primeiro-acesso'
+    | '/redefinir-senha'
+    | '/admin/alertas'
+    | '/admin/anuncios'
     | '/admin/aprovacoes'
+    | '/admin/campanhas'
+    | '/admin/crm'
     | '/admin/delivery'
     | '/admin/equipe'
     | '/admin/historico'
     | '/admin/integracoes'
     | '/admin/leads'
+    | '/admin/marketing'
     | '/admin/perfil'
     | '/admin/relatorios'
     | '/admin/reservas'
     | '/admin/sac'
     | '/admin/valores'
+    | '/admin/wifi'
+    | '/c/$slug'
     | '/goiania/pizza'
     | '/reservar/sucesso'
     | '/admin/'
@@ -373,6 +499,8 @@ export interface FileRouteTypes {
     | '/admin/unidades/$unitId'
     | '/admin/unidades/'
     | '/api/public/crm/worker'
+    | '/api/public/hooks/$token'
+    | '/api/public/notifications/email-worker'
     | '/api/public/sdr/availability'
     | '/api/public/sdr/context'
     | '/api/public/sdr/delivery'
@@ -385,24 +513,35 @@ export interface FileRouteTypes {
     | '/api/public/sdr/units'
     | '/api/public/crm/webhook/$token'
     | '/api/public/sdr/conversations/classify'
+    | '/api/public/sdr/crm/sends'
+    | '/api/public/sdr/emails/run'
     | '/api/public/sdr/followups/due'
     | '/api/public/sdr/reservations/$protocol'
+    | '/api/public/sdr/crm/sends/due'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/entrar'
     | '/primeiro-acesso'
+    | '/redefinir-senha'
+    | '/admin/alertas'
+    | '/admin/anuncios'
     | '/admin/aprovacoes'
+    | '/admin/campanhas'
+    | '/admin/crm'
     | '/admin/delivery'
     | '/admin/equipe'
     | '/admin/historico'
     | '/admin/integracoes'
     | '/admin/leads'
+    | '/admin/marketing'
     | '/admin/perfil'
     | '/admin/relatorios'
     | '/admin/reservas'
     | '/admin/sac'
     | '/admin/valores'
+    | '/admin/wifi'
+    | '/c/$slug'
     | '/goiania/pizza'
     | '/reservar/sucesso'
     | '/admin'
@@ -410,6 +549,8 @@ export interface FileRouteTypes {
     | '/admin/unidades/$unitId'
     | '/admin/unidades'
     | '/api/public/crm/worker'
+    | '/api/public/hooks/$token'
+    | '/api/public/notifications/email-worker'
     | '/api/public/sdr/availability'
     | '/api/public/sdr/context'
     | '/api/public/sdr/delivery'
@@ -422,25 +563,36 @@ export interface FileRouteTypes {
     | '/api/public/sdr/units'
     | '/api/public/crm/webhook/$token'
     | '/api/public/sdr/conversations/classify'
+    | '/api/public/sdr/crm/sends'
+    | '/api/public/sdr/emails/run'
     | '/api/public/sdr/followups/due'
     | '/api/public/sdr/reservations/$protocol'
+    | '/api/public/sdr/crm/sends/due'
   id:
     | '__root__'
     | '/'
     | '/admin'
     | '/entrar'
     | '/primeiro-acesso'
+    | '/redefinir-senha'
+    | '/admin/alertas'
+    | '/admin/anuncios'
     | '/admin/aprovacoes'
+    | '/admin/campanhas'
+    | '/admin/crm'
     | '/admin/delivery'
     | '/admin/equipe'
     | '/admin/historico'
     | '/admin/integracoes'
     | '/admin/leads'
+    | '/admin/marketing'
     | '/admin/perfil'
     | '/admin/relatorios'
     | '/admin/reservas'
     | '/admin/sac'
     | '/admin/valores'
+    | '/admin/wifi'
+    | '/c/$slug'
     | '/goiania/pizza'
     | '/reservar/sucesso'
     | '/admin/'
@@ -448,6 +600,8 @@ export interface FileRouteTypes {
     | '/admin/unidades/$unitId'
     | '/admin/unidades/'
     | '/api/public/crm/worker'
+    | '/api/public/hooks/$token'
+    | '/api/public/notifications/email-worker'
     | '/api/public/sdr/availability'
     | '/api/public/sdr/context'
     | '/api/public/sdr/delivery'
@@ -460,8 +614,11 @@ export interface FileRouteTypes {
     | '/api/public/sdr/units'
     | '/api/public/crm/webhook/$token'
     | '/api/public/sdr/conversations/classify'
+    | '/api/public/sdr/crm/sends'
+    | '/api/public/sdr/emails/run'
     | '/api/public/sdr/followups/due'
     | '/api/public/sdr/reservations/$protocol'
+    | '/api/public/sdr/crm/sends/due'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -469,10 +626,14 @@ export interface RootRouteChildren {
   AdminRoute: typeof AdminRouteWithChildren
   EntrarRoute: typeof EntrarRoute
   PrimeiroAcessoRoute: typeof PrimeiroAcessoRoute
+  RedefinirSenhaRoute: typeof RedefinirSenhaRoute
+  CSlugRoute: typeof CSlugRoute
   GoianiaPizzaRoute: typeof GoianiaPizzaRoute
   ReservarSucessoRoute: typeof ReservarSucessoRoute
   ReservarIndexRoute: typeof ReservarIndexRoute
   ApiPublicCrmWorkerRoute: typeof ApiPublicCrmWorkerRoute
+  ApiPublicHooksTokenRoute: typeof ApiPublicHooksTokenRoute
+  ApiPublicNotificationsEmailWorkerRoute: typeof ApiPublicNotificationsEmailWorkerRoute
   ApiPublicSdrAvailabilityRoute: typeof ApiPublicSdrAvailabilityRoute
   ApiPublicSdrContextRoute: typeof ApiPublicSdrContextRoute
   ApiPublicSdrDeliveryRoute: typeof ApiPublicSdrDeliveryRoute
@@ -485,6 +646,8 @@ export interface RootRouteChildren {
   ApiPublicSdrUnitsRoute: typeof ApiPublicSdrUnitsRoute
   ApiPublicCrmWebhookTokenRoute: typeof ApiPublicCrmWebhookTokenRoute
   ApiPublicSdrConversationsClassifyRoute: typeof ApiPublicSdrConversationsClassifyRoute
+  ApiPublicSdrCrmSendsRoute: typeof ApiPublicSdrCrmSendsRouteWithChildren
+  ApiPublicSdrEmailsRunRoute: typeof ApiPublicSdrEmailsRunRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -517,6 +680,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PrimeiroAcessoRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/redefinir-senha': {
+      id: '/redefinir-senha'
+      path: '/redefinir-senha'
+      fullPath: '/redefinir-senha'
+      preLoaderRoute: typeof RedefinirSenhaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/': {
       id: '/admin/'
       path: '/'
@@ -524,11 +694,39 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminIndexRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/alertas': {
+      id: '/admin/alertas'
+      path: '/alertas'
+      fullPath: '/admin/alertas'
+      preLoaderRoute: typeof AdminAlertasRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/anuncios': {
+      id: '/admin/anuncios'
+      path: '/anuncios'
+      fullPath: '/admin/anuncios'
+      preLoaderRoute: typeof AdminAnunciosRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/aprovacoes': {
       id: '/admin/aprovacoes'
       path: '/aprovacoes'
       fullPath: '/admin/aprovacoes'
       preLoaderRoute: typeof AdminAprovacoesRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/campanhas': {
+      id: '/admin/campanhas'
+      path: '/campanhas'
+      fullPath: '/admin/campanhas'
+      preLoaderRoute: typeof AdminCampanhasRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/crm': {
+      id: '/admin/crm'
+      path: '/crm'
+      fullPath: '/admin/crm'
+      preLoaderRoute: typeof AdminCrmRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/delivery': {
@@ -566,6 +764,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminLeadsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/marketing': {
+      id: '/admin/marketing'
+      path: '/marketing'
+      fullPath: '/admin/marketing'
+      preLoaderRoute: typeof AdminMarketingRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/perfil': {
       id: '/admin/perfil'
       path: '/perfil'
@@ -600,6 +805,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/valores'
       preLoaderRoute: typeof AdminValoresRouteImport
       parentRoute: typeof AdminRoute
+    }
+    '/admin/wifi': {
+      id: '/admin/wifi'
+      path: '/wifi'
+      fullPath: '/admin/wifi'
+      preLoaderRoute: typeof AdminWifiRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/c/$slug': {
+      id: '/c/$slug'
+      path: '/c/$slug'
+      fullPath: '/c/$slug'
+      preLoaderRoute: typeof CSlugRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/goiania/pizza': {
       id: '/goiania/pizza'
@@ -641,6 +860,20 @@ declare module '@tanstack/react-router' {
       path: '/api/public/crm/worker'
       fullPath: '/api/public/crm/worker'
       preLoaderRoute: typeof ApiPublicCrmWorkerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/$token': {
+      id: '/api/public/hooks/$token'
+      path: '/api/public/hooks/$token'
+      fullPath: '/api/public/hooks/$token'
+      preLoaderRoute: typeof ApiPublicHooksTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/notifications/email-worker': {
+      id: '/api/public/notifications/email-worker'
+      path: '/api/public/notifications/email-worker'
+      fullPath: '/api/public/notifications/email-worker'
+      preLoaderRoute: typeof ApiPublicNotificationsEmailWorkerRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/sdr/availability': {
@@ -727,6 +960,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicSdrConversationsClassifyRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/sdr/crm/sends': {
+      id: '/api/public/sdr/crm/sends'
+      path: '/api/public/sdr/crm/sends'
+      fullPath: '/api/public/sdr/crm/sends'
+      preLoaderRoute: typeof ApiPublicSdrCrmSendsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/sdr/emails/run': {
+      id: '/api/public/sdr/emails/run'
+      path: '/api/public/sdr/emails/run'
+      fullPath: '/api/public/sdr/emails/run'
+      preLoaderRoute: typeof ApiPublicSdrEmailsRunRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/sdr/followups/due': {
       id: '/api/public/sdr/followups/due'
       path: '/due'
@@ -741,38 +988,57 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicSdrReservationsProtocolRouteImport
       parentRoute: typeof ApiPublicSdrReservationsRoute
     }
+    '/api/public/sdr/crm/sends/due': {
+      id: '/api/public/sdr/crm/sends/due'
+      path: '/due'
+      fullPath: '/api/public/sdr/crm/sends/due'
+      preLoaderRoute: typeof ApiPublicSdrCrmSendsDueRouteImport
+      parentRoute: typeof ApiPublicSdrCrmSendsRoute
+    }
   }
 }
 
 interface AdminRouteChildren {
+  AdminAlertasRoute: typeof AdminAlertasRoute
+  AdminAnunciosRoute: typeof AdminAnunciosRoute
   AdminAprovacoesRoute: typeof AdminAprovacoesRoute
+  AdminCampanhasRoute: typeof AdminCampanhasRoute
+  AdminCrmRoute: typeof AdminCrmRoute
   AdminDeliveryRoute: typeof AdminDeliveryRoute
   AdminEquipeRoute: typeof AdminEquipeRoute
   AdminHistoricoRoute: typeof AdminHistoricoRoute
   AdminIntegracoesRoute: typeof AdminIntegracoesRoute
   AdminLeadsRoute: typeof AdminLeadsRoute
+  AdminMarketingRoute: typeof AdminMarketingRoute
   AdminPerfilRoute: typeof AdminPerfilRoute
   AdminRelatoriosRoute: typeof AdminRelatoriosRoute
   AdminReservasRoute: typeof AdminReservasRoute
   AdminSacRoute: typeof AdminSacRoute
   AdminValoresRoute: typeof AdminValoresRoute
+  AdminWifiRoute: typeof AdminWifiRoute
   AdminIndexRoute: typeof AdminIndexRoute
   AdminUnidadesUnitIdRoute: typeof AdminUnidadesUnitIdRoute
   AdminUnidadesIndexRoute: typeof AdminUnidadesIndexRoute
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
+  AdminAlertasRoute: AdminAlertasRoute,
+  AdminAnunciosRoute: AdminAnunciosRoute,
   AdminAprovacoesRoute: AdminAprovacoesRoute,
+  AdminCampanhasRoute: AdminCampanhasRoute,
+  AdminCrmRoute: AdminCrmRoute,
   AdminDeliveryRoute: AdminDeliveryRoute,
   AdminEquipeRoute: AdminEquipeRoute,
   AdminHistoricoRoute: AdminHistoricoRoute,
   AdminIntegracoesRoute: AdminIntegracoesRoute,
   AdminLeadsRoute: AdminLeadsRoute,
+  AdminMarketingRoute: AdminMarketingRoute,
   AdminPerfilRoute: AdminPerfilRoute,
   AdminRelatoriosRoute: AdminRelatoriosRoute,
   AdminReservasRoute: AdminReservasRoute,
   AdminSacRoute: AdminSacRoute,
   AdminValoresRoute: AdminValoresRoute,
+  AdminWifiRoute: AdminWifiRoute,
   AdminIndexRoute: AdminIndexRoute,
   AdminUnidadesUnitIdRoute: AdminUnidadesUnitIdRoute,
   AdminUnidadesIndexRoute: AdminUnidadesIndexRoute,
@@ -808,15 +1074,31 @@ const ApiPublicSdrReservationsRouteWithChildren =
     ApiPublicSdrReservationsRouteChildren,
   )
 
+interface ApiPublicSdrCrmSendsRouteChildren {
+  ApiPublicSdrCrmSendsDueRoute: typeof ApiPublicSdrCrmSendsDueRoute
+}
+
+const ApiPublicSdrCrmSendsRouteChildren: ApiPublicSdrCrmSendsRouteChildren = {
+  ApiPublicSdrCrmSendsDueRoute: ApiPublicSdrCrmSendsDueRoute,
+}
+
+const ApiPublicSdrCrmSendsRouteWithChildren =
+  ApiPublicSdrCrmSendsRoute._addFileChildren(ApiPublicSdrCrmSendsRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRouteWithChildren,
   EntrarRoute: EntrarRoute,
   PrimeiroAcessoRoute: PrimeiroAcessoRoute,
+  RedefinirSenhaRoute: RedefinirSenhaRoute,
+  CSlugRoute: CSlugRoute,
   GoianiaPizzaRoute: GoianiaPizzaRoute,
   ReservarSucessoRoute: ReservarSucessoRoute,
   ReservarIndexRoute: ReservarIndexRoute,
   ApiPublicCrmWorkerRoute: ApiPublicCrmWorkerRoute,
+  ApiPublicHooksTokenRoute: ApiPublicHooksTokenRoute,
+  ApiPublicNotificationsEmailWorkerRoute:
+    ApiPublicNotificationsEmailWorkerRoute,
   ApiPublicSdrAvailabilityRoute: ApiPublicSdrAvailabilityRoute,
   ApiPublicSdrContextRoute: ApiPublicSdrContextRoute,
   ApiPublicSdrDeliveryRoute: ApiPublicSdrDeliveryRoute,
@@ -830,6 +1112,8 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicCrmWebhookTokenRoute: ApiPublicCrmWebhookTokenRoute,
   ApiPublicSdrConversationsClassifyRoute:
     ApiPublicSdrConversationsClassifyRoute,
+  ApiPublicSdrCrmSendsRoute: ApiPublicSdrCrmSendsRouteWithChildren,
+  ApiPublicSdrEmailsRunRoute: ApiPublicSdrEmailsRunRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

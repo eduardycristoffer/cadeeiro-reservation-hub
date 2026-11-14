@@ -1,4 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { scopedUnits } from "@/lib/scope";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { CalendarX, ChevronLeft, ChevronRight, Loader2, Plus, Search, SlidersHorizontal, Users } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
@@ -99,7 +100,7 @@ function Reservas() {
   const queued = useQueued();
 
   useEffect(() => {
-    requireSupabase().from("units").select("id,name").order("sort_order").order("name")
+    scopedUnits("id,name").order("sort_order").order("name")
       .then(({ data }) => setUnits((data ?? []) as Unit[]));
   }, []);
 
@@ -226,7 +227,7 @@ function Reservas() {
               {search.view === "lista" ? (
                 <div className="relative min-w-0">
                   <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
-                  <Input type="search" aria-label="Buscar reserva" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Nome, telefone ou protocolo" className="h-11 rounded-xl pl-9" />
+                  <Input type="search" aria-label="Buscar reserva" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Buscar reserva" className="h-11 rounded-xl pl-9" />
                 </div>
               ) : <span />}
               <Button variant="outline" className="h-11" onClick={() => setFiltersOpen(true)}>
@@ -248,7 +249,7 @@ function Reservas() {
               {search.view === "lista" && (
                 <div className="relative min-w-56 flex-1">
                   <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
-                  <Input type="search" aria-label="Buscar reserva" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Nome, telefone ou protocolo" className="h-11 rounded-xl pl-9" />
+                  <Input type="search" aria-label="Buscar reserva" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Buscar reserva" className="h-11 rounded-xl pl-9" />
                 </div>
               )}
             </div>
@@ -405,7 +406,7 @@ function CalendarView({ unitId, mode, refDate, tick, onMode, onRef, onPick }: {
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-1">
           <Button variant="ghost" size="icon" aria-label="Anterior" onClick={() => shift(-1)}><ChevronLeft className="h-4 w-4" /></Button>
-          <p className="min-w-0 text-center text-sm font-semibold capitalize sm:min-w-40 sm:text-lg">{title}</p>
+          <p className="min-w-0 text-center text-sm font-semibold cap1 sm:min-w-40 sm:text-lg">{title}</p>
           <Button variant="ghost" size="icon" aria-label="Próximo" onClick={() => shift(1)}><ChevronRight className="h-4 w-4" /></Button>
           <Button variant="ghost" size="sm" onClick={() => onRef(todayIso)}>Hoje</Button>
         </div>
@@ -455,25 +456,27 @@ function CalendarView({ unitId, mode, refDate, tick, onMode, onRef, onPick }: {
 
 function ReservationCard({ r, queued, onOpen, onChanged }: { r: Row; queued: boolean; onOpen: () => void; onChanged: () => void }) {
   const status = queued ? "confirmada" : r.status;
+  const date = fromIsoDate(r.reservation_date).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
   return (
-    <article className="p-4 text-sm">
-      <button type="button" onClick={onOpen} className="block w-full text-left">
-        <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-2">
-          <div className="min-w-0">
-            <p className="break-words text-base font-semibold">{r.customers?.full_name ?? "Cliente"}</p>
-            <p className="mt-0.5 text-muted-foreground">{r.units?.name}{r.service ? ` · ${SERVICE_LABEL[r.service]}` : ""}</p>
-          </div>
-          <StatusBadge status={status} />
-        </div>
-        <p className="mt-2 font-medium tabular-nums">
-          {hhmm(r.reservation_time)} · {fromIsoDate(r.reservation_date).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" })} · <span className="inline-flex items-center gap-1"><Users className="h-3.5 w-3.5" aria-hidden="true" />{r.party_size} pessoas</span>
-        </p>
+    <article className="px-4 py-3.5 text-sm">
+      {/* o card inteiro abre a reserva; só as pendentes têm botões (aprovar/recusar) */}
+      <button type="button" onClick={onOpen} className="grid w-full grid-cols-[3.25rem_minmax(0,1fr)_auto] items-center gap-3 text-left" aria-label={`Abrir reserva de ${r.customers?.full_name ?? "cliente"}`}>
+        <span className="text-center">
+          <span className="block text-lg font-semibold leading-none tabular-nums">{hhmm(r.reservation_time)}</span>
+          <span className="mt-1 block text-[11px] tabular-nums text-muted-foreground">{date}</span>
+        </span>
+        <span className="min-w-0">
+          <span className="line-clamp-2 break-words text-[15px] font-semibold leading-snug">{r.customers?.full_name ?? "Cliente"}</span>
+          <span className="mt-0.5 flex min-w-0 items-center gap-1 text-xs text-muted-foreground">
+            <Users className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+            <span className="truncate">{r.party_size} {r.party_size === 1 ? "pessoa" : "pessoas"} · {r.units?.name?.replace(/^Candeeiro\s+/, "")}</span>
+          </span>
+          {r.service && <span className="mt-0.5 block truncate text-xs text-muted-foreground">{SERVICE_LABEL[r.service]}</span>}
+          {r.is_large_group && <span className="mt-1 inline-block rounded-full bg-status-pending-bg px-2 py-0.5 text-[11px] font-medium text-status-pending">Grupo grande</span>}
+        </span>
+        <StatusBadge status={status} />
       </button>
-      {status === "pendente" ? (
-        <PendingActions id={r.id} isLargeGroup={r.is_large_group} onChanged={onChanged} size="default" className="mt-3" />
-      ) : (
-        <Button variant="outline" className="mt-3 h-11 w-full" onClick={onOpen}>Ver reserva</Button>
-      )}
+      {status === "pendente" && <PendingActions id={r.id} isLargeGroup={r.is_large_group} onChanged={onChanged} size="default" className="mt-3" />}
     </article>
   );
 }
@@ -508,13 +511,13 @@ function MobileDayView({ unitId, refDate, tick, onRef, onOpen, onChanged }: {
           return (
             <button key={iso} role="option" aria-selected={on} onClick={() => onRef(iso)} ref={on ? (el) => el?.scrollIntoView({ inline: "center", block: "nearest" }) : undefined}
               className={cn("flex h-16 w-14 shrink-0 snap-center flex-col items-center justify-center rounded-2xl text-xs", on ? "bg-primary text-primary-foreground" : "bg-surface")}>
-              <span className="capitalize">{d.toLocaleDateString("pt-BR", { weekday: "short" }).replace(".", "")}</span>
+              <span className="cap1">{d.toLocaleDateString("pt-BR", { weekday: "short" }).replace(".", "")}</span>
               <span className="text-lg font-semibold tabular-nums">{d.getDate()}</span>
             </button>
           );
         })}
       </div>
-      <p className="mt-3 text-sm text-muted-foreground"><span className="capitalize">{fromIsoDate(day).toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long" })}</span>{rows ? ` · ${rows.length} reservas · ${people} pessoas` : ""}</p>
+      <p className="mt-3 text-sm text-muted-foreground"><span className="cap1">{fromIsoDate(day).toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long" })}</span>{rows ? ` · ${rows.length} reservas · ${people} pessoas` : ""}</p>
       <div className="mt-3 overflow-hidden rounded-3xl bg-card shadow-soft">
         {err ? <ErrorState message={err} onRetry={() => setRetry((n) => n + 1)} /> : !rows ? <ListSkeleton rows={3} /> : rows.length === 0 ? (
           <EmptyState icon={CalendarX} title="Sem reservas neste dia" />

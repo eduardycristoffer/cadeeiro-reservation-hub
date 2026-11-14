@@ -38,11 +38,12 @@ export function NativeSelect({ className, children, ...props }: SelectHTMLAttrib
   );
 }
 
-export function StatCard({ label, value, hint }: { label: string; value: ReactNode; hint?: string }) {
+export function StatCard({ label, value, hint }: { label: string; value: ReactNode; hint?: string | undefined }) {
   return (
-    <div className="min-w-0 rounded-3xl bg-card p-4 shadow-soft sm:p-6">
-      <p className="text-sm text-muted-foreground">{label}</p>
-      <p className="mt-2 text-3xl font-semibold tabular-nums sm:text-4xl">{value}</p>
+    <div className="@container min-w-0 rounded-3xl bg-card p-4 shadow-soft sm:p-6">
+      <p className="text-sm leading-snug text-muted-foreground">{label}</p>
+      {/* o número encolhe conforme a largura do card: "R$ 12.051,00" nunca quebra nem é cortado */}
+      <p className="mt-2 whitespace-nowrap text-[clamp(1.125rem,13cqw,2.25rem)] font-semibold leading-tight tabular-nums">{value}</p>
       {hint && <p className="mt-1 text-xs text-muted-foreground">{hint}</p>}
     </div>
   );

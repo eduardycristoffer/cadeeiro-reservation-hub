@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { scopedUnits } from "@/lib/scope";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Headset, Loader2, MessageCircle, Phone, Plus, Search, SlidersHorizontal } from "lucide-react";
 import { toast } from "sonner";
@@ -41,7 +42,7 @@ function Sac() {
 
   useEffect(() => {
     const sb = requireSupabase();
-    sb.from("units").select("id,name").order("sort_order").order("name").then(({ data }) => setUnits((data ?? []) as typeof units));
+    scopedUnits("id,name").order("sort_order").order("name").then(({ data }) => setUnits((data ?? []) as typeof units));
   }, []);
   useEffect(() => {
     const u = f.unit || units[0]?.id;

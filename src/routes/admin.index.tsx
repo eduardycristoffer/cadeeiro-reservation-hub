@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { scopedUnits } from "@/lib/scope";
 import { useCallback, useEffect, useState } from "react";
 import { CalendarDays, CheckCircle2, ChevronRight, Clock, Plus, Users } from "lucide-react";
 import { toast } from "sonner";
@@ -58,7 +59,7 @@ function AdminHome() {
   const refresh = useCallback(() => setTick((t) => t + 1), []);
 
   useEffect(() => { setErr(null); load().then(setData).catch((e) => setErr(friendlyError(e))); }, [tick, pending]);
-  useEffect(() => { requireSupabase().from("units").select("id,name").order("sort_order").order("name").then(({ data }) => setUnits((data ?? []) as { id: string; name: string }[])); }, []);
+  useEffect(() => { scopedUnits("id,name").order("sort_order").order("name").then(({ data }) => setUnits((data ?? []) as { id: string; name: string }[])); }, []);
 
   const people = data?.rows.reduce((s, r) => s + r.party_size, 0) ?? 0;
   const groups = new Map<string, TodayRow[]>();
@@ -77,7 +78,7 @@ function AdminHome() {
     <div className="fade-up">
       <p className="text-sm text-muted-foreground">{roles.map((r) => ROLE_LABEL[r]).join(" · ")}</p>
       <h1 className="mt-1 text-4xl font-semibold">Hoje</h1>
-      <p className="text-sm capitalize text-muted-foreground">{new Date().toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo", weekday: "long", day: "numeric", month: "long" })}</p>
+      <p className="cap1 text-sm text-muted-foreground">{new Date().toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo", weekday: "long", day: "numeric", month: "long" })}</p>
 
       {pending ? (
         <Link to="/admin/aprovacoes" className="mt-5 grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 rounded-3xl bg-status-pending-bg p-4 text-status-pending shadow-soft sm:p-5">
@@ -119,7 +120,7 @@ function AdminHome() {
                         <span className="min-w-0 whitespace-normal"><span className="block font-medium">{r.customers?.full_name ?? "Cliente"}</span><span className="block text-xs text-muted-foreground">{r.party_size} pessoas · {r.units?.name}</span></span>
                         <StatusBadge status={r.status} />
                       </Button>
-                      {!queued.has(r.id) && r.status === "pendente" ? <PendingActions id={r.id} isLargeGroup={r.is_large_group} onChanged={refresh} size="default" className="mt-2" /> : r.status === "confirmada" ? <div className="mt-2 flex flex-wrap gap-2"><Button className="h-11 flex-1" disabled={busyId === r.id || !!r.arrived_at} onClick={() => arrival(r.id)}>Chegou</Button><Button variant="ghost" className="h-11 px-3 text-destructive" onClick={() => setCancelId(r.id)}>Cancelar</Button><Button variant="ghost" className="h-11 px-2 text-xs" onClick={() => setOpenId(r.id)}>Não compareceu</Button></div> : null}
+                      {!queued.has(r.id) && r.status === "pendente" ? <PendingActions id={r.id} isLargeGroup={r.is_large_group} onChanged={refresh} size="default" className="mt-2" /> : r.status === "confirmada" ? <div className="mt-2 grid grid-cols-[minmax(0,1fr)_auto] gap-2"><Button className="h-11" disabled={busyId === r.id || !!r.arrived_at} onClick={() => arrival(r.id)}>{r.arrived_at ? "Já chegou" : "Chegou"}</Button><Button variant="ghost" className="h-11 px-4 text-destructive" onClick={() => setCancelId(r.id)}>Cancelar</Button></div> : null}
                     </li>
                   ))}
                 </ul>

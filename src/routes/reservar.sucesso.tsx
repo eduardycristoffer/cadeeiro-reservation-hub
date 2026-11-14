@@ -1,8 +1,12 @@
+import { useEffect, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { z } from "zod";
 import { Check, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { PublicExtras } from "@/components/public/PublicExtras";
 import { formatDateLong, hhmm } from "@/lib/format";
+import { track } from "@/lib/pixel";
+import { supabase } from "@/lib/supabase";
 import { OCCASION_LABEL, SERVICE_LABEL, type OccasionId, type ServiceId } from "@/lib/reservations";
 
 const search = z.object({
@@ -15,6 +19,7 @@ const search = z.object({
   r: z.string().catch(""),
   o: z.string().catch(""),
   w: z.string().catch(""),
+  c: z.string().catch(""),
 });
 
 export const Route = createFileRoute("/reservar/sucesso")({
@@ -32,12 +37,26 @@ export const Route = createFileRoute("/reservar/sucesso")({
 });
 
 function Success() {
-  const { p, u, d, t, n, s, r, o, w } = Route.useSearch();
+  const { p, u, d, t, n, s, r, o, w, c } = Route.useSearch();
+  const [thanks, setThanks] = useState<string | null>(null);
   const confirmed = s === "confirmada";
   const rodizio = SERVICE_LABEL[r as ServiceId];
   const ocasiao = OCCASION_LABEL[o as OccasionId];
+  // conversão da reserva: uma vez por protocolo, sem dados pessoais
+  useEffect(() => { if (p) track("Schedule", { content_name: r || "reserva", value: n, currency: "BRL" }, `reserva:${p}`); }, [p, r, n]);
+  // mensagem de agradecimento da página de campanha (buscada no banco pelo endereço; nunca vem da URL)
+  useEffect(() => {
+    if (!supabase || !/^[a-z0-9-]{3,60}$/.test(c)) return;
+    let off = false;
+    void supabase.rpc("public_campaign_page", { _slug: c }).then(({ data, error }) => {
+      const t = !error && data && typeof data === "object" ? (data as { thank_you?: unknown }).thank_you : null;
+      if (!off && typeof t === "string" && t.trim()) setThanks(t.trim().slice(0, 300));
+    }, () => undefined);
+    return () => { off = true; };
+  }, [c]);
   return (
     <main className="min-h-screen bg-surface px-4 py-6 sm:py-12">
+      <PublicExtras />
       <div className="fade-up mx-auto max-w-md text-center sm:rounded-3xl sm:bg-card sm:p-8 sm:shadow-soft">
         <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-brand text-brand-foreground">
           {confirmed ? <Check className="h-7 w-7" /> : <Clock className="h-7 w-7" />}
@@ -50,6 +69,7 @@ function Success() {
             ? "Tudo certo. Esperamos você!"
             : "Aguarde a confirmação da unidade."}
         </p>
+        {thanks && <p className="mt-4 rounded-2xl bg-surface p-4 text-sm">{thanks}</p>}
         <div className="mt-8 rounded-2xl bg-surface p-5 text-left">
           <p className="text-xs uppercase tracking-wider text-muted-foreground">Protocolo</p>
           <p className="mt-1 break-all font-mono text-lg font-semibold">{p}</p>

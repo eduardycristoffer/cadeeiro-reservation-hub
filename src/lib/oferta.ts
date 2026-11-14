@@ -6,6 +6,8 @@ export const OFERTA = {
 } as const satisfies Record<string, { nome: string; servicos: readonly ServiceId[] }>;
 export type Cidade = keyof typeof OFERTA;
 export const CIDADES = Object.keys(OFERTA) as Cidade[];
+/** Evento que abre o formulário de WhatsApp (botões das páginas de campanha). */
+export const WHATSAPP_OPEN_EVENT = "candeeiro:whatsapp";
 export const LGPD_TEXT = "Aceito o uso de nome e WhatsApp para esta reserva e atendimento (LGPD).";
 export function cidadeValida(v: unknown): Cidade | undefined {
   return v === "goiania" || v === "anapolis" ? v : undefined;

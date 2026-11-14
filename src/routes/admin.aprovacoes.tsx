@@ -6,7 +6,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { EmptyState, ErrorState, ListSkeleton } from "@/components/admin/bits";
 import { PendingActions, approve, useCanManage } from "@/components/admin/approvals";
 import { friendlyError, requireSupabase } from "@/lib/supabase";
-import { formatDateLong, hhmm, toIsoDate } from "@/lib/format";
+import { fromIsoDate, hhmm, toIsoDate } from "@/lib/format";
 import { OCCASION_LABEL, SERVICE_LABEL, canConfirmLargeGroup, formatPhoneE164, waLink, type OccasionId, type ServiceId } from "@/lib/reservations";
 import { sortPending, useQueued } from "@/lib/approvals";
 
@@ -102,17 +102,19 @@ function Aprovacoes() {
                     <Users className="h-4 w-4" aria-hidden="true" />{r.party_size}<span className="sr-only"> pessoas</span>
                   </span>
                 </div>
-                <p className="mt-3 text-base font-medium"><span className="capitalize">{formatDateLong(r.reservation_date)}</span> · {hhmm(r.reservation_time)}</p>
+                <div className="mt-3 flex items-center justify-between gap-3">
+                  <p className="min-w-0 text-base"><span className="font-semibold tabular-nums">{hhmm(r.reservation_time)}</span> · <span className="cap1">{fromIsoDate(r.reservation_date).toLocaleDateString("pt-BR", { weekday: "short", day: "numeric", month: "short" }).replace(/\./g, "")}</span></p>
+                  {r.customers && (
+                    <div className="flex shrink-0 gap-2">
+                      <Button asChild variant="outline" size="icon" className="h-11 w-11 rounded-full"><a href={`tel:${r.customers.phone_e164}`} aria-label={`Ligar para ${formatPhoneE164(r.customers.phone_e164)}`}><Phone className="h-[18px] w-[18px]" /></a></Button>
+                      <Button asChild variant="outline" size="icon" className="h-11 w-11 rounded-full"><a href={waLink(r.customers.phone_e164)} target="_blank" rel="noreferrer" aria-label="Chamar no WhatsApp"><MessageCircle className="h-[18px] w-[18px]" /></a></Button>
+                    </div>
+                  )}
+                </div>
                 {r.occasion && r.occasion !== "nenhuma" && (
                   <p className="mt-2 inline-flex items-center gap-1.5 text-sm"><PartyPopper className="h-4 w-4 text-brand-ink" aria-hidden="true" />{OCCASION_LABEL[r.occasion]}{r.celebrant_name ? ` · ${r.celebrant_name}` : ""}</p>
                 )}
                 {r.notes && <p className="mt-2 whitespace-pre-wrap rounded-2xl bg-surface p-3 text-sm">{r.notes}</p>}
-                {r.customers && (
-                  <div className="mt-3 grid grid-cols-2 gap-2">
-                    <Button asChild variant="outline" className="h-11"><a href={`tel:${r.customers.phone_e164}`} aria-label={`Ligar para ${formatPhoneE164(r.customers.phone_e164)}`}><Phone className="h-4 w-4" /> Ligar</a></Button>
-                    <Button asChild variant="outline" className="h-11"><a href={waLink(r.customers.phone_e164)} target="_blank" rel="noreferrer"><MessageCircle className="h-4 w-4" /> WhatsApp</a></Button>
-                  </div>
-                )}
                 <PendingActions id={r.id} isLargeGroup={r.is_large_group} onChanged={refresh} className="mt-3" />
               </li>
             );

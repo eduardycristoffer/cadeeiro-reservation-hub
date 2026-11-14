@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { scopedUnits } from "@/lib/scope";
 import { useCallback, useEffect, useState } from "react";
-import { ChevronRight, Loader2, UserPlus, Users } from "lucide-react";
+import { ChevronRight, Copy, Loader2, Mail, UserPlus, Users } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -12,7 +13,7 @@ import { AuditTimeline } from "@/components/admin/AuditTimeline";
 import { assignableRoles, INVITE_ERRORS, ROLE_LABEL, timeLabel, type AuditRow } from "@/lib/audit";
 import { useAuth, type Role } from "@/lib/auth";
 import { friendlyError, requireSupabase } from "@/lib/supabase";
-import { inviteTeamMember, setTeamMemberActive } from "@/lib/team.functions";
+import { inviteTeamMember, resendTeamInvite, setTeamMemberActive } from "@/lib/team.functions";
 
 export const Route = createFileRoute("/admin/equipe")({
   head: () => ({ meta: [{ name: "description", content: "Equipe e acesso às unidades da Rede Candeeiro." }, { property: "og:title", content: "Equipe — Candeeiro Gestão" }, { property: "og:description", content: "Equipe e acesso às unidades da Rede Candeeiro." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }, { title: "Equipe — Candeeiro Gestão" }, { name: "robots", content: "noindex" }] }),
@@ -24,6 +25,10 @@ type Unit = { id: string; name: string; is_active?: boolean };
 
 const errMsg = (e: string) => INVITE_ERRORS[e] ?? e;
 
+/** Link de convite que não saiu por e-mail, para o gestor copiar e mandar. */
+type PendingLink = { email: string; link: string; reason: string | null };
+const reasonText = (reason: string | null) => (!reason || reason === "sem_provedor" ? "O envio de e-mail ainda não está configurado no sistema." : `O e-mail não saiu (${reason}).`);
+
 function Equipe() {
   const { roles, user } = useAuth();
   const isSuper = roles.includes("super_admin");
@@ -33,13 +38,14 @@ function Equipe() {
   const [err, setErr] = useState<string | null>(null);
   const [invite, setInvite] = useState(false);
   const [openId, setOpenId] = useState<string | null>(null);
+  const [pending, setPending] = useState<PendingLink | null>(null);
 
   const load = useCallback(async () => {
     const sb = requireSupabase();
     setErr(null);
     const [{ data, error }, { data: u }] = await Promise.all([
       sb.rpc("admin_list_team"),
-      sb.from("units").select("id,name,is_active").order("sort_order").order("name"),
+      scopedUnits("id,name,is_active").order("sort_order").order("name"),
     ]);
     if (error) { setErr(friendlyError(error)); setList([]); return; }
     setList((data ?? []) as U[]);
@@ -82,7 +88,7 @@ function Equipe() {
                         <span>{u.roles.includes("super_admin") ? "Todas as unidades" : u.unit_ids.map(unitName).join(", ") || "Sem unidade"}</span>
                       </p>
                       <p className="mt-0.5 text-xs text-muted-foreground">
-                        {u.needs_onboarding ? "Convite enviado, ainda não entrou" : u.last_sign_in_at ? `Último acesso ${timeLabel(u.last_sign_in_at)}` : "Nunca entrou"}
+                        {u.needs_onboarding ? "Convidado, ainda não criou a senha" : u.last_sign_in_at ? `Último acesso ${timeLabel(u.last_sign_in_at)}` : "Nunca entrou"}
                       </p>
                     </div>
                     <span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-medium ${u.is_active ? "bg-status-confirmed-bg text-status-confirmed" : "bg-status-noshow-bg text-status-noshow"}`}>{u.is_active ? "Ativo" : "Inativo"}</span>
@@ -94,8 +100,9 @@ function Equipe() {
           )}
       </div>
 
-      <InviteSheet open={invite} onOpenChange={setInvite} units={units} isSuper={isSuper} onDone={load} />
-      <PersonSheet person={current} me={current?.id === user?.id} units={units} isSuper={isSuper} unitName={unitName} onClose={() => setOpenId(null)} onChanged={load} />
+      <InviteSheet open={invite} onOpenChange={setInvite} units={units} isSuper={isSuper} onDone={load} onLink={setPending} />
+      <PersonSheet person={current} me={current?.id === user?.id} units={units} isSuper={isSuper} unitName={unitName} onClose={() => setOpenId(null)} onChanged={load} onLink={setPending} />
+      <LinkSheet info={pending} onClose={() => setPending(null)} />
     </div>
   );
 }
@@ -114,7 +121,7 @@ function UnitsPicker({ units, value, onChange, idPrefix }: { units: Unit[]; valu
   );
 }
 
-function InviteSheet({ open, onOpenChange, units, isSuper, onDone }: { open: boolean; onOpenChange: (v: boolean) => void; units: Unit[]; isSuper: boolean; onDone: () => void }) {
+function InviteSheet({ open, onOpenChange, units, isSuper, onDone, onLink }: { open: boolean; onOpenChange: (v: boolean) => void; units: Unit[]; isSuper: boolean; onDone: () => void; onLink: (l: PendingLink) => void }) {
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
   const [role, setRole] = useState<Role>("funcionario");
@@ -128,11 +135,12 @@ function InviteSheet({ open, onOpenChange, units, isSuper, onDone }: { open: boo
     setMsg(null);
     if (role !== "super_admin" && sel.length === 0) return setMsg(errMsg("UNITS_REQUIRED"));
     setBusy(true);
-    const r = await inviteTeamMember({ data: { email, fullName: name, role, unitIds: role === "super_admin" ? [] : sel, redirectTo: `${window.location.origin}/primeiro-acesso` } })
+    const r = await inviteTeamMember({ data: { email, fullName: name, role, unitIds: role === "super_admin" ? [] : sel } })
       .catch((x: unknown) => ({ ok: false as const, error: x instanceof Error ? x.message : "Falha ao convidar" }));
     setBusy(false);
     if (!r.ok) return setMsg(errMsg(r.error));
-    toast.success(`Convite enviado para ${email}`);
+    if (r.emailed) toast.success(`Convite enviado por e-mail para ${email}`);
+    else if (r.link) onLink({ email, link: r.link, reason: r.reason });
     onOpenChange(false);
     onDone();
   }
@@ -155,14 +163,14 @@ function InviteSheet({ open, onOpenChange, units, isSuper, onDone }: { open: boo
           )}
           {msg && <p role="alert" className="text-sm text-destructive">{msg}</p>}
           <Button type="submit" className="h-12 w-full" disabled={busy}>{busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Enviar convite"}</Button>
-          <p className="text-xs text-muted-foreground">A pessoa recebe um e-mail para criar a senha.</p>
+          <p className="text-xs text-muted-foreground">A pessoa recebe um e-mail com o link para criar a senha. Se o e-mail não puder ser enviado, mostramos o link para você mandar.</p>
         </form>
       </SheetContent>
     </Sheet>
   );
 }
 
-function PersonSheet({ person, me, units, isSuper, unitName, onClose, onChanged }: { person: U | null; me: boolean; units: Unit[]; isSuper: boolean; unitName: (id: string) => string; onClose: () => void; onChanged: () => void }) {
+function PersonSheet({ person, me, units, isSuper, unitName, onClose, onChanged, onLink }: { person: U | null; me: boolean; units: Unit[]; isSuper: boolean; unitName: (id: string) => string; onClose: () => void; onChanged: () => void; onLink: (l: PendingLink) => void }) {
   const [role, setRole] = useState<Role>("funcionario");
   const [sel, setSel] = useState<string[]>([]);
   const [busy, setBusy] = useState<string | null>(null);
@@ -204,6 +212,17 @@ function PersonSheet({ person, me, units, isSuper, unitName, onClose, onChanged 
     onChanged();
   }
 
+  async function resend(): Promise<void> {
+    if (!person) return;
+    setBusy("resend");
+    const r = await resendTeamInvite({ data: { userId: person.id } }).catch(() => ({ ok: false as const, error: "Falha de rede. Tente de novo." }));
+    setBusy(null);
+    if (!r.ok) { toast.error(errMsg(r.error)); return; }
+    if (r.emailed) toast.success(`Convite reenviado para ${person.email}`);
+    else if (r.link) onLink({ email: person.email, link: r.link, reason: r.reason });
+    onChanged();
+  }
+
   return (
     <Sheet open={!!person} onOpenChange={(o) => !o && onClose()}>
       <SheetContent side="bottom" className="mx-auto flex max-h-[92dvh] max-w-lg flex-col rounded-t-3xl p-0">
@@ -235,6 +254,15 @@ function PersonSheet({ person, me, units, isSuper, unitName, onClose, onChanged 
                     {!isSuper && person.unit_ids.some((id) => !units.find((u) => u.id === id)) && (
                       <p className="text-xs text-muted-foreground">Unidades de outros gestores não aparecem e não são alteradas.</p>
                     )}
+                    {person.needs_onboarding && person.is_active && (
+                      <div className="rounded-2xl bg-surface p-3">
+                        <p className="text-sm font-medium">Ainda não criou a senha</p>
+                        <p className="mt-0.5 text-xs text-muted-foreground">Reenvie o convite se o e-mail não chegou ou o link venceu.</p>
+                        <Button variant="outline" className="mt-2 h-11 w-full" disabled={!!busy} onClick={resend}>
+                          {busy === "resend" ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Mail className="h-4 w-4" /> Reenviar convite</>}
+                        </Button>
+                      </div>
+                    )}
                     {person.invited_at && <p className="text-xs text-muted-foreground">Convidado em {timeLabel(person.invited_at)}</p>}
                     <p className="text-xs text-muted-foreground">Unidades atuais: {person.roles.includes("super_admin") ? "todas" : person.unit_ids.map(unitName).join(", ") || "nenhuma"}</p>
                   </div>
@@ -252,6 +280,29 @@ function PersonSheet({ person, me, units, isSuper, unitName, onClose, onChanged 
                 <Button className="h-12" disabled={!!busy} onClick={save}>{busy === "save" ? <Loader2 className="h-4 w-4 animate-spin" /> : "Salvar"}</Button>
               </footer>
             )}
+          </>
+        )}
+      </SheetContent>
+    </Sheet>
+  );
+}
+
+function LinkSheet({ info, onClose }: { info: PendingLink | null; onClose: () => void }) {
+  async function copy(): Promise<void> {
+    if (!info) return;
+    try { await navigator.clipboard.writeText(info.link); toast.success("Link copiado"); }
+    catch { toast.error("Não consegui copiar. Segure o link para selecionar e copiar."); }
+  }
+  return (
+    <Sheet open={!!info} onOpenChange={(o) => !o && onClose()}>
+      <SheetContent side="bottom" className="mx-auto max-h-[92dvh] max-w-lg overflow-y-auto rounded-t-3xl px-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-5">
+        {info && (
+          <>
+            <SheetHeader className="text-left"><SheetTitle>Mande este link para {info.email}</SheetTitle></SheetHeader>
+            <p className="mt-2 text-sm text-muted-foreground">{reasonText(info.reason)} O acesso foi criado: copie o link abaixo e envie pelo WhatsApp. Ele só funciona uma vez e vence em algumas horas.</p>
+            <Input readOnly value={info.link} aria-label="Link de convite" className="mt-4 h-12 rounded-xl font-mono text-xs" onFocus={(e) => e.currentTarget.select()} />
+            <Button className="mt-3 h-12 w-full" onClick={copy}><Copy className="h-4 w-4" /> Copiar link</Button>
+            <Button variant="outline" className="mt-2 h-12 w-full" onClick={onClose}>Fechar</Button>
           </>
         )}
       </SheetContent>

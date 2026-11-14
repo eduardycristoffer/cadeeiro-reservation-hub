@@ -75,6 +75,14 @@ export const followupMarkBody = z.object({
   error: z.string().max(500).optional().nullable(),
 });
 
+/** Envios do CRM (follow-up, reaver, remarketing) que o n8n deve disparar agora. O banco já aplica janela, teto diário e opt-out. */
+export const crmSendsDueQuery = z.object({ limit: z.coerce.number().int().min(1).max(20).default(10) });
+export const crmSendMarkBody = z.object({
+  id: z.string().uuid(),
+  ok: z.boolean(),
+  error: z.string().max(500).optional().nullable(),
+});
+
 export const findReservationsQuery = z.object({ phone, protocol: z.string().max(40).optional() });
 
 export const patchReservationBody = z.discriminatedUnion("action", [

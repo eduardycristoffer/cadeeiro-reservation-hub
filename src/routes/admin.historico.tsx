@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { scopedUnits } from "@/lib/scope";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Download, History, Loader2, Search, SlidersHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -39,7 +40,7 @@ function Historico() {
     if (!allowed) return;
     const sb = requireSupabase();
     sb.rpc("admin_list_team").then(({ data }) => setPeople((data ?? []) as typeof people));
-    sb.from("units").select("id,name").order("sort_order").order("name").then(({ data }) => setUnits((data ?? []) as typeof units));
+    scopedUnits("id,name").order("sort_order").order("name").then(({ data }) => setUnits((data ?? []) as typeof units));
   }, [allowed]);
 
   const build = useCallback(async (from: number, to: number) => {

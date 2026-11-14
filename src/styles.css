@@ -260,18 +260,31 @@
 .reserva-footer { padding-bottom: max(1rem, env(safe-area-inset-bottom)); }
 .whatsapp-public { bottom: calc(1rem + env(safe-area-inset-bottom)); }
 .whatsapp-reserva { bottom: calc(12rem + env(safe-area-inset-bottom)); }
+html[data-consent-banner] .whatsapp-public { bottom: calc(8.25rem + env(safe-area-inset-bottom)); }
+/* no fluxo de reserva o botão flutuante some (cobria texto e campos); o atalho de WhatsApp fica no topo da tela */
+html[data-reserva-stage] .whatsapp-float { display: none; }
+/* o conteúdo das páginas públicas nunca fica escondido atrás do botão */
+.public-pad { padding-bottom: calc(6.5rem + env(safe-area-inset-bottom)); }
 .admin-content { background: var(--surface); }
 .city-choice { transition: transform 250ms ease-out, box-shadow 250ms ease-out; }
 .city-choice:active { transform: scale(0.98); }
 .step-slide { animation: step-slide 260ms cubic-bezier(0.2,0.8,0.2,1) both; }
 @keyframes step-slide { from { opacity: 0; transform: translateX(12px); } to { opacity: 1; transform: none; } }
 @media (max-width: 767px) {
-  .admin-content h1 { font-size: 1.5rem; line-height: 1.25; }
+  .admin-content h1 { font-size: 1.875rem; line-height: 1.15; font-weight: 700; letter-spacing: -0.02em; }
   .admin-content h1 + p { font-size: 0.875rem; }
   .admin-content input, .admin-content select, [role="dialog"] input, [role="dialog"] select { min-width: 0; max-width: 100%; }
   .admin-content select { min-height: 44px; }
-  input, select, textarea { font-size: 16px !important; }
+  /* 16px evita o zoom do iOS ao focar; campos de exibição (ex.: número de pessoas) ficam de fora */
+  input:not([data-keep-size]), select, textarea { font-size: 16px !important; }
+  /* abas e filtros em pílula: uma linha só, com rolagem lateral em vez de quebrar em várias linhas */
+  .seg-scroll { display: flex !important; flex-wrap: nowrap !important; overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+  .seg-scroll::-webkit-scrollbar { display: none; }
+  .seg-scroll > * { flex: 0 0 auto; white-space: nowrap; }
 }
+/* primeira letra maiúscula só (datas: "Quinta-feira, 12 de novembro"); "capitalize" do Tailwind põe maiúscula em toda palavra */
+.cap1 { display: inline-block; }
+.cap1::first-letter, .capitalize-first::first-letter { text-transform: uppercase; }
 .safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
 .admin-main { padding-bottom: calc(5.5rem + env(safe-area-inset-bottom)); }
 @media (min-width: 768px) { .admin-main { padding-bottom: 2.5rem; } }

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouterState } from "@tanstack/react-router";
 import { CheckCircle2, Loader2, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -15,6 +15,7 @@ import {
   CIDADES,
   OFERTA,
   LGPD_TEXT,
+  WHATSAPP_OPEN_EVENT,
   cidadeValida,
   whatsappDestino,
   type Cidade,
@@ -23,6 +24,8 @@ import { SERVICE_LABEL } from "@/lib/reservations";
 import { isValidFullName } from "@/lib/reserva";
 import { maskBrPhone, isValidBrPhone } from "@/lib/format";
 import { friendlyError, supabase } from "@/lib/supabase";
+import { track } from "@/lib/pixel";
+import { sanitizeCampaign } from "@/lib/reserva";
 
 export function WhatsAppLead() {
   const path = useRouterState({ select: (s) => s.location.pathname });
@@ -35,6 +38,20 @@ export function WhatsAppLead() {
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [campaign, setCampaign] = useState<string | undefined>();
+  // botões das páginas de campanha abrem este mesmo formulário (com a cidade e a campanha da página)
+  useEffect(() => {
+    const onOpen = (e: Event) => {
+      const d = ((e as CustomEvent).detail ?? {}) as { city?: unknown; campaign?: unknown };
+      setCity(cidadeValida(d.city));
+      setCampaign(sanitizeCampaign(d.campaign));
+      setOpen(true);
+      setDone(false);
+      setError(null);
+    };
+    window.addEventListener(WHATSAPP_OPEN_EVENT, onOpen);
+    return () => window.removeEventListener(WHATSAPP_OPEN_EVENT, onOpen);
+  }, []);
   if (path.startsWith("/admin") || path.startsWith("/api")) return null;
   function show() {
     const url = new URL(window.location.href);
@@ -66,13 +83,15 @@ export function WhatsAppLead() {
         _website: website,
         _utm_source: url.searchParams.get("utm_source"),
         _utm_medium: url.searchParams.get("utm_medium"),
-        _utm_campaign: url.searchParams.get("utm_campaign") ?? url.searchParams.get("campanha"),
+        _utm_campaign: url.searchParams.get("utm_campaign") ?? url.searchParams.get("campanha") ?? campaign ?? null,
         _utm_content: url.searchParams.get("utm_content"),
         _fbclid: url.searchParams.get("fbclid"),
       });
       if (error) throw error;
       const result = data as { phone_e164?: string | null } | null;
       const destination = whatsappDestino(result?.phone_e164, name, city);
+      track("Lead", { content_name: "whatsapp", content_category: city });
+      track("Contact", { content_name: "whatsapp" });
       setDone(true);
       if (destination) window.location.assign(destination);
     } catch (e) {
@@ -83,7 +102,7 @@ export function WhatsAppLead() {
   }
   return (
     <>
-      <Button
+      {!path.startsWith("/c/") && <Button
         variant="brand"
         size="icon"
         className={`whatsapp-float fixed right-4 z-30 h-14 w-14 shadow-lift ${path.startsWith("/reservar") || path === "/goiania/pizza" ? "whatsapp-reserva" : "whatsapp-public"}`}
@@ -91,7 +110,7 @@ export function WhatsAppLead() {
         onClick={show}
       >
         <MessageCircle className="size-6" />
-      </Button>
+      </Button>}
       <Sheet open={open} onOpenChange={(v) => !busy && setOpen(v)}>
         <SheetContent
           side="bottom"

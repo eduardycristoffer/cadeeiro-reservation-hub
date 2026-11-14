@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { scopedUnits } from "@/lib/scope";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ChevronDown, ChevronUp, Copy, Loader2, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
@@ -37,7 +38,7 @@ function Valores() {
   const [tab, setTab] = useState<"tabelas" | "previa" | "feriados">("tabelas");
 
   useEffect(() => {
-    requireSupabase().from("units").select("id,name,services").order("sort_order").order("name").then(({ data }) => {
+    scopedUnits("id,name,services").order("sort_order").order("name").then(({ data }) => {
       const list = (data ?? []) as Unit[];
       setUnits(list);
       const first = list[0];
@@ -243,7 +244,7 @@ function Preview({ unit }: { unit: Unit }) {
     <div className="mt-6 space-y-4">
       <div className="flex flex-wrap items-center gap-3">
         <label className="text-sm text-muted-foreground">Valores em <Input type="date" value={date} onChange={(e) => e.target.value && setDate(e.target.value)} className="ml-2 inline-block h-9 w-auto rounded-xl text-foreground" /></label>
-        {raw && <span className="text-sm capitalize text-muted-foreground">{raw.is_holiday ? `feriado (${raw.holiday_name})` : fromIsoDate(date).toLocaleDateString("pt-BR", { weekday: "long" })}</span>}
+        {raw && <span className="text-sm cap1 text-muted-foreground">{raw.is_holiday ? `feriado (${raw.holiday_name})` : fromIsoDate(date).toLocaleDateString("pt-BR", { weekday: "long" })}</span>}
       </div>
       {raw === undefined && <div className="flex justify-center py-10"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>}
       {raw && services.length === 0 && <p className="rounded-2xl bg-surface p-4 text-sm text-muted-foreground">Nenhuma tabela vale para esta data.</p>}
@@ -252,7 +253,7 @@ function Preview({ unit }: { unit: Unit }) {
           <div key={s.codigo} className="rounded-3xl bg-card p-5 shadow-soft">
             <h3 className="font-semibold">{SERVICE_BY_ID[s.codigo].title}</h3>
             <p className="text-xs text-muted-foreground">Tabela: {s.tabela}{s.vigencia ? ` (${s.vigencia})` : ""}</p>
-            <p className="mt-3 text-3xl font-semibold tabular-nums">{s.hoje ? s.hoje.valor_texto : "—"}</p>
+            <p className="mt-3 text-2xl font-semibold tabular-nums sm:text-3xl">{s.hoje ? s.hoje.valor_texto : "—"}</p>
             <ul className="mt-3 space-y-1 text-sm text-muted-foreground">
               {s.linhas.map((l, i) => <li key={i}>{l.dias}: {l.valor_texto}</li>)}
               {s.infantil && <li>Infantil: {s.infantil}</li>}

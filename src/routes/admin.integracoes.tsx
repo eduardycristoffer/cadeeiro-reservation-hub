@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { scopedUnits } from "@/lib/scope";
 import { useEffect, useState } from "react";
 import { Copy, Loader2, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
@@ -41,12 +42,12 @@ function Integracoes() {
       <h1 className="text-4xl font-semibold">Integrações</h1>
       <p className="mt-1 text-muted-foreground">Tryade CRM (canal de WhatsApp) e o SDR que atende pelo n8n.</p>
       <Tabs defaultValue="crm" className="mt-6">
-        <TabsList className="grid h-auto w-full grid-cols-2 gap-1 rounded-2xl sm:grid-cols-4">
-          <TabsTrigger value="crm" className="h-11 rounded-xl">Tryade CRM</TabsTrigger>
-          <TabsTrigger value="sdr" className="h-11 rounded-xl">SDR (n8n)</TabsTrigger>
-          <TabsTrigger value="fila" className="h-11 rounded-xl">Fila de eventos</TabsTrigger>
-          <TabsTrigger value="conversas" className="h-11 rounded-xl">Conversas</TabsTrigger>
-          <TabsTrigger value="whatsapp" className="h-11 rounded-xl">WhatsApp por cidade</TabsTrigger>
+        <TabsList className="seg-scroll grid h-auto w-full grid-cols-2 gap-1 rounded-2xl sm:grid-cols-4">
+          <TabsTrigger value="crm" className="h-11 rounded-xl px-4">Tryade CRM</TabsTrigger>
+          <TabsTrigger value="sdr" className="h-11 rounded-xl px-4">SDR (n8n)</TabsTrigger>
+          <TabsTrigger value="fila" className="h-11 rounded-xl px-4">Fila de eventos</TabsTrigger>
+          <TabsTrigger value="conversas" className="h-11 rounded-xl px-4">Conversas</TabsTrigger>
+          <TabsTrigger value="whatsapp" className="h-11 rounded-xl px-4">WhatsApp por cidade</TabsTrigger>
         </TabsList>
         <TabsContent value="crm"><CrmTab /></TabsContent>
         <TabsContent value="sdr"><SdrTab /></TabsContent>
@@ -93,7 +94,7 @@ function CrmTab() {
       sb().rpc("admin_get_crm_settings"),
       sb().from("crm_events").select("id", { count: "exact", head: true }).eq("direction", "outbound").eq("status", "falhou")
         .gte("updated_at", new Date(Date.now() - 86400000).toISOString()),
-      sb().from("units").select("id,name").order("name"),
+      scopedUnits("id,name").order("name"),
       sb().from("crm_inbox_units").select("id,inbox_external_id,unit_id").order("inbox_external_id"),
     ]);
     if (a.error || !a.data) { setLoadError(a.error ? friendlyError(a.error) : "Configuração indisponível."); return; }
@@ -269,7 +270,7 @@ function SdrTab() {
   async function load() {
     const [{ data, error }, unitResult] = await Promise.all([
       sb().rpc("admin_list_api_keys"),
-      sb().from("units").select("id,name").eq("is_active", true).order("name"),
+      scopedUnits("id,name").eq("is_active", true).order("name"),
     ]);
     if (error || unitResult.error) { setLoadError(friendlyError(error ?? unitResult.error)); return; }
     setLoadError(null);

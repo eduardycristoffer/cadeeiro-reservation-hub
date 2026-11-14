@@ -74,8 +74,24 @@ Sem variáveis, `src/lib/supabase.ts` devolve `null` e as telas mostram "não co
 2. Aplique pela ferramenta de migração do Lovable. O Lovable grava o espelho em `drizzle/migrations/`.
 3. Arquivo em `db/` e schema no banco devem sempre coincidir.
 
-Última: `012_cidades_whatsapp.sql`, aplicada com espelho byte-idêntico em `drizzle/migrations/0012_cidades_whatsapp.sql`.
-As migrations 010 e 011 entregam equipe/histórico e SAC/relatórios. A 012 acrescenta `whatsapp_leads`, `city_whatsapp_settings` e RPCs de captura, configuração e status auditados, além dos números do botão no funil. O serviço `almoco_quilo` já era aceito pelos CHECKs; a 012 amplia a validação dos dois RPCs públicos de reserva, sem alterar gatilhos ou unidades.
+Aplicadas em produção: até `012_cidades_whatsapp.sql` (espelho byte-idêntico em `drizzle/migrations/0012_cidades_whatsapp.sql`).
+As migrations 010 e 011 entregam equipe/histórico e SAC/relatórios. A 012 acrescenta `whatsapp_leads`, `city_whatsapp_settings` e RPCs de captura, configuração e status auditados, além dos números do botão no funil.
+
+**Ainda não aplicadas em produção** (vêm da branch `feat/home-crm-ads-design`; aplicar na ordem, cada uma tem teste em `db/tests/`):
+
+| Migration | O que entrega |
+| --- | --- |
+| `013_leads_pixels_cancelamento` | Lead do WhatsApp ligado ao cliente e à campanha (gatilho por cima da 012), ticket médio do quilo, pixels da Meta (vários, por cidade/campanha) e aviso de cancelamento com motivo ao cliente |
+| `014_anuncios_campanhas` | Gasto por anúncio, CAC, custo por reserva, projeção de faturamento; campanhas e gerador de formulário |
+| `015_crm_followup_remarketing` | CRM: follow-up, reaver, remarketing e mensagens (confirmação, follow-up) com fila de envios |
+| `016_alertas_notificacoes_email` | Alertas no sistema e por e-mail (Resend), sino de notificações |
+| `017_webhooks_wifi` | Ambiente de webhooks e entrada de dados do Wi‑Fi (cliente conectou → dados do sistema de terceiros) |
+| `018_crm_avaliacao_google` | Campanha de pedido de avaliação no Google: link definido na criação (só domínios do Google), público de visitas recentes por unidade, sem repetir em 90 dias, sem SAC aberto, envio espaçado pela fila do CRM |
+| `019_multiloja_clientes_perfil` | Várias lojas (super admin troca de loja; gestor vê só a sua), base de clientes com ficha/histórico, importar/exportar contatos, redefinir senha, perfil e preferências de alerta, log de quem fez o quê e gasto em anúncios (CAC) por unidade |
+
+O fluxo n8n "CRM envios" (`n8n/crm-envios.workflow.ts`) entrega a fila do CRM (follow-up, reaver, remarketing e pedido de avaliação no Google) pelo WhatsApp da unidade; ele nasce despublicado e desligado (`crm_envios_ativo = nao`). Detalhes em `docs/ATENDENTE_WHATSAPP.md`.
+
+Segredos usados pelo envio de e-mail: `RESEND_API_KEY`, `EMAIL_FROM` e, opcional, `PUBLIC_APP_URL` (link do convite e de `{{link}}`).
 
 ## Regras de segurança (resumo; detalhes em `AGENTS.md`)
 
@@ -97,7 +113,7 @@ As migrations 010 e 011 entregam equipe/histórico e SAC/relatórios. A 012 acre
 
 - Acesso à equipe já é por convite, sem cadastro aberto.
 - Números de WhatsApp das duas cidades começam vazios. O super admin deve configurar os números reais em Integrações → WhatsApp por cidade. Sem número, o contato é capturado e a página informa recebimento, sem redirecionar nem simular mensagem.
-- Não existe sistema de notifications neste repositório; avisos de novos leads, Pixel e e-mail ficam para a 4B.
+- Pixel da Meta, alertas e e-mail estão implementados na branch (migrations 013–019) e dependem de aplicar essas migrations e de configurar os IDs de pixel e o remetente do Resend.
 - Captura → redirecionamento real, alteração de status do lead e cancelamento de reserva real não foram executados com dados reais nesta revisão; nenhum contato fictício foi criado.
 - Lint global aponta formatação preexistente; testes e compilação automáticos são registrados no roadmap.
 - Instância do Tryade CRM ainda não criada; sem credenciais o worker responde "CRM não configurado" e não simula envio.

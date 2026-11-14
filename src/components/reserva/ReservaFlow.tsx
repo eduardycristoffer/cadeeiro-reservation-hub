@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import {
   ArrowLeft, Beef, Briefcase, Cake, CalendarDays, Clock3, Heart, Loader2, MapPin, Minus, PartyPopper, Pizza, Plus, ShieldCheck,
-  Users, Utensils, type LucideIcon,
+  MessageCircle, Users, Utensils, type LucideIcon,
 } from "lucide-react";
 import { BrandLogo } from "@/components/BrandLogo";
 import { Button } from "@/components/ui/button";
@@ -20,8 +20,9 @@ import {
   unitsForService,
 } from "@/lib/reserva";
 import { OCCASIONS, SERVICES, SERVICE_LABEL, type OccasionId, type ServiceId } from "@/lib/reservations";
+import { track } from "@/lib/pixel";
 import { cn } from "@/lib/utils";
-import { CIDADES, OFERTA, LGPD_TEXT, cidadeValida, ofertaAceita, type Cidade } from "@/lib/oferta";
+import { CIDADES, OFERTA, LGPD_TEXT, WHATSAPP_OPEN_EVENT, cidadeValida, ofertaAceita, type Cidade } from "@/lib/oferta";
 
 type Stage = "capa" | "contatos" | "unidade" | "pessoas" | "quando" | "ocasiao";
 type Unit = {
@@ -36,13 +37,21 @@ const OCCASION_ICON: Record<OccasionId, LucideIcon> = {
 };
 const STRIP_DAYS = 14;
 
-export function ReservaFlow({ initialService, campaign, city }: { initialService?: ServiceId | undefined; campaign?: string | undefined; city?: string | undefined }) {
+export type ReservaCopy = { headline?: string | null | undefined; subheadline?: string | null | undefined; cta?: string | null | undefined };
+
+export function ReservaFlow({ initialService, campaign, city, copy, pageSlug }: { initialService?: ServiceId | undefined; campaign?: string | undefined; city?: string | undefined; copy?: ReservaCopy | undefined; pageSlug?: string | undefined }) {
   const navigate = useNavigate();
   const [stage, setStage] = useState<Stage>(city && initialService ? "contatos" : "capa");
   const [pickedCity, setPickedCity] = useState<Cidade | undefined>(cidadeValida(city));
   const selectedCity = cidadeValida(city) ?? pickedCity;
   const [pickedService, setPickedService] = useState<ServiceId | null>(null);
   const service: ServiceId | null = initialService ?? pickedService;
+
+  // o CSS esconde o botão flutuante de WhatsApp dentro dos passos do formulário (ele cobria os campos)
+  useEffect(() => {
+    document.documentElement.setAttribute("data-reserva-stage", stage);
+    return () => document.documentElement.removeAttribute("data-reserva-stage");
+  }, [stage]);
 
   const [units, setUnits] = useState<Unit[] | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -137,9 +146,12 @@ export function ReservaFlow({ initialService, campaign, city }: { initialService
   const next = () => { const n = flow[idx + 1]; if (n) setStage(n); };
   const back = () => { const p = flow[idx - 1]; setStage(p ?? "capa"); };
 
+  useEffect(() => { if (service) track("ViewContent", { content_name: service, content_category: city ?? "geral" }, `view:${service}`); }, [service, city]);
+
   function continueFromContacts() {
     setTouched(true);
     if (!nameOk || !phoneOk || !privacy) return;
+    track("InitiateCheckout", { content_name: service ?? "reserva" }, `checkout:${service ?? "x"}`);
     // guarda o contato já no início (melhor esforço: não bloqueia o fluxo)
     // (o builder do supabase-js só dispara a requisição quando recebe .then)
     supabase
@@ -199,7 +211,7 @@ export function ReservaFlow({ initialService, campaign, city }: { initialService
       to: "/reservar/sucesso",
       search: {
         p: r.protocol, u: r.unit_name, d: r.reservation_date, t: r.reservation_time, n: r.party_size, s: r.status,
-        r: service ?? "", o: occasion, w: occ?.asksWho ? who.trim() : "",
+        r: service ?? "", o: occasion, w: occ?.asksWho ? who.trim() : "", c: pageSlug ?? "",
       },
     });
   }
@@ -208,15 +220,22 @@ export function ReservaFlow({ initialService, campaign, city }: { initialService
   if (stage === "capa") {
     return (
       <Shell>
-        <div className="flex items-center justify-end pt-3">
-          <a href="/entrar" className="text-sm text-muted-foreground hover:text-foreground">Área da equipe</a>
+        <div className="flex items-center justify-between pt-3">
+          <button
+            type="button"
+            onClick={() => window.dispatchEvent(new CustomEvent(WHATSAPP_OPEN_EVENT, { detail: { city: selectedCity ?? null, campaign: campaign ?? null } }))}
+            className="inline-flex h-11 items-center gap-2 rounded-full bg-surface px-4 text-sm font-medium"
+          >
+            <MessageCircle className="h-4 w-4 text-brand-ink" aria-hidden="true" /> Falar no WhatsApp
+          </button>
+          <a href="/entrar" className="rounded-full px-3 py-2 text-sm text-muted-foreground hover:text-foreground">Área da equipe</a>
         </div>
         <div className="flex flex-1 flex-col justify-center py-4">
           <div className="fade-up">
             <BrandLogo className="h-20 sm:h-24" />
-            <h1 className="mt-4 text-3xl font-bold leading-tight sm:text-4xl">Reservar mesa</h1>
+            <h1 className="mt-4 text-3xl font-bold leading-tight sm:text-4xl">{copy?.headline || "Reservar mesa"}</h1>
             <p className="mt-2 text-sm text-muted-foreground">
-              {initialService ? "Sua mesa em poucos toques." : "Escolha sua cidade e serviço."}
+              {copy?.subheadline || (initialService ? "Sua mesa em poucos toques." : city ? "O que você quer comer?" : "Escolha sua cidade e serviço.")}
             </p>
           </div>
 
@@ -257,7 +276,7 @@ export function ReservaFlow({ initialService, campaign, city }: { initialService
               {service && units && offered.length === 0 && <p role="status" className="mb-3 text-sm text-muted-foreground">Sem unidade disponível para este serviço.</p>}
               {!service && <p role="status" className="mb-2 text-center text-sm font-medium">{selectedCity ? "Escolha um serviço para continuar." : "Escolha sua cidade."}</p>}
               <Button className="h-12 w-full text-base font-semibold disabled:bg-secondary disabled:text-muted-foreground disabled:opacity-100" disabled={!service || !units || offered.length === 0} onClick={() => setStage("contatos")}>
-                {service && !units && !loadError ? <Loader2 className="h-5 w-5 animate-spin" /> : "Reservar agora"}
+                {service && !units && !loadError ? <Loader2 className="h-5 w-5 animate-spin" /> : (copy?.cta || "Reservar agora")}
               </Button>
               <p className="mt-3 flex flex-wrap justify-center gap-x-4 gap-y-1 text-[11px] text-muted-foreground">
                 <span className="inline-flex items-center gap-1.5"><Clock3 className="h-3.5 w-3.5" /> Disponibilidade em tempo real</span>
@@ -284,7 +303,14 @@ export function ReservaFlow({ initialService, campaign, city }: { initialService
           <ArrowLeft className="h-5 w-5" />
         </button>
         <BrandLogo className="h-10" />
-        <span className="w-11" aria-hidden="true" />
+        <button
+          type="button"
+          aria-label="Prefiro falar no WhatsApp"
+          onClick={() => window.dispatchEvent(new CustomEvent(WHATSAPP_OPEN_EVENT, { detail: { city: selectedCity ?? null, campaign: campaign ?? null } }))}
+          className="flex h-11 w-11 items-center justify-center rounded-full text-brand-ink hover:bg-surface"
+        >
+          <MessageCircle className="h-5 w-5" />
+        </button>
       </header>
 
       <div className="mt-3" role="progressbar" aria-valuemin={1} aria-valuemax={flow.length} aria-valuenow={idx + 1} aria-label="Progresso da reserva">
@@ -378,6 +404,7 @@ export function ReservaFlow({ initialService, campaign, city }: { initialService
                   inputMode="numeric"
                   maxLength={3}
                   aria-label="Quantidade de pessoas"
+                  data-keep-size
                   placeholder="0"
                   autoComplete="off"
                   onChange={(e) => {
