@@ -89,7 +89,7 @@ function Relatorios() {
   void reload; void stale;
 
   const csv = useMemo(() => (data ? buildCsv(tab, data) : null), [tab, data]);
-  if (!allowed) return <p className="text-muted-foreground">Somente gestores e super admin veem relatórios.</p>;
+  if (!allowed) return <p className="text-muted-foreground">Somente admins veem relatórios.</p>;
 
   function exportCsv() {
     if (!csv) return;

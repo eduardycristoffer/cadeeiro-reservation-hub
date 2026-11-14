@@ -64,7 +64,7 @@ export function canTransition(from: ReservationStatus, to: ReservationStatus): b
   return TRANSITIONS[from].includes(to);
 }
 
-/** Grupos grandes só podem ser confirmados por gestor ou super admin. */
+/** Grupos grandes só podem ser confirmados por admin. */
 export function canConfirmLargeGroup(isLargeGroup: boolean, canManage: boolean): boolean {
   return !isLargeGroup || canManage;
 }

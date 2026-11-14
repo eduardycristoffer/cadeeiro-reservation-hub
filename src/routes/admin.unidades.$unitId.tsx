@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { PRICE_SERVICES } from "@/lib/prices";
 import { requireSupabase, friendlyError } from "@/lib/supabase";
 import { toast } from "sonner";
+import { useAuth } from "@/lib/auth";
 import { WEEKDAYS, hhmm } from "@/lib/format";
 
 export const Route = createFileRoute("/admin/unidades/$unitId")({
@@ -26,6 +27,8 @@ type Block = { id: string; block_date: string; start_time: string | null; end_ti
 
 function UnitDetail() {
   const { unitId } = Route.useParams();
+  const { roles } = useAuth();
+  const canEdit = roles.includes("super_admin") || roles.includes("gestor");
   const [unit, setUnit] = useState<Unit | null>(null);
   const [rules, setRules] = useState<Rule[]>([]);
   const [blocks, setBlocks] = useState<Block[]>([]);
@@ -64,7 +67,10 @@ function UnitDetail() {
       <div>
         <Link to="/admin/unidades" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"><ArrowLeft className="h-4 w-4" /> Unidades</Link>
         <h1 className="mt-3 text-4xl font-semibold">{unit.name}</h1>
+        {!canEdit && <p className="mt-2 text-sm text-muted-foreground">Só admin edita a unidade. Você pode consultar os dados.</p>}
       </div>
+
+      <fieldset disabled={!canEdit} className="m-0 min-w-0 space-y-12 border-0 p-0">
 
       <Section title="Informações">
         <div className="grid gap-3 sm:grid-cols-2">
@@ -132,6 +138,7 @@ function UnitDetail() {
         </div>
         <BlockForm unitId={unitId} onSaved={load} />
       </Section>
+      </fieldset>
     </div>
   );
 }

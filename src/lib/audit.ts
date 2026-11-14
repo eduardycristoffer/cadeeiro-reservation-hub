@@ -25,8 +25,8 @@ export const SOURCE_LABEL: Record<string, string> = {
 
 export const ROLE_LABEL: Record<string, string> = {
   super_admin: "Super Admin",
-  gestor: "Gestor",
-  funcionario: "Funcionário",
+  gestor: "Admin",
+  funcionario: "Operador",
 };
 
 export const ENTITY_LABEL: Record<string, string> = {
@@ -175,7 +175,7 @@ export function toCsv(rows: AuditRow[]): string {
 
 export const INVITE_ERRORS: Record<string, string> = {
   FORBIDDEN: "Você não tem permissão para isso.",
-  FORBIDDEN_ROLE: "Gestor não pode criar Super Admin.",
+  FORBIDDEN_ROLE: "Admin não pode criar Super Admin.",
   FORBIDDEN_UNIT: "Você só pode dar acesso às suas unidades.",
   UNITS_REQUIRED: "Escolha pelo menos uma unidade.",
   CANNOT_EDIT_SELF: "Você não pode alterar o próprio acesso.",

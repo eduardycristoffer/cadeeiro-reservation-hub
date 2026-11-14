@@ -82,7 +82,7 @@ function AdminShell() {
       <Center>
         <div className="max-w-sm text-center">
           <h1 className="text-2xl font-semibold">{isActive ? "Acesso pendente" : "Acesso desativado"}</h1>
-          <p className="mt-2 text-muted-foreground">{isActive ? "Sua conta ainda não tem permissão. Fale com o gestor da unidade." : "Seu acesso foi desativado. Fale com o gestor da unidade."}</p>
+          <p className="mt-2 text-muted-foreground">{isActive ? "Sua conta ainda não tem permissão. Fale com um admin da unidade." : "Seu acesso foi desativado. Fale com um admin da unidade."}</p>
           <Button variant="outline" className="mt-6 h-11" onClick={() => supabase?.auth.signOut()}>Sair</Button>
         </div>
       </Center>

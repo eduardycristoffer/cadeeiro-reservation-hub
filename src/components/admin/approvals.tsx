@@ -47,7 +47,7 @@ export function PendingActions({ id, isLargeGroup, onChanged, className, size = 
           <X className="h-5 w-5" aria-hidden="true" /> Recusar
         </Button>
       </div>
-      {!allowed && <p className="mt-2 text-xs text-muted-foreground">Grupo grande: só gestor aprova.</p>}
+      {!allowed && <p className="mt-2 text-xs text-muted-foreground">Grupo grande: só admin aprova.</p>}
       <RejectSheet ids={rejecting ? [id] : []} onClose={() => setRejecting(false)} onDone={onChanged} />
     </div>
   );

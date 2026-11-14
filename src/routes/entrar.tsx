@@ -48,7 +48,7 @@ function Entrar() {
       await supabase.auth.signOut();
       setLoading(false);
       setMfaFactor(null);
-      return setMsg("Seu acesso está desativado ou ainda não foi liberado. Fale com o gestor da unidade.");
+      return setMsg("Seu acesso está desativado ou ainda não foi liberado. Fale com um admin da unidade.");
     }
     setLoading(false);
     navigate({ to: "/admin" });
@@ -92,7 +92,7 @@ function Entrar() {
       setLoading(false);
       if (/banned/i.test(error.message)) {
         logBlockedLogin({ data: { email } }).catch(() => {});
-        return setMsg("Seu acesso está desativado. Fale com o gestor da unidade.");
+        return setMsg("Seu acesso está desativado. Fale com um admin da unidade.");
       }
       return setMsg("E-mail ou senha inválidos.");
     }
@@ -123,7 +123,7 @@ function Entrar() {
             {msg && <p role="alert" className="text-sm text-destructive">{msg}</p>}
             <Button type="submit" size="lg" className="h-12 w-full" disabled={loading || mfaCode.length !== 6}>{loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Verificar e entrar"}</Button>
             <Button type="button" variant="ghost" className="h-11 w-full" onClick={() => void cancelMfa()}>Voltar</Button>
-            <p className="pt-1 text-center text-xs text-muted-foreground">Perdeu o celular? Peça ao gestor para remover o 2FA da sua conta.</p>
+            <p className="pt-1 text-center text-xs text-muted-foreground">Perdeu o celular? Peça a um admin para remover o 2FA da sua conta.</p>
           </form>
         ) : forgot ? (
           sent ? (
@@ -160,7 +160,7 @@ function Entrar() {
               {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Entrar"}
             </Button>
             <Button type="button" variant="link" className="h-auto w-full p-1 text-sm" onClick={() => { setForgot(true); setMsg(null); }}>Esqueci minha senha</Button>
-            <p className="pt-2 text-center text-xs text-muted-foreground">Acesso só por convite. Peça ao gestor da sua unidade.</p>
+            <p className="pt-2 text-center text-xs text-muted-foreground">Acesso só por convite. Peça a um admin da sua unidade.</p>
           </form>
         )}
       </div>

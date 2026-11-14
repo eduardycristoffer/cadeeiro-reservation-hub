@@ -45,7 +45,7 @@ const ERRORS: Record<string, string> = {
   INVALID_NOTES: "A observação pode ter no máximo 1.000 caracteres.",
   INVALID_TRANSITION: "Essa mudança de status não é permitida a partir do status atual.",
   REASON_REQUIRED: "Informe o motivo do cancelamento.",
-  LARGE_GROUP_NEEDS_MANAGER: "Grupos grandes só podem ser confirmados por gestor ou super admin.",
+  LARGE_GROUP_NEEDS_MANAGER: "Grupos grandes só podem ser confirmados por admin.",
   NOTE_REQUIRED: "Escreva a observação antes de salvar.",
   INVALID_CITY: "Escolha Goiânia ou Anápolis.",
   INVALID_MESSAGE: "A mensagem precisa ter entre 10 e 300 caracteres.",

@@ -98,11 +98,11 @@ export function renderResetEmail(i: { name: string; link: string }): Mail {
 
 export const ALERT_KINDS = [
   { id: "reserva_pendente", label: "Reserva nova para aprovar", hint: "Cliente reservou pelo site ou WhatsApp." },
-  { id: "grupo_grande", label: "Grupo grande", hint: "Só gestores — precisa de aprovação do gestor." },
+  { id: "grupo_grande", label: "Grupo grande", hint: "Só admins — precisa de aprovação de um admin." },
   { id: "reserva_cancelada", label: "Cancelamento do cliente", hint: "Com o motivo que o cliente deu." },
   { id: "sac_novo", label: "Novo atendimento no SAC", hint: "Reclamação, dúvida ou cliente pediu atendente." },
   { id: "lead_whatsapp", label: "Lead no WhatsApp", hint: "Alguém chamou pelo botão do site. Costuma ser frequente." },
-  { id: "falha_envio", label: "Mensagem que não saiu", hint: "Só gestores — confirmação ou CRM que falhou." },
+  { id: "falha_envio", label: "Mensagem que não saiu", hint: "Só admins — confirmação ou CRM que falhou." },
 ] as const;
 export type AlertKind = (typeof ALERT_KINDS)[number]["id"];
 

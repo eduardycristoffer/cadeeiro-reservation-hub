@@ -118,7 +118,7 @@ export function TwoFactorCard() {
           {factor
             ? <Button variant="outline" className="h-11 w-full sm:w-auto" disabled={busy} onClick={() => void disable()}>{busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Desativar 2FA"}</Button>
             : <Button className="h-11 w-full sm:w-auto" disabled={busy} onClick={() => void start()}>{busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Ativar 2FA"}</Button>}
-          {factor && <p className="text-xs text-muted-foreground">Perdeu o celular? Peça a um gestor para remover o 2FA da sua conta.</p>}
+          {factor && <p className="text-xs text-muted-foreground">Perdeu o celular? Peça a um admin para remover o 2FA da sua conta.</p>}
         </>
       )}
     </section>

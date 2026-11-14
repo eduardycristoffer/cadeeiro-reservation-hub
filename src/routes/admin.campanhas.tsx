@@ -44,7 +44,7 @@ function Campanhas() {
   }, []);
   useEffect(() => { if (allowed) void load(); }, [allowed, load]);
 
-  if (!allowed) return <ErrorState message="Só gestores acessam as campanhas." />;
+  if (!allowed) return <ErrorState message="Só admins acessam as campanhas." />;
 
   return (
     <div className="fade-up">

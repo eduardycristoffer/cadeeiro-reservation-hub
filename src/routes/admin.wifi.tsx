@@ -44,7 +44,7 @@ function WifiPage() {
     if (!allowed) return;
     void scopedUnits("id,name").order("sort_order").order("name").then(({ data }) => setUnits((data ?? []) as Unit[]));
   }, [allowed]);
-  if (!allowed) return <ErrorState message="Só gestores acessam esta área." />;
+  if (!allowed) return <ErrorState message="Só admins acessam esta área." />;
   return (
     <div className="fade-up">
       <h1 className="text-2xl font-semibold sm:text-4xl">Wi-Fi</h1>

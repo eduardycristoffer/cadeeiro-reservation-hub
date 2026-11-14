@@ -82,7 +82,7 @@ const PAINEL = (p: string) => `${SITE}/admin${p}`;
 
 export const TEMPLATES: Tpl[] = [
   // ───────────── acesso (Supabase Auth) ─────────────
-  { id: "convite", group: "acesso", name: "Convite para a equipe", when: "Quando um gestor convida uma pessoa.", subject: "Seu acesso ao painel Rede Candeeiro", preheader: "Crie sua senha e comece a usar o painel.",
+  { id: "convite", group: "acesso", name: "Convite para a equipe", when: "Quando um admin convida uma pessoa.", subject: "Seu acesso ao painel Rede Candeeiro", preheader: "Crie sua senha e comece a usar o painel.",
     title: "Você foi convidado(a) para o painel", body: ["Olá! Você agora faz parte da equipe da <b>Rede Candeeiro</b>. Crie sua senha para entrar no painel de reservas e atendimento."], button: { label: "Criar minha senha", url: "{{ .ConfirmationURL }}" }, small: "O link vale por tempo limitado e só funciona uma vez. Se você não esperava este convite, pode ignorar este e-mail.", footer: "equipe" },
   { id: "redefinir-senha", group: "acesso", name: "Redefinir senha", when: "Quando alguém toca em “Esqueci minha senha”.", subject: "Redefinir sua senha — Rede Candeeiro", preheader: "Crie uma senha nova para o painel.",
     title: "Redefinir sua senha", body: ["Recebemos um pedido para criar uma senha nova para <b>{{ .Email }}</b>."], button: { label: "Criar senha nova", url: "{{ .ConfirmationURL }}" }, small: "Não foi você? Ignore este e-mail: sua senha continua a mesma.", footer: "equipe" },
@@ -91,7 +91,7 @@ export const TEMPLATES: Tpl[] = [
   { id: "confirmar-email", group: "acesso", name: "Confirmar e-mail", when: "Ao confirmar o endereço de e-mail de uma conta.", subject: "Confirme seu e-mail — Rede Candeeiro", preheader: "Falta só confirmar seu e-mail.",
     title: "Confirme seu e-mail", body: ["Falta pouco! Confirme que <b>{{ .Email }}</b> é seu para liberar o acesso."], button: { label: "Confirmar e-mail", url: "{{ .ConfirmationURL }}" }, small: "Se você não criou esta conta, ignore este e-mail.", footer: "equipe" },
   { id: "trocar-email", group: "acesso", name: "Trocar e-mail", when: "Quando a pessoa muda o e-mail do login.", subject: "Confirme o novo e-mail — Rede Candeeiro", preheader: "Confirme a troca do e-mail de acesso.",
-    title: "Confirme a troca de e-mail", body: ["Você pediu para trocar o e-mail de acesso de <b>{{ .Email }}</b> para <b>{{ .NewEmail }}</b>."], button: { label: "Confirmar troca", url: "{{ .ConfirmationURL }}" }, small: "Não pediu essa troca? Ignore este e-mail e avise um gestor.", footer: "equipe" },
+    title: "Confirme a troca de e-mail", body: ["Você pediu para trocar o e-mail de acesso de <b>{{ .Email }}</b> para <b>{{ .NewEmail }}</b>."], button: { label: "Confirmar troca", url: "{{ .ConfirmationURL }}" }, small: "Não pediu essa troca? Ignore este e-mail e avise um admin.", footer: "equipe" },
   { id: "codigo", group: "acesso", name: "Código de confirmação", when: "Ao confirmar uma ação sensível (reautenticação).", subject: "Seu código de confirmação — Rede Candeeiro", preheader: "Use este código para continuar. Ele vale por poucos minutos.",
     title: "Seu código de confirmação", body: ["Digite este código no painel para continuar:"], code: "{{ .Token }}", small: "Nunca compartilhe este código. A equipe da Rede Candeeiro não pede esse número por telefone nem por mensagem.", footer: "equipe" },
 
@@ -99,8 +99,8 @@ export const TEMPLATES: Tpl[] = [
   { id: "reserva-pendente", group: "alerta", name: "Reserva nova para aprovar", when: "Cliente reservou pelo site ou WhatsApp e precisa de aprovação.", subject: "Reserva nova para aprovar — {{unidade}}", preheader: "{{cliente}} · {{pessoas}} pessoas · {{data}} às {{hora}}",
     tag: { text: "Atenção", tone: "atencao" }, title: "Reserva nova para aprovar", body: ["Chegou uma reserva aguardando a sua decisão."],
     rows: [["Cliente", "{{cliente}}"], ["Unidade", "{{unidade}}"], ["Data e hora", "{{data}} às {{hora}}"], ["Pessoas", "{{pessoas}}"], ["Como chegou", "{{origem}}"]], button: { label: "Aprovar ou recusar", url: PAINEL("/aprovacoes") }, footer: "equipe" },
-  { id: "grupo-grande", group: "alerta", name: "Grupo grande", when: "Reserva de grupo grande — só gestores recebem.", subject: "Grupo grande aguardando você — {{unidade}}", preheader: "{{pessoas}} pessoas em {{data}} às {{hora}}",
-    tag: { text: "Urgente", tone: "urgente" }, title: "Grupo grande aguardando o gestor", body: ["Uma reserva de grupo grande precisa da aprovação de um gestor."],
+  { id: "grupo-grande", group: "alerta", name: "Grupo grande", when: "Reserva de grupo grande — só admins recebem.", subject: "Grupo grande aguardando você — {{unidade}}", preheader: "{{pessoas}} pessoas em {{data}} às {{hora}}",
+    tag: { text: "Urgente", tone: "urgente" }, title: "Grupo grande aguardando um admin", body: ["Uma reserva de grupo grande precisa da aprovação de um admin."],
     rows: [["Cliente", "{{cliente}}"], ["Unidade", "{{unidade}}"], ["Data e hora", "{{data}} às {{hora}}"], ["Pessoas", "{{pessoas}}"]], button: { label: "Abrir aprovações", url: PAINEL("/aprovacoes") }, footer: "equipe" },
   { id: "reserva-cancelada", group: "alerta", name: "Cancelamento do cliente", when: "O cliente cancelou e informou o motivo.", subject: "Reserva cancelada — {{cliente}}", preheader: "{{unidade}} · {{data}} às {{hora}}",
     tag: { text: "Aviso", tone: "info" }, title: "Uma reserva foi cancelada", body: ["O cliente cancelou a reserva abaixo."],
@@ -111,7 +111,7 @@ export const TEMPLATES: Tpl[] = [
   { id: "lead-whatsapp", group: "alerta", name: "Lead no WhatsApp", when: "Alguém chamou pelo botão do site.", subject: "Novo contato pelo WhatsApp — {{cidade}}", preheader: "{{nome}} · {{telefone}}",
     tag: { text: "Aviso", tone: "info" }, title: "Novo contato pelo WhatsApp", body: ["Alguém acabou de chamar pelo botão do site."],
     rows: [["Nome", "{{nome}}"], ["Telefone", "{{telefone}}"], ["Cidade", "{{cidade}}"]], button: { label: "Ver contato", url: PAINEL("/contatos") }, footer: "equipe" },
-  { id: "falha-envio", group: "alerta", name: "Mensagem que não saiu", when: "Confirmação ou CRM que falhou — só gestores.", subject: "Mensagem não enviada — {{cliente}}", preheader: "{{motivo}}",
+  { id: "falha-envio", group: "alerta", name: "Mensagem que não saiu", when: "Confirmação ou CRM que falhou — só admins.", subject: "Mensagem não enviada — {{cliente}}", preheader: "{{motivo}}",
     tag: { text: "Urgente", tone: "urgente" }, title: "Uma mensagem não foi enviada", body: ["A mensagem abaixo não chegou ao cliente. Vale conferir e, se precisar, falar com ele direto."],
     rows: [["Cliente", "{{cliente}}"], ["Unidade", "{{unidade}}"], ["Tipo", "{{tipo}}"], ["Motivo", "{{motivo}}"]], button: { label: "Ver no painel", url: PAINEL("/alertas") }, footer: "equipe" },
 

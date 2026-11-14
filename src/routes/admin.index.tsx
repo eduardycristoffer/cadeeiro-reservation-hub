@@ -29,7 +29,7 @@ export const Route = createFileRoute("/admin/")({
   component: AdminHome,
 });
 
-const ROLE_LABEL = { super_admin: "Super Admin", gestor: "Gestor", funcionario: "Funcionário" } as const;
+const ROLE_LABEL = { super_admin: "Super Admin", gestor: "Admin", funcionario: "Operador" } as const;
 type TodayRow = { id: string; reservation_time: string; party_size: number; status: string; arrived_at: string | null; is_large_group: boolean; customers: { full_name: string } | null; units: { name: string } | null };
 type Month = { reservas: number; pessoas: number; pendentes: number; canceladas: number };
 type Data = { rows: TodayRow[]; sac: number | null; month: Month | null };

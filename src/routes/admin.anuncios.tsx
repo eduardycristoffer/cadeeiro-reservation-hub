@@ -69,7 +69,7 @@ function Anuncios() {
 
   const campaignOptions = useMemo(() => Array.from(new Set([...known, ...(report?.by_campaign ?? []).map((c) => c.campaign).filter((c) => !c.startsWith("("))])).sort(), [known, report]);
 
-  if (!allowed) return <ErrorState message="Só gestores acessam os anúncios." />;
+  if (!allowed) return <ErrorState message="Só admins acessam os anúncios." />;
 
   return (
     <div className="fade-up">
