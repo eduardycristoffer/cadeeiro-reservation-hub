@@ -114,7 +114,7 @@ export function WhatsAppLead() {
       <Sheet open={open} onOpenChange={(v) => !busy && setOpen(v)}>
         <SheetContent
           side="bottom"
-          className="mx-auto max-h-[90dvh] max-w-lg overflow-y-auto rounded-t-3xl p-5 pb-[max(1.5rem,env(safe-area-inset-bottom))]"
+          className="mx-auto max-h-[90dvh] max-w-lg overflow-y-auto rounded-3xl p-5 pb-[max(1.5rem,env(safe-area-inset-bottom))]"
         >
           <SheetHeader className="text-left">
             <SheetTitle>Fale com o Candeeiro</SheetTitle>

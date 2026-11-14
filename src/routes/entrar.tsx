@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { isSupabaseConfigured, supabase } from "@/lib/supabase";
 import { logBlockedLogin } from "@/lib/auth-log.functions";
 import { requestPasswordReset } from "@/lib/password-reset.functions";
+import { onlyCode } from "@/components/admin/TwoFactorCard";
 
 export const Route = createFileRoute("/entrar")({
   head: () => ({
@@ -19,7 +20,10 @@ export const Route = createFileRoute("/entrar")({
       { name: "robots", content: "noindex" },
     ],
   }),
-  validateSearch: (s: Record<string, unknown>): { senha?: "ok" } => (s["senha"] === "ok" ? { senha: "ok" } : {}),
+  validateSearch: (s: Record<string, unknown>): { senha?: "ok"; motivo?: "inatividade" } => ({
+    ...(s["senha"] === "ok" ? { senha: "ok" as const } : {}),
+    ...(s["motivo"] === "inatividade" ? { motivo: "inatividade" as const } : {}),
+  }),
   component: Entrar,
 });
 
@@ -32,6 +36,42 @@ function Entrar() {
   const search = Route.useSearch();
   const [forgot, setForgot] = useState(false);
   const [sent, setSent] = useState(false);
+  /** Passo do código de 6 números: só aparece para quem ligou o 2FA no perfil. */
+  const [mfaFactor, setMfaFactor] = useState<string | null>(null);
+  const [mfaCode, setMfaCode] = useState("");
+
+  /** Registra o login e entra no painel (comum ao login só com senha e ao login com 2FA). */
+  async function finishLogin() {
+    if (!supabase) return;
+    const { data: allowed } = await supabase.rpc("log_auth_event", { _action: "login" });
+    if (allowed === false) {
+      await supabase.auth.signOut();
+      setLoading(false);
+      setMfaFactor(null);
+      return setMsg("Seu acesso está desativado ou ainda não foi liberado. Fale com um admin da unidade.");
+    }
+    setLoading(false);
+    navigate({ to: "/admin" });
+  }
+
+  async function onMfa(e: React.FormEvent) {
+    e.preventDefault();
+    if (!supabase || !mfaFactor) return;
+    setLoading(true);
+    setMsg(null);
+    const { error } = await supabase.auth.mfa.challengeAndVerify({ factorId: mfaFactor, code: mfaCode });
+    if (error) {
+      setLoading(false);
+      setMfaCode("");
+      return setMsg(/invalid|expired/i.test(error.message) ? "Código incorreto ou vencido. Digite o código atual do app." : "Não foi possível verificar agora. Tente de novo.");
+    }
+    await finishLogin();
+  }
+
+  async function cancelMfa() {
+    await supabase?.auth.signOut();
+    setMfaFactor(null); setMfaCode(""); setPassword(""); setMsg(null);
+  }
 
   async function onForgot(e: React.FormEvent) {
     e.preventDefault();
@@ -52,27 +92,39 @@ function Entrar() {
       setLoading(false);
       if (/banned/i.test(error.message)) {
         logBlockedLogin({ data: { email } }).catch(() => {});
-        return setMsg("Seu acesso está desativado. Fale com o gestor da unidade.");
+        return setMsg("Seu acesso está desativado. Fale com um admin da unidade.");
       }
       return setMsg("E-mail ou senha inválidos.");
     }
-    const { data: allowed } = await supabase.rpc("log_auth_event", { _action: "login" });
-    if (allowed === false) {
-      await supabase.auth.signOut();
-      setLoading(false);
-      return setMsg("Seu acesso está desativado ou ainda não foi liberado. Fale com o gestor da unidade.");
+    // Quem ligou o 2FA ainda precisa do código; quem não ligou entra direto com e-mail e senha.
+    const { data: aal } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+    if (aal?.nextLevel === "aal2" && aal.currentLevel !== "aal2") {
+      const { data: fs } = await supabase.auth.mfa.listFactors();
+      const f = fs?.totp?.[0];
+      if (f) { setLoading(false); setMfaCode(""); setMfaFactor(f.id); return; }
     }
-    setLoading(false);
-    navigate({ to: "/admin" });
+    await finishLogin();
   }
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-surface px-5">
       <div className="fade-up w-full max-w-sm py-6 sm:rounded-3xl sm:bg-card sm:p-8 sm:shadow-soft">
         <BrandLogo className="h-16" />
-        <h1 className="mt-2 text-2xl font-semibold">{forgot ? "Esqueci minha senha" : "Entrar"}</h1>
+        <h1 className="mt-2 text-2xl font-semibold">{mfaFactor ? "Código de verificação" : forgot ? "Esqueci minha senha" : "Entrar"}</h1>
         {!isSupabaseConfigured ? (
           <p className="mt-4 text-sm text-muted-foreground">O banco de dados ainda não foi conectado a este projeto.</p>
+        ) : mfaFactor ? (
+          <form onSubmit={onMfa} className="mt-6 space-y-3">
+            <p className="text-sm text-muted-foreground">Abra o app autenticador e digite o código de 6 números do Candeeiro.</p>
+            <div className="space-y-1.5">
+              <Label htmlFor="mfa-code">Código</Label>
+              <Input id="mfa-code" required autoFocus inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6}" maxLength={6} placeholder="000000" value={mfaCode} onChange={(e) => setMfaCode(onlyCode(e.target.value))} className="h-12 rounded-xl text-center font-mono text-lg tracking-[0.4em]" />
+            </div>
+            {msg && <p role="alert" className="text-sm text-destructive">{msg}</p>}
+            <Button type="submit" size="lg" className="h-12 w-full" disabled={loading || mfaCode.length !== 6}>{loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Verificar e entrar"}</Button>
+            <Button type="button" variant="ghost" className="h-11 w-full" onClick={() => void cancelMfa()}>Voltar</Button>
+            <p className="pt-1 text-center text-xs text-muted-foreground">Perdeu o celular? Peça a um admin para remover o 2FA da sua conta.</p>
+          </form>
         ) : forgot ? (
           sent ? (
             <div className="mt-4 space-y-4" role="status">
@@ -101,13 +153,14 @@ function Entrar() {
               <Label htmlFor="password">Senha</Label>
               <Input id="password" required type="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} className="h-12 rounded-xl" />
             </div>
+            {search.motivo === "inatividade" && !msg && search.senha !== "ok" && <p role="status" className="text-sm text-muted-foreground">Você saiu por ficar um tempo sem usar o painel. Entre de novo.</p>}
             {search.senha === "ok" && !msg && <p role="status" className="text-sm text-status-confirmed">Senha alterada. Entre com a senha nova.</p>}
             {msg && <p role="alert" className="text-sm text-destructive">{msg}</p>}
             <Button type="submit" size="lg" className="h-12 w-full" disabled={loading}>
               {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Entrar"}
             </Button>
             <Button type="button" variant="link" className="h-auto w-full p-1 text-sm" onClick={() => { setForgot(true); setMsg(null); }}>Esqueci minha senha</Button>
-            <p className="pt-2 text-center text-xs text-muted-foreground">Acesso só por convite. Peça ao gestor da sua unidade.</p>
+            <p className="pt-2 text-center text-xs text-muted-foreground">Acesso só por convite. Peça a um admin da sua unidade.</p>
           </form>
         )}
       </div>

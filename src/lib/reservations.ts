@@ -1,7 +1,7 @@
 import { toIsoDate } from "@/lib/format";
 
 export type ReservationStatus = "pendente" | "confirmada" | "cancelada" | "concluida" | "nao_compareceu";
-export type ReservationOrigin = "landing_page" | "sdr_whatsapp" | "painel" | "telefone" | "outro";
+export type ReservationOrigin = "landing_page" | "sdr_whatsapp" | "painel" | "telefone" | "whatsapp" | "presencial" | "instagram" | "google" | "indicacao" | "outro";
 
 export function todaySaoPaulo(now = new Date()): string {
   return new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo", year: "numeric", month: "2-digit", day: "2-digit" }).format(now);
@@ -10,9 +10,15 @@ export function todaySaoPaulo(now = new Date()): string {
 export const ORIGIN_LABEL: Record<ReservationOrigin, string> = {
   landing_page: "Página de reservas",
   sdr_whatsapp: "WhatsApp (SDR)",
-  painel: "Painel",
+  painel: "Balcão / painel",
   telefone: "Telefone",
+  whatsapp: "WhatsApp",
+  presencial: "Presencial",
+  instagram: "Instagram",
+  google: "Google",
+  indicacao: "Indicação",
   outro: "Outro",
+
 };
 
 export const SERVICES = [
@@ -58,7 +64,7 @@ export function canTransition(from: ReservationStatus, to: ReservationStatus): b
   return TRANSITIONS[from].includes(to);
 }
 
-/** Grupos grandes só podem ser confirmados por gestor ou super admin. */
+/** Grupos grandes só podem ser confirmados por admin. */
 export function canConfirmLargeGroup(isLargeGroup: boolean, canManage: boolean): boolean {
   return !isLargeGroup || canManage;
 }

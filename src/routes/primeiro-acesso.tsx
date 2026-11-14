@@ -80,7 +80,7 @@ function PrimeiroAcesso() {
         {ready === "wait" && <div className="mt-8 flex justify-center"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>}
         {ready === "none" && (
           <div className="mt-4 space-y-4">
-            <p className="text-sm text-muted-foreground">Link de convite inválido ou expirado. Peça um novo convite ao gestor.</p>
+            <p className="text-sm text-muted-foreground">Link de convite inválido ou expirado. Peça um novo convite a um admin.</p>
             <Button variant="outline" className="h-12 w-full" onClick={() => navigate({ to: "/entrar" })}>Ir para o login</Button>
           </div>
         )}

@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { requireSupabase, friendlyError } from "@/lib/supabase";
 import { useAuth } from "@/lib/auth";
+import { useScope } from "@/lib/scope-context";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/admin/unidades/")({
   head: () => ({ meta: [{ title: "Unidades — Candeeiro Gestão" }, { name: "description", content: "Unidades, horários e capacidade da Rede Candeeiro." }, { property: "og:title", content: "Unidades — Candeeiro Gestão" }, { property: "og:description", content: "Unidades, horários e capacidade da Rede Candeeiro." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }, { name: "robots", content: "noindex" }] }),
@@ -20,6 +22,7 @@ const slugify = (s: string) =>
 function Unidades() {
   const { roles } = useAuth();
   const isSuper = roles.includes("super_admin");
+  const { scope, reload } = useScope();
   const [units, setUnits] = useState<Unit[] | null>(null);
   const [name, setName] = useState("");
   const [city, setCity] = useState("");
@@ -35,21 +38,38 @@ function Unidades() {
 
   async function create(e: React.FormEvent) {
     e.preventDefault();
+    if (saving || !name.trim()) return;
     setSaving(true);
     setErr(null);
-    const sb = requireSupabase();
-    const { data: org } = await sb.from("organizations").select("id").limit(1).single();
-    const { error } = await sb.from("units").insert({ organization_id: org?.id, name: name.trim(), city: city.trim() || null, slug: `${slugify(name)}-${Math.random().toString(36).slice(2, 6)}` });
-    setSaving(false);
-    if (error) return setErr("Não foi possível criar a unidade.");
-    setName(""); setCity("");
-    load();
+    try {
+      const sb = requireSupabase();
+      // sempre na loja que está em uso (com mais de uma loja, "a primeira" não serve)
+      let orgId = scope?.orgId ?? null;
+      if (!orgId) {
+        const { data: org, error: oe } = await sb.from("organizations").select("id").limit(1).maybeSingle();
+        if (oe) throw oe;
+        orgId = org?.id ?? null;
+      }
+      if (!orgId) throw new Error("Nenhuma loja selecionada.");
+      const { data: unit, error } = await sb.from("units").insert({ organization_id: orgId, name: name.trim(), city: city.trim() || null, slug: `${slugify(name) || "unidade"}-${Math.random().toString(36).slice(2, 6)}` }).select("id").single();
+      if (error) throw error;
+      // já nasce funcionando: seg a dom, 11h às 15h, sem limite de quantidade (ajuste os horários dentro da unidade)
+      const { error: re } = await sb.from("reservation_capacity_rules").insert(
+        [0, 1, 2, 3, 4, 5, 6].map((d) => ({ unit_id: unit.id, weekday: d, start_time: "11:00", end_time: "15:00", slot_interval_minutes: 30, max_guests_per_slot: 9999, max_party_size: 200 })),
+      );
+      setName(""); setCity("");
+      toast.success("Unidade criada", { description: re ? "Cadastre os horários dentro da unidade." : "Horários padrão 11h às 15h. Ajuste dentro da unidade." });
+      await load();
+      reload();
+    } catch (e2) {
+      setErr(friendlyError(e2 as { message?: string }) || "Não foi possível criar a unidade.");
+    } finally { setSaving(false); }
   }
 
   return (
     <div className="fade-up">
       <h1 className="text-4xl font-semibold">Unidades</h1>
-      <p className="mt-2 text-muted-foreground">Horários, capacidade e bloqueios de cada unidade.</p>
+      <p className="mt-2 text-muted-foreground">Horários e bloqueios de cada unidade.</p>
 
       {isSuper && (
         <form onSubmit={create} className="mt-8 flex flex-col gap-3 rounded-2xl bg-surface p-4 sm:flex-row">

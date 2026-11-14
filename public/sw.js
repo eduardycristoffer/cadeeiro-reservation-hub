@@ -3,7 +3,7 @@
  * 2) Guarda só arquivos do próprio app (JS/CSS/ícones). Nunca guarda dados: reservas, clientes e alertas vêm sempre da rede.
  * 3) Mostra os alertas no popup do aparelho (push) e abre a tela certa ao tocar.
  * Para forçar atualização do cache, troque a versão abaixo. */
-const VERSION = "v1";
+const VERSION = "v2";
 const STATIC_CACHE = `candeeiro-static-${VERSION}`;
 const OFFLINE_URL = "/offline.html";
 const PRECACHE = [OFFLINE_URL, "/icons/icon-192.png", "/icons/icon-512.png", "/icons/badge-96.png", "/favicon.png"];
@@ -91,7 +91,11 @@ self.addEventListener("push", (event) => {
     (async () => {
       const wins = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
       const focused = wins.find((w) => w.visibilityState === "visible" && w.focused);
-      if (focused) { // app aberto na frente: mostra um aviso dentro da tela, sem popup duplicado
+      // Safari/iPhone exige um popup para TODO push (senão cancela a assinatura depois de alguns). Lá o popup aparece mesmo
+      // com o app aberto e some sozinho em seguida; nos outros navegadores basta o aviso dentro da tela.
+      const ua = (self.navigator && self.navigator.userAgent) || "";
+      const webkit = /AppleWebKit/.test(ua) && !/Chrome|Chromium|CriOS|Edg|Firefox|FxiOS|OPR/.test(ua);
+      if (focused && !webkit) {
         focused.postMessage({ type: "push", data: { ...data, url } });
         return;
       }
@@ -108,6 +112,14 @@ self.addEventListener("push", (event) => {
         lang: "pt-BR",
         data: { url },
       });
+      if (focused) { // só Safari chega aqui: avisa dentro da tela e recolhe o popup depois de alguns segundos
+        focused.postMessage({ type: "push", data: { ...data, url } });
+        const tag = String(data.id || data.kind || "candeeiro");
+        await new Promise((r) => setTimeout(r, 6000));
+        const open = await self.registration.getNotifications({ tag });
+        open.forEach((n) => n.close());
+        return;
+      }
       wins.forEach((w) => w.postMessage({ type: "push", data: { ...data, url }, silent: true }));
     })(),
   );

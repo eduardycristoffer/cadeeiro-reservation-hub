@@ -89,6 +89,9 @@ As migrations 010 e 011 entregam equipe/histórico e SAC/relatórios. A 012 acre
 | `018_crm_avaliacao_google` | Campanha de pedido de avaliação no Google: link definido na criação (só domínios do Google), público de visitas recentes por unidade, sem repetir em 90 dias, sem SAC aberto, envio espaçado pela fila do CRM |
 | `019_multiloja_clientes_perfil` | Várias lojas (super admin troca de loja; gestor vê só a sua), base de clientes com ficha/histórico, importar/exportar contatos, redefinir senha, perfil e preferências de alerta, log de quem fez o quê e gasto em anúncios (CAC) por unidade |
 | `020_app_alertas_popup` | Aparelhos com alertas no popup (`push_subscriptions`), fila de envio (`push_outbox`), regras de quem recebe (mesmas dos e-mails + tipos silenciados), teste de envio e limite de 10 aparelhos por pessoa |
+| `021_sem_limite_origens_confirmacao` | Sem limite de quantidade de pessoas por reserva (admin/operador decidem), novas origens ("Como chegou") e confirmação por WhatsApp quando a reserva manual já nasce confirmada |
+| `022_log_2fa` | Registro no histórico de quando alguém liga ou desliga o 2FA |
+| `023_mensagem_pela_caixa_da_unidade` | Mensagens de confirmação/cancelamento saem pela caixa de WhatsApp da unidade da reserva (nunca por outra cidade) |
 
 O fluxo n8n "CRM envios" (`n8n/crm-envios.workflow.ts`) entrega a fila do CRM (follow-up, reaver, remarketing e pedido de avaliação no Google) pelo WhatsApp da unidade; ele nasce despublicado e desligado (`crm_envios_ativo = nao`). Detalhes em `docs/ATENDENTE_WHATSAPP.md`.
 
@@ -138,3 +141,12 @@ O botão aparece nas páginas públicas, nunca no painel. `capture_whatsapp_lead
 Recusa/cancelamento usam o mesmo seletor de motivo; Outro exige detalhe. O RPC existente recebe exatamente `Recusada: <motivo>` ou `Cancelada: <motivo>`, com ` — <detalhe>` quando preenchido. Nenhum RPC SDR, gatilho de reserva ou agendamento foi alterado. O envio do motivo ao cliente continua responsabilidade das automações externas.
 
 Visual: fonte de sistema, neutros, vermelho discreto, áreas de toque amplas, barras de vidro, seleção por períodos e ações do dia. Busca do menu leva a reservas por nome/telefone/protocolo, com atalhos para SAC e contatos. Fotos reais das unidades não foram fornecidas; a home usa ícones e a reserva mantém a imagem ilustrativa anterior.
+
+
+## Perfis, 2FA e e-mails (resumo)
+
+- **Perfis na tela:** Admin (gestor no banco) e Operador (funcionário). O Super Admin é só da Tryade. Admin convida Admin e Operador; Operador não vê Anúncios, Campanhas, CRM, Wi-Fi, Marketing, Relatórios, Valores, Equipe, Histórico e só consulta Unidades. Grupo grande só Admin aprova.
+- **2FA opcional** por pessoa (app autenticador) em Meu perfil; um Admin remove o 2FA de quem perdeu o celular. A exigência é feita pelo painel, não pelo banco.
+- **Saída por inatividade:** 30 minutos sem uso (aviso aos 60 s finais).
+- **Ícones do app:** `python3 scripts/gen-icons.py` gera tudo em `public/icons` a partir da logo.
+- **E-mails da marca:** fonte em `src/emails/templates.ts`; `bun scripts/build-emails.ts` gera `docs/emails/*.html`.

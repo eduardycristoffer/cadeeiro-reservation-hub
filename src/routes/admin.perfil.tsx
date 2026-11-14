@@ -13,6 +13,7 @@ import { ROLE_LABEL } from "@/lib/audit";
 import { signOutLogged, useAuth } from "@/lib/auth";
 import { friendlyError, requireSupabase } from "@/lib/supabase";
 import { formatPhoneE164 } from "@/lib/reservations";
+import { TwoFactorCard } from "@/components/admin/TwoFactorCard";
 
 export const Route = createFileRoute("/admin/perfil")({
   head: () => ({ meta: [{ title: "Meu perfil — Candeeiro Gestão" }, { name: "description", content: "Seus dados, os alertas que você recebe e sua senha no painel Candeeiro." }, { property: "og:title", content: "Meu perfil — Candeeiro Gestão" }, { property: "og:description", content: "Seu nome, sua senha e sua sessão." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }, { name: "robots", content: "noindex" }] }),
@@ -101,7 +102,7 @@ function Perfil() {
           <Input id="pf-phone" inputMode="tel" autoComplete="tel" placeholder="(62) 99999-0000" value={phone} onChange={(e) => setPhone(maskBrPhone(e.target.value))} className="h-12 rounded-xl" /></div>
         <div className="space-y-1.5"><Label htmlFor="pf-email">E-mail de acesso</Label>
           <Input id="pf-email" readOnly disabled value={user?.email ?? ""} className="h-12 rounded-xl" />
-          <p className="text-xs text-muted-foreground">Para trocar o e-mail de acesso, peça ao gestor.</p></div>
+          <p className="text-xs text-muted-foreground">Para trocar o e-mail de acesso, peça a um admin.</p></div>
         {scope && scope.units.length > 0 && <p className="text-xs text-muted-foreground">Unidades com acesso: {scope.units.map((u) => u.name).join(", ")}</p>}
         <Button type="submit" className="h-11 w-full sm:w-auto" disabled={savingName || (name.trim() === (fullName ?? "") && phone === phoneLoaded)}>
           {savingName ? <Loader2 className="h-4 w-4 animate-spin" /> : "Salvar dados"}
@@ -137,6 +138,8 @@ function Perfil() {
         {pwMsg && <p role="alert" className="text-sm text-destructive">{pwMsg}</p>}
         <Button type="submit" className="h-11 w-full sm:w-auto" disabled={savingPw}>{savingPw ? <Loader2 className="h-4 w-4 animate-spin" /> : "Trocar senha"}</Button>
       </form>
+
+      <TwoFactorCard />
 
       <Button variant="outline" className="mt-4 h-12 w-full" onClick={() => signOutLogged()}><LogOut className="h-4 w-4" /> Sair</Button>
     </div>

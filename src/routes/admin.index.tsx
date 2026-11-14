@@ -14,6 +14,7 @@ import { friendlyError, requireSupabase } from "@/lib/supabase";
 import { hhmm } from "@/lib/format";
 import { todaySaoPaulo } from "@/lib/reservations";
 import { usePendingCount, useQueued } from "@/lib/approvals";
+import { useSwr } from "@/lib/swr";
 
 export const Route = createFileRoute("/admin/")({
   head: () => ({ meta: [
@@ -28,28 +29,40 @@ export const Route = createFileRoute("/admin/")({
   component: AdminHome,
 });
 
-const ROLE_LABEL = { super_admin: "Super Admin", gestor: "Gestor", funcionario: "Funcionário" } as const;
+const ROLE_LABEL = { super_admin: "Super Admin", gestor: "Admin", funcionario: "Operador" } as const;
 type TodayRow = { id: string; reservation_time: string; party_size: number; status: string; arrived_at: string | null; is_large_group: boolean; customers: { full_name: string } | null; units: { name: string } | null };
-type Data = { rows: TodayRow[]; sac: number | null };
+type Month = { reservas: number; pessoas: number; pendentes: number; canceladas: number };
+type Data = { rows: TodayRow[]; sac: number | null; month: Month | null };
 
 async function load(): Promise<Data> {
   const sb = requireSupabase();
   const today = todaySaoPaulo();
-  const [r, s] = await Promise.all([
+  const [y, m] = today.split("-").map(Number) as [number, number];
+  const first = `${y}-${String(m).padStart(2, "0")}-01`;
+  const last = `${y}-${String(m).padStart(2, "0")}-${String(new Date(y, m, 0).getDate()).padStart(2, "0")}`;
+  const [r, s, mo] = await Promise.all([
     sb.from("reservations").select("id,reservation_time,party_size,status,arrived_at,is_large_group,customers(full_name),units(name)")
       .eq("reservation_date", today).in("status", ["pendente", "confirmada", "concluida"]).order("reservation_time").limit(300),
     sb.from("sac_tickets").select("id", { count: "exact", head: true }).in("status", ["aberto", "em_andamento", "aguardando_cliente"]),
+    sb.from("reservations").select("party_size,status").gte("reservation_date", first).lte("reservation_date", last).limit(5000),
   ]);
   if (r.error) throw r.error;
-  return { rows: (r.data ?? []) as unknown as TodayRow[], sac: s.error ? null : s.count ?? 0 };
+  let month: Month | null = null;
+  if (!mo.error) {
+    month = { reservas: 0, pessoas: 0, pendentes: 0, canceladas: 0 };
+    for (const x of (mo.data ?? []) as { party_size: number; status: string }[]) {
+      if (x.status === "cancelada") { month.canceladas++; continue; }
+      month.reservas++; month.pessoas += x.party_size;
+      if (x.status === "pendente") month.pendentes++;
+    }
+  }
+  return { rows: (r.data ?? []) as unknown as TodayRow[], sac: s.error ? null : s.count ?? 0, month };
 }
 
 function AdminHome() {
   const { roles } = useAuth();
   const pending = usePendingCount();
   const queued = useQueued();
-  const [data, setData] = useState<Data | null>(null);
-  const [err, setErr] = useState<string | null>(null);
   const [tick, setTick] = useState(0);
   const [creating, setCreating] = useState(false);
   const [openId, setOpenId] = useState<string | null>(null);
@@ -58,7 +71,9 @@ function AdminHome() {
   const [units, setUnits] = useState<{ id: string; name: string }[]>([]);
   const refresh = useCallback(() => setTick((t) => t + 1), []);
 
-  useEffect(() => { setErr(null); load().then(setData).catch((e) => setErr(friendlyError(e))); }, [tick, pending]);
+  // mostra o último resultado na hora ao voltar para "Hoje" e atualiza por trás
+  const { data, error } = useSwr<Data>(`hoje:${todaySaoPaulo()}`, load, [tick, pending]);
+  const err = error ? friendlyError(error) : null;
   useEffect(() => { scopedUnits("id,name").order("sort_order").order("name").then(({ data }) => setUnits((data ?? []) as { id: string; name: string }[])); }, []);
 
   const people = data?.rows.reduce((s, r) => s + r.party_size, 0) ?? 0;
@@ -88,11 +103,20 @@ function AdminHome() {
         </Link>
       ) : null}
 
-      <div className="mt-4 grid grid-cols-3 gap-2 sm:gap-4">
+      <h2 className="mb-2 mt-5 text-sm font-semibold text-muted-foreground">Hoje</h2>
+      <div className="grid grid-cols-3 gap-2 sm:gap-4">
         <Stat icon={CalendarDays} label="Reservas" value={data ? data.rows.length : null} />
         <Stat icon={Users} label="Pessoas" value={data ? people : null} />
         <Stat icon={CheckCircle2} label="Pendentes" value={pending} />
       </div>
+
+      <h2 className="mb-2 mt-6 text-sm font-semibold text-muted-foreground"><span className="capitalize">{new Date().toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo", month: "long" })}</span> · no mês</h2>
+      <div className="grid grid-cols-3 gap-2 sm:gap-4">
+        <Stat icon={CalendarDays} label="Reservas" value={data ? (data.month?.reservas ?? null) : null} />
+        <Stat icon={Users} label="Pessoas" value={data ? (data.month?.pessoas ?? null) : null} />
+        <Stat icon={CheckCircle2} label="Pendentes" value={data ? (data.month?.pendentes ?? null) : null} />
+      </div>
+      {data?.month && data.month.canceladas > 0 && <p className="mt-2 text-xs text-muted-foreground">{data.month.canceladas} {data.month.canceladas === 1 ? "cancelada" : "canceladas"} no mês (não entram nos números acima).</p>}
 
       {nextArrival && <section className="mt-5 border-y py-4"><p className="text-xs font-medium text-muted-foreground">Próxima chegada</p><p className="mt-1 text-lg font-semibold">{hhmm(nextArrival.reservation_time)} · {nextArrival.customers?.full_name}</p><p className="text-sm text-muted-foreground">{nextArrival.party_size} pessoas · {nextArrival.units?.name}</p></section>}
 

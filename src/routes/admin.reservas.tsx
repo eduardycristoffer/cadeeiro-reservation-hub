@@ -235,7 +235,7 @@ function Reservas() {
               </Button>
             </div>
             <Sheet open={filtersOpen} onOpenChange={setFiltersOpen}>
-              <SheetContent side="bottom" className="rounded-t-3xl px-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-5 md:hidden">
+              <SheetContent side="bottom" className="rounded-3xl px-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-5 md:hidden">
                 <SheetHeader className="text-left"><SheetTitle>Filtros</SheetTitle></SheetHeader>
                 <div className="mt-4 grid gap-3 [&_select]:w-full">{filters}</div>
                 <div className="mt-5 grid grid-cols-2 gap-2">
@@ -287,43 +287,35 @@ function Reservas() {
                 <ReservationCard key={r.id} r={r} queued={queued.has(r.id)} onOpen={() => setOpenId(r.id)} onChanged={() => setTick((t) => t + 1)} />
               ))}
             </div>
-            <div className="hidden overflow-x-auto md:block">
+            <div className="hidden md:block">
               <table className="w-full text-sm">
                 <thead className="text-left text-xs uppercase tracking-wide text-muted-foreground">
                   <tr className="border-b">
-                    {["Protocolo", "Cliente", "WhatsApp", "Unidade", "Serviço", "Data", "Horário", "Pessoas", "Ocasião", "Origem", "Status", "Criada em"].map((h) => (
-                      <th key={h} className="whitespace-nowrap px-4 py-3 font-medium">{h}</th>
+                    {["Cliente", "Quando", "Unidade", "Pessoas", "Status"].map((h) => (
+                      <th key={h} className="whitespace-nowrap px-5 py-3 font-medium">{h}</th>
                     ))}
+                    <th className="w-10" aria-label="Abrir" />
                   </tr>
                 </thead>
                 <tbody>
                   {rows.map((r) => (
-                    <tr key={r.id} onClick={() => setOpenId(r.id)} className="cursor-pointer border-b last:border-0 transition-colors hover:bg-surface">
-                      <td className="whitespace-nowrap px-4 py-3 font-mono text-xs">{r.protocol}</td>
-                      <td className="px-4 py-3 font-medium">{r.customers?.full_name ?? "—"}</td>
-                      <td className="whitespace-nowrap px-4 py-3 text-muted-foreground">{r.customers ? formatPhoneE164(r.customers.phone_e164) : "—"}</td>
-                      <td className="whitespace-nowrap px-4 py-3">{r.units?.name}</td>
-                      <td className="whitespace-nowrap px-4 py-3">{r.service ? SERVICE_LABEL[r.service] : <span className="text-muted-foreground">—</span>}</td>
-                      <td className="whitespace-nowrap px-4 py-3">{fromIsoDate(r.reservation_date).toLocaleDateString("pt-BR")}</td>
-                      <td className="px-4 py-3 tabular-nums">{hhmm(r.reservation_time)}</td>
-                      <td className="px-4 py-3">
+                    <tr key={r.id} onClick={() => setOpenId(r.id)} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setOpenId(r.id); } }} tabIndex={0} role="button" aria-label={`Abrir reserva de ${r.customers?.full_name ?? "cliente"}`} className="cursor-pointer border-b last:border-0 transition-colors hover:bg-surface focus-visible:bg-surface">
+                      <td className="min-w-0 px-5 py-3.5">
+                        <span className="block font-medium leading-tight">{r.customers?.full_name ?? "—"}</span>
+                        <span className="mt-0.5 block font-mono text-[11px] text-muted-foreground">{r.protocol}</span>
+                      </td>
+                      <td className="whitespace-nowrap px-5 py-3.5">
+                        <span className="block tabular-nums">{fromIsoDate(r.reservation_date).toLocaleDateString("pt-BR", { weekday: "short", day: "2-digit", month: "2-digit" })}</span>
+                        <span className="block text-muted-foreground tabular-nums">{hhmm(r.reservation_time)}</span>
+                      </td>
+                      <td className="px-5 py-3.5">{r.units?.name}</td>
+                      <td className="px-5 py-3.5">
                         <span className={cn("inline-flex items-center gap-1 tabular-nums", r.is_large_group && "rounded-full border border-foreground px-2 py-0.5 font-semibold")}>
-                          {r.is_large_group && <Users className="h-3 w-3" />}{r.party_size}
+                          {r.is_large_group && <Users className="h-3 w-3" aria-hidden="true" />}{r.party_size}
                         </span>
                       </td>
-                      <td className="whitespace-nowrap px-4 py-3">
-                        {r.occasion && r.occasion !== "nenhuma" ? (
-                          <span className="inline-flex items-center gap-1.5 rounded-full bg-surface px-2.5 py-1 text-xs font-semibold">
-                            <span className="h-1.5 w-1.5 rounded-full bg-brand" aria-hidden="true" />
-                            {OCCASION_LABEL[r.occasion]}{r.celebrant_name ? ` · ${r.celebrant_name}` : ""}
-                          </span>
-                        ) : (
-                          <span className="text-muted-foreground">—</span>
-                        )}
-                      </td>
-                      <td className="whitespace-nowrap px-4 py-3 text-muted-foreground">{ORIGIN_LABEL[r.origin]}</td>
-                      <td className="px-4 py-3"><StatusBadge status={queued.has(r.id) ? "confirmada" : r.status} /></td>
-                      <td className="whitespace-nowrap px-4 py-3 text-muted-foreground">{new Date(r.created_at).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })}</td>
+                      <td className="px-5 py-3.5"><StatusBadge status={queued.has(r.id) ? "confirmada" : r.status} /></td>
+                      <td className="pr-4 text-muted-foreground"><ChevronRight className="h-4 w-4" aria-hidden="true" /></td>
                     </tr>
                   ))}
                 </tbody>

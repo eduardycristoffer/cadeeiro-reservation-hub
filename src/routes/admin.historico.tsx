@@ -141,7 +141,7 @@ function Historico() {
       </form>
       <div className="mt-4 hidden md:block">{filters}</div>
       <Sheet open={sheet} onOpenChange={setSheet}>
-        <SheetContent side="bottom" className="max-h-[90dvh] overflow-y-auto rounded-t-3xl px-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-5 md:hidden">
+        <SheetContent side="bottom" className="max-h-[90dvh] overflow-y-auto rounded-3xl px-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-5 md:hidden">
           <SheetHeader className="text-left"><SheetTitle>Filtros</SheetTitle></SheetHeader>
           <div className="mt-4">{filters}</div>
           <Button className="mt-4 h-12 w-full" onClick={() => setSheet(false)}>Ver resultados</Button>

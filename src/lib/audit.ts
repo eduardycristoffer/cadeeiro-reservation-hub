@@ -25,8 +25,8 @@ export const SOURCE_LABEL: Record<string, string> = {
 
 export const ROLE_LABEL: Record<string, string> = {
   super_admin: "Super Admin",
-  gestor: "Gestor",
-  funcionario: "Funcionário",
+  gestor: "Admin",
+  funcionario: "Operador",
 };
 
 export const ENTITY_LABEL: Record<string, string> = {
@@ -88,6 +88,9 @@ const VERB: Record<string, string> = {
   "usuario.primeiro_acesso": "concluiu o primeiro acesso",
   "usuario.senha_alterada": "trocou a própria senha",
   "usuario.senha_redefinicao_pedida": "pediu para redefinir a senha",
+  "usuario.2fa_ativado": "ativou a verificação em duas etapas",
+  "usuario.2fa_desativado": "desativou a verificação em duas etapas",
+  "usuario.2fa_removido": "removeu a verificação em duas etapas de um usuário",
   "delivery.criado": "criou o pedido de delivery",
   "delivery.status_alterado": "mudou o status do delivery",
   "delivery.editado": "editou o delivery",
@@ -172,7 +175,7 @@ export function toCsv(rows: AuditRow[]): string {
 
 export const INVITE_ERRORS: Record<string, string> = {
   FORBIDDEN: "Você não tem permissão para isso.",
-  FORBIDDEN_ROLE: "Gestor não pode criar Super Admin.",
+  FORBIDDEN_ROLE: "Admin não pode criar Super Admin.",
   FORBIDDEN_UNIT: "Você só pode dar acesso às suas unidades.",
   UNITS_REQUIRED: "Escolha pelo menos uma unidade.",
   CANNOT_EDIT_SELF: "Você não pode alterar o próprio acesso.",

@@ -5,6 +5,8 @@ import { BarChart3, Bell, Building2, CalendarDays, Headset, CheckCircle2, HeartH
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { usePendingCount } from "@/lib/approvals";
 import { AuthProvider, signOutLogged, useAuth } from "@/lib/auth";
+import { SessionGuard } from "@/components/admin/SessionGuard";
+import { clearSwr } from "@/lib/swr";
 import { isSupabaseConfigured, supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Toaster } from "@/components/ui/sonner";
@@ -80,7 +82,7 @@ function AdminShell() {
       <Center>
         <div className="max-w-sm text-center">
           <h1 className="text-2xl font-semibold">{isActive ? "Acesso pendente" : "Acesso desativado"}</h1>
-          <p className="mt-2 text-muted-foreground">{isActive ? "Sua conta ainda não tem permissão. Fale com o gestor da unidade." : "Seu acesso foi desativado. Fale com o gestor da unidade."}</p>
+          <p className="mt-2 text-muted-foreground">{isActive ? "Sua conta ainda não tem permissão. Fale com um admin da unidade." : "Seu acesso foi desativado. Fale com um admin da unidade."}</p>
           <Button variant="outline" className="mt-6 h-11" onClick={() => supabase?.auth.signOut()}>Sair</Button>
         </div>
       </Center>
@@ -90,7 +92,7 @@ function AdminShell() {
   const isManager = roles.includes("super_admin") || roles.includes("gestor");
   const nav = NAV.filter((n) => (!("superOnly" in n) || roles.includes("super_admin")) && (!("managerOnly" in n) || isManager));
 
-  return <Shell nav={nav} email={user.email ?? ""} />;
+  return <><SessionGuard /><Shell nav={nav} email={user.email ?? ""} /></>;
 }
 
 type NavItem = (typeof NAV)[number];
@@ -163,6 +165,7 @@ function Shell({ nav: allNav, email }: { nav: readonly NavItem[]; email: string 
   const sacOpen = useSacOpenCount();
   const alerts = useUnreadAlerts();
   const { ready, epoch } = useScope();
+  useEffect(() => { clearSwr(); }, [epoch]); // trocou de loja/escopo: nada do cache antigo aparece
   const { fullName } = useAuth();
   // sem a migração de alertas no banco o contador não existe: esconde o item em vez de abrir uma tela quebrada
   const nav = allNav.filter((n) => n.to !== "/admin/alertas" || alerts !== null);
@@ -277,7 +280,7 @@ function Shell({ nav: allNav, email }: { nav: readonly NavItem[]; email: string 
         </div>
       </nav>
       <Sheet open={more} onOpenChange={setMore}>
-        <SheetContent side="bottom" className="max-h-[88dvh] overflow-y-auto px-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-7">
+        <SheetContent side="bottom-sheet" className="max-h-[88dvh] overflow-y-auto px-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-7">
           <SheetHeader className="text-left"><SheetTitle>Mais opções</SheetTitle></SheetHeader>
           <div className="-mx-3 mt-3"><OrgSwitcher collapsed={false} /></div>
           <div className="mt-4 space-y-4">

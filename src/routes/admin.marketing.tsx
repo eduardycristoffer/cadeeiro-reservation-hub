@@ -23,7 +23,7 @@ function Marketing() {
   const { roles } = useAuth();
   const allowed = roles.includes("super_admin") || roles.includes("gestor");
   const [tab, setTab] = useState<Tab>("pixels");
-  if (!allowed) return <ErrorState message="Só gestores acessam esta área." />;
+  if (!allowed) return <ErrorState message="Só admins acessam esta área." />;
   return (
     <div className="fade-up">
       <h1 className="text-2xl font-semibold sm:text-4xl">Marketing</h1>
