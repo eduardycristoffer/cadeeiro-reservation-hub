@@ -88,8 +88,19 @@ As migrations 010 e 011 entregam equipe/histórico e SAC/relatórios. A 012 acre
 | `017_webhooks_wifi` | Ambiente de webhooks e entrada de dados do Wi‑Fi (cliente conectou → dados do sistema de terceiros) |
 | `018_crm_avaliacao_google` | Campanha de pedido de avaliação no Google: link definido na criação (só domínios do Google), público de visitas recentes por unidade, sem repetir em 90 dias, sem SAC aberto, envio espaçado pela fila do CRM |
 | `019_multiloja_clientes_perfil` | Várias lojas (super admin troca de loja; gestor vê só a sua), base de clientes com ficha/histórico, importar/exportar contatos, redefinir senha, perfil e preferências de alerta, log de quem fez o quê e gasto em anúncios (CAC) por unidade |
+| `020_app_alertas_popup` | Aparelhos com alertas no popup (`push_subscriptions`), fila de envio (`push_outbox`), regras de quem recebe (mesmas dos e-mails + tipos silenciados), teste de envio e limite de 10 aparelhos por pessoa |
 
 O fluxo n8n "CRM envios" (`n8n/crm-envios.workflow.ts`) entrega a fila do CRM (follow-up, reaver, remarketing e pedido de avaliação no Google) pelo WhatsApp da unidade; ele nasce despublicado e desligado (`crm_envios_ativo = nao`). Detalhes em `docs/ATENDENTE_WHATSAPP.md`.
+
+## App instalável e alertas no popup
+
+- Página pública `/app` ("Baixar o app"): só por endereço (não há link no site). Mostra o passo a passo certo para o aparelho de quem abre (iPhone, Android, computador, navegador de Instagram/WhatsApp).
+- Aba **App** no painel (`/admin/app`): instalar, ligar/desligar alertas no popup, enviar teste, ver e remover aparelhos, copiar/enviar o link para a equipe, buscar atualização.
+- Arquivos: `public/manifest.webmanifest`, `public/sw.js` (cache do app, tela offline, alertas), `public/offline.html`, ícones em `public/icons/` (provisórios: trocar pelos da logo real mantendo os nomes e tamanhos 192, 512, maskable 512, apple-touch 180 e badge 96).
+- O service worker só registra no site publicado (não na prévia do editor nem em iframe). Ao mudar `public/sw.js`, aumente `VERSION` para o app antigo limpar o cache.
+- Alertas: o banco enfileira em `push_outbox` (mesmas regras de unidade e função dos e-mails, respeitando os tipos silenciados no perfil) e o servidor envia (Web Push, VAPID) na rodada de 1 minuto que já existe para os e-mails (`/api/public/sdr/emails/run` e `/api/public/notifications/email-worker`). Com o app aberto o aviso aparece na hora como toast dentro do app; o botão de teste envia imediatamente.
+- A chave VAPID é derivada de um segredo do servidor: `PUSH_SEED` (opcional) ou, se não existir, `SUPABASE_SERVICE_ROLE_KEY`. Trocar o segredo invalida os aparelhos já ligados (eles se religam ao abrir o painel).
+- iPhone: alertas só com o app instalado na tela de início (iOS 16.4 ou mais novo). Aparelhos que respondem 404/410 são removidos sozinhos.
 
 Segredos usados pelo envio de e-mail: `RESEND_API_KEY`, `EMAIL_FROM` e, opcional, `PUBLIC_APP_URL` (link do convite e de `{{link}}`).
 
