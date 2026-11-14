@@ -86,6 +86,8 @@ const VERB: Record<string, string> = {
   "usuario.unidade_vinculada": "vinculou uma unidade a um usuário",
   "usuario.unidade_removida": "desvinculou uma unidade de um usuário",
   "usuario.primeiro_acesso": "concluiu o primeiro acesso",
+  "usuario.senha_alterada": "trocou a própria senha",
+  "usuario.senha_redefinicao_pedida": "pediu para redefinir a senha",
   "delivery.criado": "criou o pedido de delivery",
   "delivery.status_alterado": "mudou o status do delivery",
   "delivery.editado": "editou o delivery",

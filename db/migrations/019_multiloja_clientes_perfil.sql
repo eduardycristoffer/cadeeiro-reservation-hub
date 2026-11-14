@@ -451,3 +451,25 @@ begin
 end $$;
 revoke all on function public.profile_update(text,text) from public, anon;
 grant execute on function public.profile_update(text,text) to authenticated;
+
+-- Troca de senha (pelo perfil ou pela redefinição) fica no log: quem e quando (nunca a senha).
+create or replace function public.log_password_change(_via text default 'perfil')
+returns void language plpgsql volatile security definer set search_path = public as $$
+begin
+  if auth.uid() is null or not public.is_staff(auth.uid()) then raise exception 'FORBIDDEN'; end if;
+  perform public.write_audit('painel', 'usuario.senha_alterada', 'usuario', auth.uid(), null, null,
+    jsonb_build_object('via', case when _via = 'redefinicao' then 'redefinicao' else 'perfil' end), null);
+end $$;
+revoke all on function public.log_password_change(text) from public, anon;
+grant execute on function public.log_password_change(text) to authenticated;
+
+-- O sino também respeita os tipos que a pessoa silenciou no perfil.
+create or replace function public.notifications_unread_count() returns integer
+language sql stable security invoker set search_path = public as $$
+  select count(*)::integer from public.notifications n
+   where n.created_at > now() - interval '14 days'
+     and not exists (select 1 from public.notification_reads r where r.notification_id = n.id and r.user_id = auth.uid())
+     and not (n.kind = any(coalesce((select p.muted_kinds from public.notification_prefs p where p.user_id = auth.uid()), '{}')))
+$$;
+revoke all on function public.notifications_unread_count() from public, anon;
+grant execute on function public.notifications_unread_count() to authenticated;

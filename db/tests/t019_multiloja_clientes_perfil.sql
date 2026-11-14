@@ -138,6 +138,18 @@ select pg_temp.ok((public.notification_prefs_get()->'muted_kinds') @> '["reserva
 select public.notification_prefs_set(false);
 select pg_temp.ok((public.notification_prefs_get()->>'email_alerts')::boolean = false and jsonb_array_length(public.notification_prefs_get()->'muted_kinds') = 2, 'chamada antiga (só e-mail) não apaga os tipos silenciados');
 select public.notification_prefs_set(true);
+select public.log_password_change('redefinicao');
+-- sino: alerta de tipo silenciado não conta como não lido
+reset role;
+insert into notifications(organization_id,unit_id,kind,title) values (:'orga','00000000-0000-0000-0000-0000000000a1','reserva_pendente','Nova reserva'),(:'orga','00000000-0000-0000-0000-0000000000a1','reserva_cancelada','Cancelou');
+set local role authenticated; set local request.jwt.claim.sub = '00000000-0000-0000-0000-0000000000c3';
+select public.notification_prefs_set(true, array[]::text[]);
+create temp table n0 as select public.notifications_unread_count() n;
+grant select on n0 to authenticated;
+select pg_temp.ok((select n from n0) >= 2, 'sem silenciar: conta os alertas novos');
+select public.notification_prefs_set(true, array['reserva_pendente']);
+select pg_temp.ok(public.notifications_unread_count() = (select n from n0) - 1, 'silenciado: o sino não conta o tipo desligado');
+select public.notification_prefs_set(true, array['reserva_pendente','sac_novo']);
 select public.profile_update('Funcionária Silva','(62) 99999-1234');
 select pg_temp.ok((select full_name from user_profiles where id = auth.uid()) = 'Funcionária Silva' and (select phone from user_profiles where id = auth.uid()) = '5562999991234', 'perfil atualizado');
 select pg_temp.ok(pg_temp.fails($q$select public.profile_update('Ok','123')$q$, '%INVALID_PHONE%'), 'telefone do perfil inválido recusado');
@@ -153,6 +165,7 @@ select pg_temp.ok(exists (select 1 from audit_log where action = 'cliente.export
 select pg_temp.ok(exists (select 1 from audit_log where action = 'plataforma.loja_trocada' and actor_name = 'Super'), 'log: troca de loja');
 select pg_temp.ok(exists (select 1 from audit_log where action = 'plataforma.loja_criada'), 'log: loja criada');
 select pg_temp.ok(exists (select 1 from audit_log where action = 'usuario.alertas_preferencias' and actor_name = 'Func A1'), 'log: preferências de alerta');
+select pg_temp.ok(exists (select 1 from audit_log where action = 'usuario.senha_alterada' and actor_name = 'Func A1' and after->>'via' = 'redefinicao'), 'log: troca de senha');
 select pg_temp.ok(exists (select 1 from audit_log where action = 'usuario.editado' and entity_id = '00000000-0000-0000-0000-0000000000c3'), 'log: perfil editado');
 select pg_temp.ok(exists (select 1 from audit_log where action = 'cliente.criado' and unit_id = '00000000-0000-0000-0000-0000000000a1' and actor_name = 'Func A1'), 'log: cliente criado já aponta a unidade de origem');
 select pg_temp.ok(not exists (select 1 from audit_log where action like 'plataforma.%' and entity_type is null), 'log da plataforma com entidade');

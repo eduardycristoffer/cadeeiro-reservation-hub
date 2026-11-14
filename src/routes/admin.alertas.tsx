@@ -55,8 +55,13 @@ function Lista() {
   const load = useCallback(async () => {
     const sb = requireSupabase();
     setErr(null);
+    // tipos que a pessoa silenciou no perfil não aparecem (se o banco ainda não tem a preferência, mostra tudo)
+    const prefs = await sb.rpc("notification_prefs_get" as never);
+    const muted = ((prefs.data as { muted_kinds?: string[] } | null)?.muted_kinds ?? []).filter((k) => /^[a-z_]+$/.test(k));
+    let list = sb.from("notifications" as never).select("id,kind,severity,title,body,link,created_at").order("created_at", { ascending: false }).limit(100);
+    if (muted.length) list = list.not("kind", "in", `(${muted.join(",")})`);
     const [n, r] = await Promise.all([
-      sb.from("notifications" as never).select("id,kind,severity,title,body,link,created_at").order("created_at", { ascending: false }).limit(100),
+      list,
       sb.from("notification_reads" as never).select("notification_id").limit(1000),
     ]);
     if (n.error) { setErr(notReady(n.error) ? NOT_READY_MSG : friendlyError(n.error)); setRows([]); return; }

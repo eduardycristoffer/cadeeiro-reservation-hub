@@ -83,6 +83,19 @@ export function renderInviteEmail(i: { name: string; link: string; inviter?: str
   };
 }
 
+/** Redefinição de senha. `link` é de uso único e vale por tempo limitado. */
+export function renderResetEmail(i: { name: string; link: string }): Mail {
+  const first = oneLine(i.name).split(" ")[0] || "";
+  const intro = `${first ? `Olá, ${first}! ` : ""}Recebemos um pedido para redefinir a senha do seu acesso ao painel da ${BRAND}.`;
+  const rule = "Toque no botão para criar uma senha nova. O link vale por tempo limitado e só pode ser usado uma vez. Se não foi você, ignore este e-mail: sua senha continua a mesma.";
+  const text = [intro, "", rule, "", i.link, "", `— ${BRAND}`].join("\n");
+  return {
+    subject: `Redefinir sua senha — ${BRAND}`,
+    text,
+    html: shell("Redefinir senha", `<p style="margin:0 0 10px;font-size:16px;line-height:1.5">${escapeHtml(intro)}</p><p style="margin:0;font-size:15px;line-height:1.5;color:#6e6e73">${escapeHtml(rule)}</p>`, { label: "Criar senha nova", url: i.link }),
+  };
+}
+
 export const ALERT_KINDS = [
   { id: "reserva_pendente", label: "Reserva nova para aprovar", hint: "Cliente reservou pelo site ou WhatsApp." },
   { id: "grupo_grande", label: "Grupo grande", hint: "Só gestores — precisa de aprovação do gestor." },

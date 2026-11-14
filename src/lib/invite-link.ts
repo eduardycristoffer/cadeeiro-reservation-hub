@@ -6,13 +6,13 @@ export type InviteType = (typeof INVITE_TYPES)[number];
 
 const TOKEN_RE = /^[A-Za-z0-9_-]{16,200}$/;
 
-export function buildInviteLink(base: string, tokenHash: string, type: string): string | null {
+export function buildInviteLink(base: string, tokenHash: string, type: string, path: "/primeiro-acesso" | "/redefinir-senha" = "/primeiro-acesso"): string | null {
   if (!TOKEN_RE.test(tokenHash) || !(INVITE_TYPES as readonly string[]).includes(type)) return null;
   try {
     const u = new URL(base);
     const local = u.hostname === "localhost" || u.hostname === "127.0.0.1";
     if (u.protocol !== "https:" && !(local && u.protocol === "http:")) return null;
-    return `${u.origin}/primeiro-acesso?token_hash=${encodeURIComponent(tokenHash)}&type=${type}`;
+    return `${u.origin}${path}?token_hash=${encodeURIComponent(tokenHash)}&type=${type}`;
   } catch { return null; }
 }
 

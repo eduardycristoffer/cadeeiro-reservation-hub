@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as EntrarRouteImport } from './routes/entrar'
 import { Route as PrimeiroAcessoRouteImport } from './routes/primeiro-acesso'
+import { Route as RedefinirSenhaRouteImport } from './routes/redefinir-senha'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as AdminAlertasRouteImport } from './routes/admin.alertas'
 import { Route as AdminAnunciosRouteImport } from './routes/admin.anuncios'
@@ -76,6 +77,11 @@ const EntrarRoute = EntrarRouteImport.update({
 const PrimeiroAcessoRoute = PrimeiroAcessoRouteImport.update({
   id: '/primeiro-acesso',
   path: '/primeiro-acesso',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RedefinirSenhaRoute = RedefinirSenhaRouteImport.update({
+  id: '/redefinir-senha',
+  path: '/redefinir-senha',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminIndexRoute = AdminIndexRouteImport.update({
@@ -312,6 +318,7 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AdminRouteWithChildren
   '/entrar': typeof EntrarRoute
   '/primeiro-acesso': typeof PrimeiroAcessoRoute
+  '/redefinir-senha': typeof RedefinirSenhaRoute
   '/admin/alertas': typeof AdminAlertasRoute
   '/admin/anuncios': typeof AdminAnunciosRoute
   '/admin/aprovacoes': typeof AdminAprovacoesRoute
@@ -361,6 +368,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/entrar': typeof EntrarRoute
   '/primeiro-acesso': typeof PrimeiroAcessoRoute
+  '/redefinir-senha': typeof RedefinirSenhaRoute
   '/admin/alertas': typeof AdminAlertasRoute
   '/admin/anuncios': typeof AdminAnunciosRoute
   '/admin/aprovacoes': typeof AdminAprovacoesRoute
@@ -412,6 +420,7 @@ export interface FileRoutesById {
   '/admin': typeof AdminRouteWithChildren
   '/entrar': typeof EntrarRoute
   '/primeiro-acesso': typeof PrimeiroAcessoRoute
+  '/redefinir-senha': typeof RedefinirSenhaRoute
   '/admin/alertas': typeof AdminAlertasRoute
   '/admin/anuncios': typeof AdminAnunciosRoute
   '/admin/aprovacoes': typeof AdminAprovacoesRoute
@@ -464,6 +473,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/entrar'
     | '/primeiro-acesso'
+    | '/redefinir-senha'
     | '/admin/alertas'
     | '/admin/anuncios'
     | '/admin/aprovacoes'
@@ -513,6 +523,7 @@ export interface FileRouteTypes {
     | '/'
     | '/entrar'
     | '/primeiro-acesso'
+    | '/redefinir-senha'
     | '/admin/alertas'
     | '/admin/anuncios'
     | '/admin/aprovacoes'
@@ -563,6 +574,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/entrar'
     | '/primeiro-acesso'
+    | '/redefinir-senha'
     | '/admin/alertas'
     | '/admin/anuncios'
     | '/admin/aprovacoes'
@@ -614,6 +626,7 @@ export interface RootRouteChildren {
   AdminRoute: typeof AdminRouteWithChildren
   EntrarRoute: typeof EntrarRoute
   PrimeiroAcessoRoute: typeof PrimeiroAcessoRoute
+  RedefinirSenhaRoute: typeof RedefinirSenhaRoute
   CSlugRoute: typeof CSlugRoute
   GoianiaPizzaRoute: typeof GoianiaPizzaRoute
   ReservarSucessoRoute: typeof ReservarSucessoRoute
@@ -665,6 +678,13 @@ declare module '@tanstack/react-router' {
       path: '/primeiro-acesso'
       fullPath: '/primeiro-acesso'
       preLoaderRoute: typeof PrimeiroAcessoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/redefinir-senha': {
+      id: '/redefinir-senha'
+      path: '/redefinir-senha'
+      fullPath: '/redefinir-senha'
+      preLoaderRoute: typeof RedefinirSenhaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/': {
@@ -1070,6 +1090,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRoute: AdminRouteWithChildren,
   EntrarRoute: EntrarRoute,
   PrimeiroAcessoRoute: PrimeiroAcessoRoute,
+  RedefinirSenhaRoute: RedefinirSenhaRoute,
   CSlugRoute: CSlugRoute,
   GoianiaPizzaRoute: GoianiaPizzaRoute,
   ReservarSucessoRoute: ReservarSucessoRoute,
