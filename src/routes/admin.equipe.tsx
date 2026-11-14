@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { scopedUnits } from "@/lib/scope";
 import { useCallback, useEffect, useState } from "react";
 import { ChevronRight, Copy, Loader2, Mail, UserPlus, Users } from "lucide-react";
 import { toast } from "sonner";
@@ -44,7 +45,7 @@ function Equipe() {
     setErr(null);
     const [{ data, error }, { data: u }] = await Promise.all([
       sb.rpc("admin_list_team"),
-      sb.from("units").select("id,name,is_active").order("sort_order").order("name"),
+      scopedUnits("id,name,is_active").order("sort_order").order("name"),
     ]);
     if (error) { setErr(friendlyError(error)); setList([]); return; }
     setList((data ?? []) as U[]);

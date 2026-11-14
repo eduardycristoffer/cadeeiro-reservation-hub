@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { scopedUnits } from "@/lib/scope";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ChevronDown, ChevronUp, Copy, Loader2, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
@@ -37,7 +38,7 @@ function Valores() {
   const [tab, setTab] = useState<"tabelas" | "previa" | "feriados">("tabelas");
 
   useEffect(() => {
-    requireSupabase().from("units").select("id,name,services").order("sort_order").order("name").then(({ data }) => {
+    scopedUnits("id,name,services").order("sort_order").order("name").then(({ data }) => {
       const list = (data ?? []) as Unit[];
       setUnits(list);
       const first = list[0];

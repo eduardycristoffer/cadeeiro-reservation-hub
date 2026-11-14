@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { scopedUnits } from "@/lib/scope";
 import { useCallback, useEffect, useState } from "react";
 import { Loader2, MapPin, MessageCircle, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
@@ -51,7 +52,7 @@ function Delivery() {
   }, [unitId, status]);
 
   useEffect(() => {
-    requireSupabase().from("units").select("id,name,has_delivery").order("sort_order").then(({ data }) => setUnits((data ?? []) as typeof units));
+    scopedUnits("id,name,has_delivery").order("sort_order").then(({ data }) => setUnits((data ?? []) as typeof units));
   }, []);
   useEffect(() => { setOrders(null); void load(); const t = setInterval(load, 30000); return () => clearInterval(t); }, [load]);
 

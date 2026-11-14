@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { scopedUnits } from "@/lib/scope";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ExternalLink, Loader2, Megaphone, RotateCcw, Send, Star, X } from "lucide-react";
 import { toast } from "sonner";
@@ -35,7 +36,7 @@ function Crm() {
   const [units, setUnits] = useState<Unit[]>([]);
   useEffect(() => {
     if (!allowed) return;
-    void requireSupabase().from("units").select("id,name").order("sort_order").order("name").then(({ data }) => setUnits((data ?? []) as Unit[]));
+    void scopedUnits("id,name").order("sort_order").order("name").then(({ data }) => setUnits((data ?? []) as Unit[]));
   }, [allowed]);
   if (!allowed) return <ErrorState message="Só gestores acessam esta área." />;
   return (

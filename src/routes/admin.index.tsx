@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { scopedUnits } from "@/lib/scope";
 import { useCallback, useEffect, useState } from "react";
 import { CalendarDays, CheckCircle2, ChevronRight, Clock, Plus, Users } from "lucide-react";
 import { toast } from "sonner";
@@ -58,7 +59,7 @@ function AdminHome() {
   const refresh = useCallback(() => setTick((t) => t + 1), []);
 
   useEffect(() => { setErr(null); load().then(setData).catch((e) => setErr(friendlyError(e))); }, [tick, pending]);
-  useEffect(() => { requireSupabase().from("units").select("id,name").order("sort_order").order("name").then(({ data }) => setUnits((data ?? []) as { id: string; name: string }[])); }, []);
+  useEffect(() => { scopedUnits("id,name").order("sort_order").order("name").then(({ data }) => setUnits((data ?? []) as { id: string; name: string }[])); }, []);
 
   const people = data?.rows.reduce((s, r) => s + r.party_size, 0) ?? 0;
   const groups = new Map<string, TodayRow[]>();

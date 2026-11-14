@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { scopedUnits } from "@/lib/scope";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Copy, Loader2, MessageCircle, Plus, RefreshCw, Search, Wifi } from "lucide-react";
 import { toast } from "sonner";
@@ -41,7 +42,7 @@ function WifiPage() {
   const [units, setUnits] = useState<Unit[]>([]);
   useEffect(() => {
     if (!allowed) return;
-    void requireSupabase().from("units").select("id,name").order("sort_order").order("name").then(({ data }) => setUnits((data ?? []) as Unit[]));
+    void scopedUnits("id,name").order("sort_order").order("name").then(({ data }) => setUnits((data ?? []) as Unit[]));
   }, [allowed]);
   if (!allowed) return <ErrorState message="Só gestores acessam esta área." />;
   return (

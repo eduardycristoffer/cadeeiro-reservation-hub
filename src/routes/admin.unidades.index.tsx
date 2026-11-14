@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { scopedUnits } from "@/lib/scope";
 import { useEffect, useState } from "react";
 import { ChevronRight, Loader2, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -26,7 +27,7 @@ function Unidades() {
   const [saving, setSaving] = useState(false);
 
   async function load() {
-    const { data, error } = await requireSupabase().from("units").select("id,name,city,is_active,accepts_online_reservations").order("sort_order").order("name");
+    const { data, error } = await scopedUnits("id,name,city,is_active,accepts_online_reservations").order("sort_order").order("name");
     if (error) setErr(friendlyError(error));
     setUnits((data ?? []) as Unit[]);
   }

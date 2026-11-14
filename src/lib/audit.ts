@@ -41,6 +41,7 @@ export const ENTITY_LABEL: Record<string, string> = {
   config: "Configuração",
   usuario: "Usuário",
   delivery: "Delivery",
+  organization: "Loja",
 };
 
 // verbo no passado, usado em "Fulano aprovou a reserva X"
@@ -55,6 +56,11 @@ const VERB: Record<string, string> = {
   "cliente.criado": "cadastrou o cliente",
   "cliente.editado": "editou o cliente",
   "cliente.excluido": "excluiu o cliente",
+  "cliente.importado": "importou contatos",
+  "cliente.exportado": "exportou contatos",
+  "plataforma.loja_trocada": "trocou a loja em uso",
+  "plataforma.loja_criada": "criou uma loja",
+  "usuario.alertas_preferencias": "mudou os alertas que recebe",
   "unidade.criada": "criou a unidade",
   "unidade.editada": "editou a unidade",
   "unidade.excluida": "excluiu a unidade",

@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { scopedUnits } from "@/lib/scope";
 import { useEffect, useState } from "react";
 import { Copy, Loader2, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
@@ -93,7 +94,7 @@ function CrmTab() {
       sb().rpc("admin_get_crm_settings"),
       sb().from("crm_events").select("id", { count: "exact", head: true }).eq("direction", "outbound").eq("status", "falhou")
         .gte("updated_at", new Date(Date.now() - 86400000).toISOString()),
-      sb().from("units").select("id,name").order("name"),
+      scopedUnits("id,name").order("name"),
       sb().from("crm_inbox_units").select("id,inbox_external_id,unit_id").order("inbox_external_id"),
     ]);
     if (a.error || !a.data) { setLoadError(a.error ? friendlyError(a.error) : "Configuração indisponível."); return; }
@@ -269,7 +270,7 @@ function SdrTab() {
   async function load() {
     const [{ data, error }, unitResult] = await Promise.all([
       sb().rpc("admin_list_api_keys"),
-      sb().from("units").select("id,name").eq("is_active", true).order("name"),
+      scopedUnits("id,name").eq("is_active", true).order("name"),
     ]);
     if (error || unitResult.error) { setLoadError(friendlyError(error ?? unitResult.error)); return; }
     setLoadError(null);

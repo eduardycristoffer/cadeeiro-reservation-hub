@@ -1,8 +1,7 @@
 import { BrandLogo } from "@/components/BrandLogo";
 import { createFileRoute, Link, Outlet, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { BarChart3, Bell, Building2, CalendarDays, Headset, CheckCircle2, HeartHandshake, History, LayoutGrid, LineChart, LogOut, Loader2, Megaphone, Menu, MessageCircle, Plug, Search, Tag, Target, Truck, UserCircle, Users, Wifi } from "lucide-react";
-import { Input } from "@/components/ui/input";
+import { BarChart3, Bell, Building2, CalendarDays, Headset, CheckCircle2, HeartHandshake, History, LayoutGrid, LineChart, LogOut, Loader2, Megaphone, Menu, MessageCircle, PanelLeftClose, PanelLeftOpen, Plug, Search, Tag, Target, Truck, UserCircle, Users, Wifi } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { usePendingCount } from "@/lib/approvals";
 import { AuthProvider, signOutLogged, useAuth } from "@/lib/auth";
@@ -11,6 +10,11 @@ import { Button } from "@/components/ui/button";
 import { Toaster } from "@/components/ui/sonner";
 import { AlertBell } from "@/components/admin/AlertBell";
 import { useUnreadAlerts } from "@/lib/use-alerts";
+import { GlobalSearch } from "@/components/admin/GlobalSearch";
+import { OrgSwitcher } from "@/components/admin/OrgSwitcher";
+import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
+import { ScopeProvider, useScope } from "@/lib/scope-context";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/admin")({
   ssr: false,
@@ -25,7 +29,9 @@ export const Route = createFileRoute("/admin")({
   }),
   component: () => (
     <AuthProvider>
-      <AdminShell />
+      <ScopeProvider>
+        <AdminShell />
+      </ScopeProvider>
       <Toaster position="top-center" />
     </AuthProvider>
   ),
@@ -37,7 +43,7 @@ const NAV = [
   { to: "/admin/aprovacoes", label: "Aprovações", icon: CheckCircle2, exact: false },
   { to: "/admin/alertas", label: "Alertas", icon: Bell, exact: false },
   { to: "/admin/sac", label: "SAC", icon: Headset, exact: false },
-  { to: "/admin/leads", label: "Contatos WhatsApp", icon: MessageCircle, exact: false },
+  { to: "/admin/leads", label: "Contatos", icon: MessageCircle, exact: false },
   { to: "/admin/delivery", label: "Delivery", icon: Truck, exact: false },
   { to: "/admin/anuncios", label: "Anúncios", icon: LineChart, exact: false, managerOnly: true },
   { to: "/admin/campanhas", label: "Campanhas", icon: Target, exact: false, managerOnly: true },
@@ -114,49 +120,120 @@ function Badge({ n }: { n: number | null }) {
   return <span className="ml-auto inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-brand px-1.5 text-[11px] font-bold text-brand-foreground">{n > 99 ? "99+" : n}<span className="sr-only"> pendentes</span></span>;
 }
 
+const SECTIONS: { title: string; items: string[] }[] = [
+  { title: "Operação", items: ["/admin", "/admin/reservas", "/admin/aprovacoes"] },
+  { title: "Atendimento", items: ["/admin/alertas", "/admin/sac", "/admin/leads", "/admin/delivery"] },
+  { title: "Marketing", items: ["/admin/anuncios", "/admin/campanhas", "/admin/crm", "/admin/wifi", "/admin/marketing"] },
+  { title: "Gestão", items: ["/admin/relatorios", "/admin/valores", "/admin/unidades", "/admin/equipe", "/admin/historico", "/admin/integracoes"] },
+];
+const COLLAPSE_KEY = "candeeiro.sidebar.collapsed";
+
+function useCollapsed() {
+  const [collapsed, setCollapsed] = useState(false);
+  useEffect(() => { try { setCollapsed(window.localStorage.getItem(COLLAPSE_KEY) === "1"); } catch { /* sem armazenamento: segue aberto */ } }, []);
+  const toggle = () => setCollapsed((c) => { const v = !c; try { window.localStorage.setItem(COLLAPSE_KEY, v ? "1" : "0"); } catch { /* ok */ } return v; });
+  return [collapsed, toggle] as const;
+}
+
+/** Item do menu lateral. Recolhido, mostra só o ícone e o nome aparece ao passar o mouse (ou focar com o teclado). */
+function SideLink({ n, collapsed, count }: { n: NavItem; collapsed: boolean; count: number | null }) {
+  const link = (
+    <Link
+      to={n.to}
+      activeOptions={{ exact: n.exact }}
+      aria-label={collapsed ? (count ? `${n.label}: ${count} pendentes` : n.label) : undefined}
+      className={cn("relative flex min-h-11 items-center gap-3 rounded-xl px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-foreground data-[status=active]:bg-sidebar-accent data-[status=active]:font-medium data-[status=active]:text-foreground", collapsed && "justify-center px-0")}
+    >
+      <n.icon className="h-[18px] w-[18px] shrink-0" aria-hidden="true" />
+      {!collapsed && <span className="min-w-0 flex-1 truncate">{n.label}</span>}
+      {!collapsed && <Badge n={count} />}
+      {collapsed && count ? <span className="absolute right-1.5 top-1.5 h-2.5 w-2.5 rounded-full bg-brand ring-2 ring-sidebar" aria-hidden="true" /> : null}
+    </Link>
+  );
+  if (!collapsed) return link;
+  return <Tooltip><TooltipTrigger asChild>{link}</TooltipTrigger><TooltipContent side="right" sideOffset={10}>{n.label}{count ? ` · ${count}` : ""}</TooltipContent></Tooltip>;
+}
+
 function Shell({ nav: allNav, email }: { nav: readonly NavItem[]; email: string }) {
   const pending = usePendingCount();
   const sacOpen = useSacOpenCount();
   const alerts = useUnreadAlerts();
+  const { ready, epoch } = useScope();
+  const { fullName } = useAuth();
   // sem a migração de alertas no banco o contador não existe: esconde o item em vez de abrir uma tela quebrada
   const nav = allNav.filter((n) => n.to !== "/admin/alertas" || alerts !== null);
   const badge = (to: string) => (to === "/admin/aprovacoes" ? pending : to === "/admin/sac" ? sacOpen : to === "/admin/alertas" ? alerts : null);
   const [more, setMore] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
-  const [query, setQuery] = useState("");
-  const navigate = useNavigate();
+  const [collapsed, toggleCollapsed] = useCollapsed();
   const primary = nav.filter((n) => PRIMARY.includes(n.to));
   const rest = nav.filter((n) => !PRIMARY.includes(n.to));
   const signOut = () => signOutLogged();
+  const profile = nav.find((n) => n.to === "/admin/perfil");
+  const pages = nav.map((n) => ({ to: n.to, label: n.label, icon: n.icon }));
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") { e.preventDefault(); setSearchOpen((o) => !o); }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
+  const initial = (fullName || email || "?").trim().charAt(0).toUpperCase();
   return (
+    <TooltipProvider delayDuration={150}>
     <div className="flex min-h-screen bg-surface">
-      <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col border-r bg-sidebar p-4 md:flex">
-        <div className="px-3 py-2"><BrandLogo className="h-12" /></div>
-        <Button variant="outline" className="mt-3 h-11 justify-start" onClick={() => setSearchOpen(true)}><Search />Buscar</Button>
-        <nav aria-label="Navegação do painel" className="mt-4 flex-1 space-y-1">
-          {nav.map((n) => (
-            <div key={n.to}>
-            {n.to === "/admin" && <p className="px-3 pb-2 pt-2 text-xs font-medium text-muted-foreground">Operação</p>}
-            {n.to === "/admin/sac" && <p className="px-3 pb-2 pt-4 text-xs font-medium text-muted-foreground">Atendimento</p>}
-            {n.to === "/admin/anuncios" && <p className="px-3 pb-2 pt-4 text-xs font-medium text-muted-foreground">Marketing</p>}
-            {n.to === "/admin/relatorios" && <p className="px-3 pb-2 pt-4 text-xs font-medium text-muted-foreground">Gestão</p>}
-            <Link
-              key={n.to}
-              to={n.to}
-              activeOptions={{ exact: n.exact }}
-              className="flex min-h-11 items-center gap-3 rounded-xl px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-foreground data-[status=active]:bg-sidebar-accent data-[status=active]:font-medium data-[status=active]:text-foreground"
-            >
-              <n.icon className="h-4 w-4" aria-hidden="true" /> {n.label}
-              <Badge n={badge(n.to)} />
-            </Link>
-            </div>
-          ))}
+      {/* altura fixa da tela + rolagem só no meio: o menu rola sozinho, sem depender do conteúdo à direita */}
+      <aside className={cn("sticky top-0 hidden h-dvh shrink-0 flex-col overflow-hidden border-r bg-sidebar transition-[width] duration-200 md:flex", collapsed ? "w-[76px]" : "w-64")}>
+        <div className={cn("flex shrink-0 items-center gap-2 px-3 pb-2 pt-4", collapsed ? "flex-col" : "justify-between")}>
+          {!collapsed && <div className="min-w-0 px-1"><BrandLogo className="h-11" /></div>}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-10 w-10 shrink-0 text-muted-foreground" onClick={toggleCollapsed} aria-label={collapsed ? "Expandir menu" : "Recolher menu"} aria-expanded={!collapsed}>
+                {collapsed ? <PanelLeftOpen /> : <PanelLeftClose />}
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="right" sideOffset={10}>{collapsed ? "Expandir menu" : "Recolher menu"}</TooltipContent>
+          </Tooltip>
+        </div>
+        <div className="shrink-0 pb-2"><OrgSwitcher collapsed={collapsed} /></div>
+        <div className="shrink-0 px-3 pb-2">
+          {collapsed ? (
+            <Tooltip><TooltipTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-11 w-full text-muted-foreground" aria-label="Buscar" onClick={() => setSearchOpen(true)}><Search /></Button>
+            </TooltipTrigger><TooltipContent side="right" sideOffset={10}>Buscar (Ctrl K)</TooltipContent></Tooltip>
+          ) : (
+            <button type="button" onClick={() => setSearchOpen(true)} className="flex h-10 w-full items-center gap-2 rounded-xl border bg-background px-3 text-left text-sm text-muted-foreground transition-colors hover:bg-sidebar-accent">
+              <Search className="h-4 w-4 shrink-0" aria-hidden="true" /><span className="flex-1">Buscar…</span>
+              <kbd className="hidden rounded border bg-surface px-1.5 py-0.5 text-[10px] font-medium lg:inline">Ctrl K</kbd>
+            </button>
+          )}
+        </div>
+        <nav aria-label="Navegação do painel" className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 pb-3 [scrollbar-width:thin]">
+          {SECTIONS.map((s) => {
+            const items = nav.filter((n) => s.items.includes(n.to));
+            if (!items.length) return null;
+            return (
+              <div key={s.title} className="mt-3 first:mt-1">
+                {collapsed ? <div className="mx-3 mb-2 border-t" aria-hidden="true" /> : <p className="px-3 pb-1.5 text-xs font-medium text-muted-foreground">{s.title}</p>}
+                <div className="space-y-0.5">{items.map((n) => <SideLink key={n.to} n={n} collapsed={collapsed} count={badge(n.to)} />)}</div>
+              </div>
+            );
+          })}
         </nav>
-        <div className="border-t pt-4">
-          <p className="truncate px-3 text-xs text-muted-foreground">{email}</p>
-          <Button variant="ghost" onClick={signOut} className="mt-2 w-full justify-start gap-3 rounded-xl px-3 text-muted-foreground">
-            <LogOut className="h-4 w-4" /> Sair
-          </Button>
+        <div className={cn("shrink-0 border-t p-3", collapsed && "flex flex-col items-center gap-1")}>
+          {profile && (collapsed ? <SideLink n={profile} collapsed count={null} /> : (
+            <Link to={profile.to} className="flex min-h-12 items-center gap-3 rounded-xl px-2 py-1.5 transition-colors hover:bg-sidebar-accent data-[status=active]:bg-sidebar-accent">
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground" aria-hidden="true">{initial}</span>
+              <span className="min-w-0"><span className="block truncate text-sm font-medium leading-tight">{fullName || "Meu perfil"}</span><span className="block truncate text-xs text-muted-foreground">{email}</span></span>
+            </Link>
+          ))}
+          {collapsed ? (
+            <Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" onClick={signOut} aria-label="Sair" className="h-11 w-11 text-muted-foreground"><LogOut /></Button></TooltipTrigger><TooltipContent side="right" sideOffset={10}>Sair</TooltipContent></Tooltip>
+          ) : (
+            <Button variant="ghost" onClick={signOut} className="mt-1 w-full justify-start gap-3 rounded-xl px-3 text-muted-foreground"><LogOut className="h-4 w-4" /> Sair</Button>
+          )}
         </div>
       </aside>
       <div className="min-w-0 flex-1">
@@ -168,7 +245,7 @@ function Shell({ nav: allNav, email }: { nav: readonly NavItem[]; email: string 
           </div>
         </header>
         <main className="admin-content admin-main mx-auto min-w-0 max-w-6xl px-4 pt-5 md:px-10 md:pt-10">
-          <Outlet />
+          {ready ? <Outlet key={epoch} /> : <div className="flex justify-center py-20"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" aria-label="Carregando" /></div>}
         </main>
       </div>
 
@@ -191,9 +268,10 @@ function Shell({ nav: allNav, email }: { nav: readonly NavItem[]; email: string 
         </div>
       </nav>
       <Sheet open={more} onOpenChange={setMore}>
-        <SheetContent side="bottom" className="px-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-7">
+        <SheetContent side="bottom" className="max-h-[88dvh] overflow-y-auto px-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-7">
           <SheetHeader className="text-left"><SheetTitle>Mais opções</SheetTitle></SheetHeader>
-          <div className="mt-3 space-y-4">
+          <div className="-mx-3 mt-3"><OrgSwitcher collapsed={false} /></div>
+          <div className="mt-4 space-y-4">
             {MORE_GROUPS.map((g) => {
               const items = rest.filter((n) => g.items.includes(n.to));
               if (items.length === 0) return null;
@@ -218,17 +296,9 @@ function Shell({ nav: allNav, email }: { nav: readonly NavItem[]; email: string 
           </div>
         </SheetContent>
       </Sheet>
-      <Sheet open={searchOpen} onOpenChange={setSearchOpen}>
-        <SheetContent side="bottom" className="mx-auto max-w-lg px-5 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-7">
-          <SheetHeader className="text-left"><SheetTitle>Buscar</SheetTitle></SheetHeader>
-          <form className="mt-5 space-y-3" onSubmit={(e) => { e.preventDefault(); setSearchOpen(false); navigate({ to: "/admin/reservas", search: { view: "lista", cal: "mes", periodo: "todas", pagina: 1, q: query.trim() || undefined } }); }}>
-            <Input aria-label="Nome, telefone ou protocolo" placeholder="Nome, telefone ou protocolo" autoFocus className="h-12" value={query} onChange={(e) => setQuery(e.target.value)} />
-            <Button className="h-12 w-full" type="submit"><Search />Buscar reservas</Button>
-          </form>
-          <div className="mt-3 grid grid-cols-2 gap-2"><Button asChild variant="outline" className="h-11"><Link to="/admin/sac" onClick={() => setSearchOpen(false)}>SAC</Link></Button><Button asChild variant="outline" className="h-11"><Link to="/admin/leads" onClick={() => setSearchOpen(false)}>Contatos</Link></Button></div>
-        </SheetContent>
-      </Sheet>
+      <GlobalSearch open={searchOpen} onOpenChange={setSearchOpen} pages={pages} />
     </div>
+    </TooltipProvider>
   );
 }
 

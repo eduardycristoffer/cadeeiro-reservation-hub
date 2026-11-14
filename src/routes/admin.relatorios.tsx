@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { scopedUnits } from "@/lib/scope";
 import { useEffect, useMemo, useState } from "react";
 import { BarChart3, Download, Printer } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -62,7 +63,7 @@ function Relatorios() {
   const [tick, setTick] = useState(0);
   const [from, to] = range(p, de, ate);
 
-  useEffect(() => { requireSupabase().from("units").select("id,name").order("sort_order").order("name").then(({ data }) => setUnits((data ?? []) as typeof units)); }, []);
+  useEffect(() => { scopedUnits("id,name").order("sort_order").order("name").then(({ data }) => setUnits((data ?? []) as typeof units)); }, []);
 
   useEffect(() => {
     if (!allowed) return;

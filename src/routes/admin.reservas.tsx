@@ -1,4 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { scopedUnits } from "@/lib/scope";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { CalendarX, ChevronLeft, ChevronRight, Loader2, Plus, Search, SlidersHorizontal, Users } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
@@ -99,7 +100,7 @@ function Reservas() {
   const queued = useQueued();
 
   useEffect(() => {
-    requireSupabase().from("units").select("id,name").order("sort_order").order("name")
+    scopedUnits("id,name").order("sort_order").order("name")
       .then(({ data }) => setUnits((data ?? []) as Unit[]));
   }, []);
 

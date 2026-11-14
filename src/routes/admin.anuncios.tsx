@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { scopedUnits } from "@/lib/scope";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Download, Loader2, Plus, Trash2, TrendingUp, Upload } from "lucide-react";
 import { toast } from "sonner";
@@ -48,7 +49,7 @@ function Anuncios() {
   useEffect(() => {
     if (!allowed) return;
     const sb = requireSupabase();
-    void sb.from("units").select("id,name,slug").order("sort_order").order("name").then(({ data }) => setUnits((data ?? []) as Unit[]));
+    void scopedUnits("id,name,slug").order("sort_order").order("name").then(({ data }) => setUnits((data ?? []) as Unit[]));
     void sb.from("campaign_pages").select("campaign").then(({ data }) => setKnown(Array.from(new Set((data ?? []).map((r: { campaign: string }) => r.campaign)))), () => undefined);
   }, [allowed]);
 

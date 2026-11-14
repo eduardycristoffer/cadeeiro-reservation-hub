@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { NativeSelect, EmptyState, ErrorState, ListSkeleton } from "@/components/admin/bits";
 import { CIDADES, OFERTA, type Cidade } from "@/lib/oferta";
 import { downloadCsv, toCsvTable } from "@/lib/csv";
+import { CustomersBase } from "@/components/admin/CustomersBase";
 import { formatPhoneE164, waLink } from "@/lib/reservations";
 import { friendlyError, requireSupabase } from "@/lib/supabase";
 import type { Database } from "@/integrations/supabase/types";
@@ -33,8 +34,37 @@ export const Route = createFileRoute("/admin/leads")({
       { name: "robots", content: "noindex" },
     ],
   }),
-  component: Leads,
+  validateSearch: (s: Record<string, unknown>): { aba?: "clientes" | "leads"; cliente?: string } => ({
+    ...(s["aba"] === "leads" || s["aba"] === "clientes" ? { aba: s["aba"] as "clientes" | "leads" } : {}),
+    ...(typeof s["cliente"] === "string" && /^[0-9a-f-]{36}$/i.test(s["cliente"]) ? { cliente: s["cliente"] } : {}),
+  }),
+  component: Contatos,
 });
+
+function Contatos() {
+  const search = Route.useSearch();
+  const navigate = Route.useNavigate();
+  const aba = search.aba ?? "clientes";
+  const tabs = [["clientes", "Base de clientes"], ["leads", "Leads do WhatsApp"]] as const;
+  return (
+    <div className="fade-up">
+      <h1 className="text-3xl font-semibold">Contatos</h1>
+      <div role="tablist" aria-label="Tipo de contato" className="mt-4 inline-flex max-w-full gap-1 overflow-x-auto rounded-xl bg-surface p-1">
+        {tabs.map(([k, label]) => (
+          <button key={k} role="tab" type="button" aria-selected={aba === k} onClick={() => navigate({ search: { aba: k }, replace: true })}
+            className={`min-h-10 shrink-0 rounded-lg px-4 text-sm font-medium transition ${aba === k ? "bg-card shadow-soft" : "text-muted-foreground"}`}>{label}</button>
+        ))}
+      </div>
+      <div className="mt-5">
+        {aba === "clientes" ? (
+          <CustomersBase openId={search.cliente} onOpen={(id) => navigate({ search: { aba: "clientes", ...(id ? { cliente: id } : {}) }, replace: true })} />
+        ) : (
+          <Leads />
+        )}
+      </div>
+    </div>
+  );
+}
 function Leads() {
   const [city, setCity] = useState("");
   const [from, setFrom] = useState("");
@@ -151,9 +181,9 @@ function Leads() {
     }
   }
   return (
-    <div className="fade-up">
+    <div>
       <div className="flex items-center justify-between gap-3">
-        <h1 className="text-3xl font-semibold">Contatos</h1>
+        <h2 className="text-xl font-semibold">Leads do WhatsApp</h2>
         <Button variant="outline" className="h-11" disabled={!!busy || !count} onClick={exportCsv}>
           <Download />
           CSV
