@@ -53,6 +53,7 @@ import { Route as ApiPublicSdrPricesRouteImport } from './routes/api.public.sdr.
 import { Route as ApiPublicSdrReservationsRouteImport } from './routes/api.public.sdr.reservations'
 import { Route as ApiPublicSdrSacRouteImport } from './routes/api.public.sdr.sac'
 import { Route as ApiPublicSdrUnitsRouteImport } from './routes/api.public.sdr.units'
+import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
 import { Route as ApiPublicCrmWebhookTokenRouteImport } from './routes/api.public.crm.webhook.$token'
 import { Route as ApiPublicSdrConversationsClassifyRouteImport } from './routes/api.public.sdr.conversations.classify'
 import { Route as ApiPublicSdrCrmSendsRouteImport } from './routes/api.public.sdr.crm.sends'
@@ -285,6 +286,12 @@ const ApiPublicSdrUnitsRoute = ApiPublicSdrUnitsRouteImport.update({
   path: '/api/public/sdr/units',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LovableEmailTransactionalPreviewRoute =
+  LovableEmailTransactionalPreviewRouteImport.update({
+    id: '/lovable/email/transactional/preview',
+    path: '/lovable/email/transactional/preview',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicCrmWebhookTokenRoute =
   ApiPublicCrmWebhookTokenRouteImport.update({
     id: '/api/public/crm/webhook/$token',
@@ -370,6 +377,7 @@ export interface FileRoutesByFullPath {
   '/api/public/sdr/reservations': typeof ApiPublicSdrReservationsRouteWithChildren
   '/api/public/sdr/sac': typeof ApiPublicSdrSacRoute
   '/api/public/sdr/units': typeof ApiPublicSdrUnitsRoute
+  '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
   '/api/public/crm/webhook/$token': typeof ApiPublicCrmWebhookTokenRoute
   '/api/public/sdr/conversations/classify': typeof ApiPublicSdrConversationsClassifyRoute
   '/api/public/sdr/crm/sends': typeof ApiPublicSdrCrmSendsRouteWithChildren
@@ -422,6 +430,7 @@ export interface FileRoutesByTo {
   '/api/public/sdr/reservations': typeof ApiPublicSdrReservationsRouteWithChildren
   '/api/public/sdr/sac': typeof ApiPublicSdrSacRoute
   '/api/public/sdr/units': typeof ApiPublicSdrUnitsRoute
+  '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
   '/api/public/crm/webhook/$token': typeof ApiPublicCrmWebhookTokenRoute
   '/api/public/sdr/conversations/classify': typeof ApiPublicSdrConversationsClassifyRoute
   '/api/public/sdr/crm/sends': typeof ApiPublicSdrCrmSendsRouteWithChildren
@@ -476,6 +485,7 @@ export interface FileRoutesById {
   '/api/public/sdr/reservations': typeof ApiPublicSdrReservationsRouteWithChildren
   '/api/public/sdr/sac': typeof ApiPublicSdrSacRoute
   '/api/public/sdr/units': typeof ApiPublicSdrUnitsRoute
+  '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
   '/api/public/crm/webhook/$token': typeof ApiPublicCrmWebhookTokenRoute
   '/api/public/sdr/conversations/classify': typeof ApiPublicSdrConversationsClassifyRoute
   '/api/public/sdr/crm/sends': typeof ApiPublicSdrCrmSendsRouteWithChildren
@@ -531,6 +541,7 @@ export interface FileRouteTypes {
     | '/api/public/sdr/reservations'
     | '/api/public/sdr/sac'
     | '/api/public/sdr/units'
+    | '/lovable/email/transactional/preview'
     | '/api/public/crm/webhook/$token'
     | '/api/public/sdr/conversations/classify'
     | '/api/public/sdr/crm/sends'
@@ -583,6 +594,7 @@ export interface FileRouteTypes {
     | '/api/public/sdr/reservations'
     | '/api/public/sdr/sac'
     | '/api/public/sdr/units'
+    | '/lovable/email/transactional/preview'
     | '/api/public/crm/webhook/$token'
     | '/api/public/sdr/conversations/classify'
     | '/api/public/sdr/crm/sends'
@@ -636,6 +648,7 @@ export interface FileRouteTypes {
     | '/api/public/sdr/reservations'
     | '/api/public/sdr/sac'
     | '/api/public/sdr/units'
+    | '/lovable/email/transactional/preview'
     | '/api/public/crm/webhook/$token'
     | '/api/public/sdr/conversations/classify'
     | '/api/public/sdr/crm/sends'
@@ -669,6 +682,7 @@ export interface RootRouteChildren {
   ApiPublicSdrReservationsRoute: typeof ApiPublicSdrReservationsRouteWithChildren
   ApiPublicSdrSacRoute: typeof ApiPublicSdrSacRoute
   ApiPublicSdrUnitsRoute: typeof ApiPublicSdrUnitsRoute
+  LovableEmailTransactionalPreviewRoute: typeof LovableEmailTransactionalPreviewRoute
   ApiPublicCrmWebhookTokenRoute: typeof ApiPublicCrmWebhookTokenRoute
   ApiPublicSdrConversationsClassifyRoute: typeof ApiPublicSdrConversationsClassifyRoute
   ApiPublicSdrCrmSendsRoute: typeof ApiPublicSdrCrmSendsRouteWithChildren
@@ -985,6 +999,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicSdrUnitsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/lovable/email/transactional/preview': {
+      id: '/lovable/email/transactional/preview'
+      path: '/lovable/email/transactional/preview'
+      fullPath: '/lovable/email/transactional/preview'
+      preLoaderRoute: typeof LovableEmailTransactionalPreviewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/crm/webhook/$token': {
       id: '/api/public/crm/webhook/$token'
       path: '/api/public/crm/webhook/$token'
@@ -1151,6 +1172,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicSdrReservationsRoute: ApiPublicSdrReservationsRouteWithChildren,
   ApiPublicSdrSacRoute: ApiPublicSdrSacRoute,
   ApiPublicSdrUnitsRoute: ApiPublicSdrUnitsRoute,
+  LovableEmailTransactionalPreviewRoute: LovableEmailTransactionalPreviewRoute,
   ApiPublicCrmWebhookTokenRoute: ApiPublicCrmWebhookTokenRoute,
   ApiPublicSdrConversationsClassifyRoute:
     ApiPublicSdrConversationsClassifyRoute,

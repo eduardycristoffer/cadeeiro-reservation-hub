@@ -1,5 +1,10 @@
 # Revisão de experiência e funcionamento
 
+# Infraestrutura de e-mail
+- [x] Configurar envio gerenciado para notify.candeeiro.tryade.com.br, dependências, registro de modelos e prévia protegida; sem alterar automações existentes.
+- [ ] Verificação DNS: aguardando validação do domínio em Mais → E-mails; envio real indisponível até concluir.
+- [ ] Modelos e gatilhos de envio: fora deste pedido de infraestrutura; definir na etapa de e-mails.
+
 - [x] Compactar a reserva pública e manter ações visíveis no celular.
 - [x] Corrigir navegação e conteúdo que ultrapassam a tela no painel.
 - [x] Revisar formulários, falhas e estados de erro sem alterar regras no banco.
