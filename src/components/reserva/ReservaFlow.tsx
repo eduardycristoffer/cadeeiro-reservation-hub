@@ -228,7 +228,6 @@ export function ReservaFlow({ initialService, campaign, city, copy, pageSlug }: 
           >
             <MessageCircle className="h-4 w-4 text-brand-ink" aria-hidden="true" /> Falar no WhatsApp
           </button>
-          <a href="/entrar" className="rounded-full px-3 py-2 text-sm text-muted-foreground hover:text-foreground">Área da equipe</a>
         </div>
         <div className="flex flex-1 flex-col justify-center py-4">
           <div className="fade-up">
