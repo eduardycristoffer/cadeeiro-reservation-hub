@@ -1,7 +1,7 @@
 import { BrandLogo } from "@/components/BrandLogo";
 import { createFileRoute, Link, Outlet, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { BarChart3, Bell, Building2, CalendarDays, Headset, CheckCircle2, HeartHandshake, History, LayoutGrid, LineChart, LogOut, Loader2, Megaphone, Menu, MessageCircle, PanelLeftClose, PanelLeftOpen, Plug, Search, Tag, Target, Truck, UserCircle, Users, Wifi } from "lucide-react";
+import { BarChart3, Bell, Building2, CalendarDays, Headset, CheckCircle2, HeartHandshake, History, LayoutGrid, LineChart, LogOut, Loader2, Megaphone, Menu, MessageCircle, PanelLeftClose, PanelLeftOpen, Plug, Search, Smartphone, Tag, Target, Truck, UserCircle, Users, Wifi } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { usePendingCount } from "@/lib/approvals";
 import { AuthProvider, signOutLogged, useAuth } from "@/lib/auth";
@@ -10,6 +10,8 @@ import { Button } from "@/components/ui/button";
 import { Toaster } from "@/components/ui/sonner";
 import { AlertBell } from "@/components/admin/AlertBell";
 import { useUnreadAlerts } from "@/lib/use-alerts";
+import { setAppBadge, syncPushOnOpen } from "@/lib/app-state";
+import { InstallBanner } from "@/components/app/InstallBanner";
 import { GlobalSearch } from "@/components/admin/GlobalSearch";
 import { OrgSwitcher } from "@/components/admin/OrgSwitcher";
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
@@ -56,6 +58,7 @@ const NAV = [
   { to: "/admin/equipe", label: "Equipe", icon: Users, exact: false, managerOnly: true },
   { to: "/admin/historico", label: "Histórico", icon: History, exact: false, managerOnly: true },
   { to: "/admin/integracoes", label: "Integrações", icon: Plug, exact: false, superOnly: true },
+  { to: "/admin/app", label: "App", icon: Smartphone, exact: false },
   { to: "/admin/perfil", label: "Meu perfil", icon: UserCircle, exact: false },
 ] as const;
 
@@ -97,7 +100,7 @@ const MORE_GROUPS: { title: string; items: string[] }[] = [
   { title: "Atendimento", items: ["/admin/alertas", "/admin/leads", "/admin/delivery"] },
   { title: "Marketing", items: ["/admin/anuncios", "/admin/campanhas", "/admin/crm", "/admin/wifi", "/admin/marketing"] },
   { title: "Gestão", items: ["/admin/relatorios", "/admin/valores", "/admin/unidades", "/admin/equipe", "/admin/historico", "/admin/integracoes"] },
-  { title: "Minha conta", items: ["/admin/perfil"] },
+  { title: "Minha conta", items: ["/admin/app", "/admin/perfil"] },
 ];
 
 /** Chamados de SAC abertos (só das unidades do usuário), atualizado em tempo real. */
@@ -125,6 +128,7 @@ const SECTIONS: { title: string; items: string[] }[] = [
   { title: "Atendimento", items: ["/admin/alertas", "/admin/sac", "/admin/leads", "/admin/delivery"] },
   { title: "Marketing", items: ["/admin/anuncios", "/admin/campanhas", "/admin/crm", "/admin/wifi", "/admin/marketing"] },
   { title: "Gestão", items: ["/admin/relatorios", "/admin/valores", "/admin/unidades", "/admin/equipe", "/admin/historico", "/admin/integracoes"] },
+  { title: "Conta", items: ["/admin/app"] },
 ];
 const COLLAPSE_KEY = "candeeiro.sidebar.collapsed";
 
@@ -171,6 +175,10 @@ function Shell({ nav: allNav, email }: { nav: readonly NavItem[]; email: string 
   const signOut = () => signOutLogged();
   const profile = nav.find((n) => n.to === "/admin/perfil");
   const pages = nav.map((n) => ({ to: n.to, label: n.label, icon: n.icon }));
+
+  // selo com o número de alertas no ícone do app, e renovação silenciosa do aparelho nos alertas no popup
+  useEffect(() => { setAppBadge(alerts); }, [alerts]);
+  useEffect(() => { void syncPushOnOpen(); }, []);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -237,7 +245,7 @@ function Shell({ nav: allNav, email }: { nav: readonly NavItem[]; email: string 
         </div>
       </aside>
       <div className="min-w-0 flex-1">
-        <header className="sticky top-0 z-30 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 border-b bg-background/80 px-4 py-2 backdrop-blur-xl md:hidden">
+        <header className="sticky top-0 z-30 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 border-b bg-background/80 px-4 pb-2 pt-[calc(0.5rem+env(safe-area-inset-top))] backdrop-blur-xl md:hidden">
           <BrandLogo className="h-9" />
           <div className="flex items-center">
             <Button variant="ghost" size="icon" className="h-11 w-11" aria-label="Busca global" onClick={() => setSearchOpen(true)}><Search /></Button>
@@ -245,6 +253,7 @@ function Shell({ nav: allNav, email }: { nav: readonly NavItem[]; email: string 
           </div>
         </header>
         <main className="admin-content admin-main mx-auto min-w-0 max-w-6xl px-4 pt-5 md:px-10 md:pt-10">
+          <InstallBanner />
           {ready ? <Outlet key={epoch} /> : <div className="flex justify-center py-20"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" aria-label="Carregando" /></div>}
         </main>
       </div>

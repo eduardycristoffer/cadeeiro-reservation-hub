@@ -52,7 +52,7 @@ export function WhatsAppLead() {
     window.addEventListener(WHATSAPP_OPEN_EVENT, onOpen);
     return () => window.removeEventListener(WHATSAPP_OPEN_EVENT, onOpen);
   }, []);
-  if (path.startsWith("/admin") || path.startsWith("/api")) return null;
+  if (path.startsWith("/admin") || path.startsWith("/api") || path === "/app") return null;
   function show() {
     const url = new URL(window.location.href);
     setCity(

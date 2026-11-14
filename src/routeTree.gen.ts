@@ -11,12 +11,14 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminRouteImport } from './routes/admin'
+import { Route as AppRouteImport } from './routes/app'
 import { Route as EntrarRouteImport } from './routes/entrar'
 import { Route as PrimeiroAcessoRouteImport } from './routes/primeiro-acesso'
 import { Route as RedefinirSenhaRouteImport } from './routes/redefinir-senha'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as AdminAlertasRouteImport } from './routes/admin.alertas'
 import { Route as AdminAnunciosRouteImport } from './routes/admin.anuncios'
+import { Route as AdminAppRouteImport } from './routes/admin.app'
 import { Route as AdminAprovacoesRouteImport } from './routes/admin.aprovacoes'
 import { Route as AdminCampanhasRouteImport } from './routes/admin.campanhas'
 import { Route as AdminCrmRouteImport } from './routes/admin.crm'
@@ -69,6 +71,11 @@ const AdminRoute = AdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AppRoute = AppRouteImport.update({
+  id: '/app',
+  path: '/app',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const EntrarRoute = EntrarRouteImport.update({
   id: '/entrar',
   path: '/entrar',
@@ -97,6 +104,11 @@ const AdminAlertasRoute = AdminAlertasRouteImport.update({
 const AdminAnunciosRoute = AdminAnunciosRouteImport.update({
   id: '/anuncios',
   path: '/anuncios',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminAppRoute = AdminAppRouteImport.update({
+  id: '/app',
+  path: '/app',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminAprovacoesRoute = AdminAprovacoesRouteImport.update({
@@ -316,11 +328,13 @@ const ApiPublicSdrCrmSendsDueRoute = ApiPublicSdrCrmSendsDueRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
+  '/app': typeof AppRoute
   '/entrar': typeof EntrarRoute
   '/primeiro-acesso': typeof PrimeiroAcessoRoute
   '/redefinir-senha': typeof RedefinirSenhaRoute
   '/admin/alertas': typeof AdminAlertasRoute
   '/admin/anuncios': typeof AdminAnunciosRoute
+  '/admin/app': typeof AdminAppRoute
   '/admin/aprovacoes': typeof AdminAprovacoesRoute
   '/admin/campanhas': typeof AdminCampanhasRoute
   '/admin/crm': typeof AdminCrmRoute
@@ -366,11 +380,13 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/app': typeof AppRoute
   '/entrar': typeof EntrarRoute
   '/primeiro-acesso': typeof PrimeiroAcessoRoute
   '/redefinir-senha': typeof RedefinirSenhaRoute
   '/admin/alertas': typeof AdminAlertasRoute
   '/admin/anuncios': typeof AdminAnunciosRoute
+  '/admin/app': typeof AdminAppRoute
   '/admin/aprovacoes': typeof AdminAprovacoesRoute
   '/admin/campanhas': typeof AdminCampanhasRoute
   '/admin/crm': typeof AdminCrmRoute
@@ -418,11 +434,13 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
+  '/app': typeof AppRoute
   '/entrar': typeof EntrarRoute
   '/primeiro-acesso': typeof PrimeiroAcessoRoute
   '/redefinir-senha': typeof RedefinirSenhaRoute
   '/admin/alertas': typeof AdminAlertasRoute
   '/admin/anuncios': typeof AdminAnunciosRoute
+  '/admin/app': typeof AdminAppRoute
   '/admin/aprovacoes': typeof AdminAprovacoesRoute
   '/admin/campanhas': typeof AdminCampanhasRoute
   '/admin/crm': typeof AdminCrmRoute
@@ -471,11 +489,13 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/admin'
+    | '/app'
     | '/entrar'
     | '/primeiro-acesso'
     | '/redefinir-senha'
     | '/admin/alertas'
     | '/admin/anuncios'
+    | '/admin/app'
     | '/admin/aprovacoes'
     | '/admin/campanhas'
     | '/admin/crm'
@@ -521,11 +541,13 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/app'
     | '/entrar'
     | '/primeiro-acesso'
     | '/redefinir-senha'
     | '/admin/alertas'
     | '/admin/anuncios'
+    | '/admin/app'
     | '/admin/aprovacoes'
     | '/admin/campanhas'
     | '/admin/crm'
@@ -572,11 +594,13 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/admin'
+    | '/app'
     | '/entrar'
     | '/primeiro-acesso'
     | '/redefinir-senha'
     | '/admin/alertas'
     | '/admin/anuncios'
+    | '/admin/app'
     | '/admin/aprovacoes'
     | '/admin/campanhas'
     | '/admin/crm'
@@ -624,6 +648,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRouteWithChildren
+  AppRoute: typeof AppRoute
   EntrarRoute: typeof EntrarRoute
   PrimeiroAcessoRoute: typeof PrimeiroAcessoRoute
   RedefinirSenhaRoute: typeof RedefinirSenhaRoute
@@ -666,6 +691,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/app': {
+      id: '/app'
+      path: '/app'
+      fullPath: '/app'
+      preLoaderRoute: typeof AppRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/entrar': {
       id: '/entrar'
       path: '/entrar'
@@ -706,6 +738,13 @@ declare module '@tanstack/react-router' {
       path: '/anuncios'
       fullPath: '/admin/anuncios'
       preLoaderRoute: typeof AdminAnunciosRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/app': {
+      id: '/admin/app'
+      path: '/app'
+      fullPath: '/admin/app'
+      preLoaderRoute: typeof AdminAppRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/aprovacoes': {
@@ -1001,6 +1040,7 @@ declare module '@tanstack/react-router' {
 interface AdminRouteChildren {
   AdminAlertasRoute: typeof AdminAlertasRoute
   AdminAnunciosRoute: typeof AdminAnunciosRoute
+  AdminAppRoute: typeof AdminAppRoute
   AdminAprovacoesRoute: typeof AdminAprovacoesRoute
   AdminCampanhasRoute: typeof AdminCampanhasRoute
   AdminCrmRoute: typeof AdminCrmRoute
@@ -1024,6 +1064,7 @@ interface AdminRouteChildren {
 const AdminRouteChildren: AdminRouteChildren = {
   AdminAlertasRoute: AdminAlertasRoute,
   AdminAnunciosRoute: AdminAnunciosRoute,
+  AdminAppRoute: AdminAppRoute,
   AdminAprovacoesRoute: AdminAprovacoesRoute,
   AdminCampanhasRoute: AdminCampanhasRoute,
   AdminCrmRoute: AdminCrmRoute,
@@ -1088,6 +1129,7 @@ const ApiPublicSdrCrmSendsRouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRouteWithChildren,
+  AppRoute: AppRoute,
   EntrarRoute: EntrarRoute,
   PrimeiroAcessoRoute: PrimeiroAcessoRoute,
   RedefinirSenhaRoute: RedefinirSenhaRoute,

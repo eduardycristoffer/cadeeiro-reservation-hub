@@ -20,6 +20,7 @@ const Ctx = createContext<AuthState>({ loading: true, user: null, roles: [], ful
 export async function signOutLogged() {
   if (!supabase) return;
   try { await supabase.rpc("log_auth_event", { _action: "logout" }); } catch { /* segue */ }
+  try { await (await import("@/lib/app-state")).pushOnSignOut(); } catch { /* alertas são um extra */ }
   await supabase.auth.signOut();
 }
 

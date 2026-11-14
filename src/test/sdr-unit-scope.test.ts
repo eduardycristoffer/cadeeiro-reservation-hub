@@ -44,7 +44,7 @@ vi.mock("@/integrations/supabase/client.server", () => ({ supabaseAdmin: {
   },
 } }));
 
-vi.mock("@/server/email-worker.server", () => ({ runEmailWorker: vi.fn(async () => ({ ok: true, skipped: "sem_provedor" })) }));
+vi.mock("@/server/notifications-worker.server", () => ({ runNotificationsWorker: vi.fn(async () => ({ ok: true, skipped: "sem_provedor", push: { ok: true, skipped: "sem_chave" } })) }));
 import * as h from "@/server/sdr-handlers.server";
 import { sha256Hex } from "@/lib/integration/crypto";
 
@@ -252,6 +252,6 @@ describe("/emails/run (fila de e-mails de alerta)", () => {
     state.key.unit_ids = [];
     const r = await call();
     expect(r.status).toBe(200);
-    expect((await r.json()).data).toEqual({ ok: true, skipped: "sem_provedor" });
+    expect((await r.json()).data).toEqual({ ok: true, skipped: "sem_provedor", push: { ok: true, skipped: "sem_chave" } });
   });
 });
